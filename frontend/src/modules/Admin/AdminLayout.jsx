@@ -36,6 +36,11 @@ const AdminLayout = () => {
     setIsMobile(window.innerWidth < 768);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('admin');
+    navigate('/');
+  };
+
   useEffect(() => {
     checkIsMobile();
     window.addEventListener('resize', checkIsMobile);
@@ -307,7 +312,7 @@ const AdminLayout = () => {
             </Button>
             <Button
               style={buttonStyle}
-              onClick={() => navigate('/')}
+              onClick={() => handleLogout()}
               onMouseEnter={(e) => (e.currentTarget.style.background = buttonHoverStyle.background)}
               onMouseLeave={(e) => (e.currentTarget.style.background = buttonStyle.background)}
               onMouseDown={(e) => (e.currentTarget.style.transform = buttonActiveStyle.transform)}

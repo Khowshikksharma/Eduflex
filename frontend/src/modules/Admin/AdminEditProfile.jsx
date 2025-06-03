@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Button, 
-  Form, 
-  Input, 
-  Select, 
-  Table, 
+import {
+  Button,
+  Form,
+  Input,
+  Select,
+  Table,
   message,
   Space,
   Typography
@@ -36,29 +36,22 @@ const AdminEditProfile = () => {
   const [loading, setLoading] = useState(false);
   const [adminData, setAdminData] = useState(null);
 
-  // Mock data fetch
   useEffect(() => {
     setLoading(true);
-    setTimeout(() => {
-      setAdminData({
-        id: 'ADMIN001',
-        name: 'Admin User',
-        dob: '1985-05-15',
-        gender: 'Male',
-        email: 'admin@eduflex.com',
-        phone: '9876543210',
-        qualification: 'Master\'s Degree',
-        fatherName: 'John Doe',
-        maritalStatus: 'Married',
-        motherTongue: 'English',
-        nationality: 'Indian',
-        address: '123 Admin Street, Bangalore, Karnataka'
-      });
-      setLoading(false);
-    }, 1000);
+    try {
+      const storedData = localStorage.getItem('admin');
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        setAdminData(parsedData);
+      } else {
+        message.warning('No admin data found in local storage.');
+      }
+    } catch {
+      message.error('Failed to load admin data from local storage.');
+    }
+    setLoading(false);
   }, []);
 
-  // Initialize form with data
   useEffect(() => {
     if (adminData) {
       form.setFieldsValue({
@@ -77,23 +70,20 @@ const AdminEditProfile = () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
-      
-      // Format the date before saving
+
       const formattedValues = {
         ...values,
         dob: values.dob ? dayjs(values.dob).format('YYYY-MM-DD') : null
       };
 
-      console.log('Saving data:', formattedValues);
-      
-      // Simulate API call
-      setTimeout(() => {
-        setAdminData(formattedValues);
-        message.success('Profile updated successfully!');
-        setLoading(false);
-      }, 1000);
+      // Save to localStorage
+      localStorage.setItem('adminProfile', JSON.stringify(formattedValues));
+      setAdminData(formattedValues);
+
+      message.success('Profile updated successfully!');
     } catch (error) {
       console.error('Validation failed:', error);
+    } finally {
       setLoading(false);
     }
   };
@@ -114,7 +104,7 @@ const AdminEditProfile = () => {
 
   const handlePasswordChange = () => {
     showPopup(
-      <AdminChangePassword 
+      <AdminChangePassword
         onSuccess={() => message.success('Password changed successfully!')}
         onCancel={() => message.info('Password change cancelled')}
       />
@@ -174,11 +164,7 @@ const AdminEditProfile = () => {
       key: 'phone',
       label: 'Phone Number',
       editable: true,
-      component: <Input 
-        type="tel" 
-        placeholder="Enter phone number" 
-        maxLength={10}
-      />,
+      component: <Input type="tel" placeholder="Enter phone number" maxLength={10} />,
       rules: [
         { required: true, message: 'Please input your phone number!' },
         { pattern: /^[6-9]\d{9}$/, message: 'Please enter valid Indian number!' }
@@ -242,15 +228,15 @@ const AdminEditProfile = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: '24px' 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '24px'
       }}>
         <Title level={3} style={{ margin: 0 }}>Edit Your Profile</Title>
-        <Button 
-          type="primary" 
+        <Button
+          type="primary"
           onClick={handlePasswordChange}
           style={{ width: '160px' }}
         >
@@ -297,8 +283,8 @@ const AdminEditProfile = () => {
         <Space style={{ float: 'right' }}>
           <Button onClick={handleCancel}>Cancel</Button>
           <Button onClick={handleClear}>Reset</Button>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             onClick={handleSave}
             loading={loading}
           >

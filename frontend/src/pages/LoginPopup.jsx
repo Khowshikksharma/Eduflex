@@ -1,17 +1,29 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link,useNavigate } from 'react-router-dom';
 import loginImage from '../assets/loginrocket.jpg';
+import axios from 'axios';
+import config from '../config';
 
 const LoginPopup = ({ onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const admin = await axios.post(`${config.url}/admin/checkadminlogin`, { email, password });
+    try{
+      if(admin.data != null){
+        localStorage.setItem('admin', JSON.stringify(admin.data));
+        navigate('/admin/home/dashboard');
+      }
+    }catch (e) {
+      setError('Invalid email or password'+ e.message);
+    }
     setLoading(true);
-    setError('');
+    setError(e.target.value);
 
     if (!email || !password) {
       setError('Please fill in all fields');

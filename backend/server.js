@@ -1,21 +1,24 @@
-// Add this AT THE VERY TOP
-require('dotenv').config({ path: `${__dirname}/.env` });  // Explicit path
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+require('dotenv').config();
 
-console.log('Checking environment variables...');
-console.log('MONGO_URI:', process.env.MONGO_URI);  // Should show your URI
-console.log('PORT:', process.env.PORT);
+const dburl = process.env.MONGO_URL;
+mongoose.connect(dburl).then(async () => {
+    console.log("Connected to DB Successfully");
+  }).catch((e) => {
+    console.log(e.message);
+});
 
-const app = require('./app');
-const connectDB = require('./config/db');
+const app = express();
+app.use(express.json());
+app.use(cors());
 
-const PORT = process.env.PORT || 5000;
+const adminRoutes = require("./routes/adminroutes");
 
-// Connect to MongoDB
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}).catch(err => {
-  console.error('Failed to connect to MongoDB:', err);
-  process.exit(1);
+app.use("/admin", adminRoutes);
+
+const port = process.env.PORT || 2032;
+app.listen(port, () => {
+    console.log(`Server is running at the port ${port}`);
 });

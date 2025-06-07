@@ -8,7 +8,7 @@ import LoginPopup from './LoginPopup';
 import { Table, Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 
-const AllCourses = () => {
+const AllCourses = ({setAuthState}) => {
   const [click, setClick] = useState(false);
   const [searchText, setSearchText] = useState("");
   const { showPopup, PopupWrapper } = usePopup();
@@ -94,7 +94,7 @@ const AllCourses = () => {
 
   const handleLoginClick = (e) => {
     e.preventDefault();
-    showPopup(<LoginPopup />);
+    showPopup(<LoginPopup setAuthState={setAuthState}/>);
     setClick(false);
   };
 

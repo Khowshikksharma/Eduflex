@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
+const validator = require('validator');
 
 const studentSchema = new mongoose.Schema({
-  id: { type: String, required: true, unique: true },
+  id: {type: String,required: true,unique: true,},
   name: { type: String, required: true },
   age: { type: Number, required: true },
   dob: { type: Date, required: true },
@@ -22,7 +23,7 @@ const studentSchema = new mongoose.Schema({
   motherTongue: { type: String, required: true },
   nationality: { type: String, required: true },
   address: { type: String, required: true },
-  password: { type: String, required: true } // Added for authentication
+  password: { type: String, required: true, default: "123" }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Student', studentSchema);

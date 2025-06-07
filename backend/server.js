@@ -15,8 +15,10 @@ app.use(express.json());
 app.use(cors());
 
 const adminRoutes = require("./routes/adminroutes");
+const studentRoutes = require("./routes/studentroutes");
 
 app.use("/admin", adminRoutes);
+app.use("/student", studentRoutes);
 
 const port = process.env.PORT || 2032;
 app.listen(port, () => {

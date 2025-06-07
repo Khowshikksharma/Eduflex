@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Link,useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import loginImage from '../assets/loginrocket.jpg';
 import axios from 'axios';
 import config from '../config';
 
-const LoginPopup = ({ onClose }) => {
+const LoginPopup = ({ onClose,setAuthState}) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -13,25 +13,35 @@ const LoginPopup = ({ onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const admin = await axios.post(`${config.url}/admin/checkadminlogin`, { email, password });
-    try{
-      if(admin.data != null){
-        localStorage.setItem('admin', JSON.stringify(admin.data));
-        navigate('/admin/home/dashboard');
-      }
-    }catch (e) {
-      setError('Invalid email or password'+ e.message);
-    }
-    setLoading(true);
-    setError(e.target.value);
-
+    setError('');
+    
     if (!email || !password) {
       setError('Please fill in all fields');
-      setLoading(false);
       return;
     }
+
+    setLoading(true);
+    try {
+      const response = await axios.post(`${config.url}/admin/checkadminlogin`, { email, password });
+      if (response.data) {
+        localStorage.setItem('admin', JSON.stringify(response.data));
+        setAuthState({
+          isAdminLoggedIn: true,
+          isFacultyLoggedIn: false,
+          isStudentLoggedIn: false
+        });
+        navigate('/admin/home/dashboard');
+      } else {
+        setError('Invalid email or password');
+      }
+    } catch (e) {
+      setError('Login failed: ' + (e.response?.data?.message || e.message));
+    } finally {
+      setLoading(false);
+    }
   };
-  // Styles
+
+  // --- Styles ---
   const containerStyle = {
     display: 'flex',
     maxWidth: '800px',
@@ -39,14 +49,15 @@ const LoginPopup = ({ onClose }) => {
     borderRadius: '12px',
     overflow: 'hidden',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-    backgroundColor: '#fff'
+    backgroundColor: '#fff',
+    margin: '0 auto'
   };
 
   const formContainerStyle = {
     padding: '40px',
     width: '50%',
     minWidth: '400px',
-    background: 'linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 40%,rgb(136, 129, 129) 100%)',
+    background: 'linear-gradient(135deg, #ffffff 0%, #ffffff 40%, #888181 100%)',
     color: '#1e293b'
   };
 
@@ -118,7 +129,6 @@ const LoginPopup = ({ onClose }) => {
     textAlign: 'center',
     fontSize: '0.9rem'
   };
-
 
   return (
     <div style={containerStyle}>

@@ -6,11 +6,11 @@ const Popup = ({ children, onClose }) => {
   const popupRef = useRef(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (popupRef.current && !popupRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
+    // const handleClickOutside = (event) => {
+    //   if (popupRef.current && !popupRef.current.contains(event.target)) {
+    //     onClose();
+    //   }
+    // };
   
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
@@ -19,12 +19,12 @@ const Popup = ({ children, onClose }) => {
     };
   
     // Add event listeners
-    document.addEventListener('mousedown', handleClickOutside);
+    // document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleKeyDown);
   
     // Clean up event listeners on unmount
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      // document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [onClose]);

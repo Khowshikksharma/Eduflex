@@ -21,12 +21,21 @@ import Contact from '../../pages/Contact';
 
 const { Header, Sider, Content, Footer } = Layout;
 
-const AdminLayout = () => {
+const AdminLayout = ({onLogout}) => {
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { showPopup, PopupWrapper } = usePopup();
+  const [adminData, setAdminData] = useState(null);
+  const storedData = localStorage.getItem('admin');
+  useEffect(() => {
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      setAdminData(parsedData);
+    }
+  }, [storedData]);
+
 
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -37,8 +46,21 @@ const AdminLayout = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('admin');
-    navigate('/');
+    try {
+      localStorage.clear();
+      if (onLogout) {
+        onLogout();
+      }
+      window.dispatchEvent(new Event('authStateChange'));
+      navigate('/', { replace: true });
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.href = '/';
+    }
   };
 
   useEffect(() => {
@@ -269,7 +291,7 @@ const AdminLayout = () => {
               justifyContent: 'flex-end',
             }}
           >
-            <span style={{ marginRight: 15 }}>Welcome, Admin!</span>
+            <span style={{ marginRight: 15 }}>Welcome, {adminData?.name || 'Admin'}!</span>
             <Button
               style={buttonStyle}
               onClick={() => navigate('/admin/home/dashboard')}
@@ -312,7 +334,7 @@ const AdminLayout = () => {
             </Button>
             <Button
               style={buttonStyle}
-              onClick={() => handleLogout()}
+              onClick={handleLogout}
               onMouseEnter={(e) => (e.currentTarget.style.background = buttonHoverStyle.background)}
               onMouseLeave={(e) => (e.currentTarget.style.background = buttonStyle.background)}
               onMouseDown={(e) => (e.currentTarget.style.transform = buttonActiveStyle.transform)}

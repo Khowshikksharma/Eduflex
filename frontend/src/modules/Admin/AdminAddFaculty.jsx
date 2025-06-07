@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Form, Input, Button, DatePicker, Select, Radio, Space, InputNumber, message } from 'antd';
 import { UserOutlined, MailOutlined, PhoneOutlined, IdcardOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import axios from 'axios';
+import config from '../../config';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -17,12 +19,13 @@ const AdminAddFaculty = ({
   onSuccess, 
   departments, 
   qualifications,
-  maritalStatuses 
+  maritalStatuses,
+  closePopup
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  const onFinish = (values) => {
+  const onFinish = async (values) => {
     setLoading(true);
     
     const facultyId = generateFacultyId(values.department);
@@ -32,16 +35,22 @@ const AdminAddFaculty = ({
       dob: values.dob ? dayjs(values.dob).format('YYYY-MM-DD') : null,
       startYear: values.startYear ? values.startYear.year() : null,
       status: true,
-      resignedDate: '-',
+      resignedDate: null,
       age: values.dob ? dayjs().diff(dayjs(values.dob), 'year') : null,
     };
 
-    setTimeout(() => {
-      onSuccess(newFaculty);
+    try{
+      await axios.post(`${config.url}/admin/insertfaculty`, newFaculty);
       message.success('Faculty added successfully!');
-      setLoading(false);
+      onSuccess(newFaculty);
       form.resetFields();
-    }, 1000);
+      closePopup();
+    }catch (error) {
+      console.error(error);
+      message.error('Failed to add faculty. Please try again.');
+    }finally {
+      setLoading(false);
+    }
   };
 
   const validatePhoneNumber = (_, value) => {
@@ -229,6 +238,15 @@ const AdminAddFaculty = ({
           rules={[{ required: true, message: 'Please input address!' }]}
         >
           <TextArea rows={4} placeholder="Address" size="large" />
+        </Form.Item>
+        
+        <Form.Item
+            label="Password"
+            name="password"
+            rules={[{ required: true, message: 'Please input password!' }]}
+            initialValue="123" // Default password  
+          >
+            <Input.Password placeholder="Password" />
         </Form.Item>
 
         <Form.Item style={{ marginTop: 32 }}>

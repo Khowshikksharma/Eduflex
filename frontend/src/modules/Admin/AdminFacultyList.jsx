@@ -4,6 +4,8 @@ import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddFaculty from './AdminAddFaculty';
 import AdminEditFaculty from './AdminEditFaculty';
+import axios from 'axios';
+import config from '../../config';
 
 const departments = [
   'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
@@ -36,36 +38,24 @@ const AdminFacultyList = () => {
 
   useEffect(() => {
     setLoading(true);
-    setTimeout(() => {
-      setFaculty([
-        {
-          id: '25CSEF001',
-          name: 'Dr. Jane Smith',
-          age: 42,
-          dob: '1981-05-15',
-          gender: 'Female',
-          email: 'jane.smith@example.com',
-          phone: '9876543210',
-          fatherName: 'Robert Smith',
-          aadhaarNo: '123456789012',
-          salary: 1200000,
-          qualification: 'Ph.D',
-          designation: 'Professor',
-          joiningDate: '2015-06-01',
-          startYear: 2015,
-          status: true,
-          department: 'CSE',
-          maritalStatus: 'Married',
-          motherTongue: 'English',
-          nationality: 'Indian',
-          address: '456 Faculty Street, Bangalore, Karnataka',
-          subjects: ['Data Structures', 'Algorithms'],
-          researchAreas: ['Machine Learning', 'AI'],
-          experience: '15 years'
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
+    axios.get(`${config.url}/admin/viewfaculties`)
+      .then((response) => {
+        const facultyData = response.data;
+        if (Array.isArray(facultyData)) {
+          setFaculty(facultyData);
+        } else {
+          setFaculty([]);
+          console.warn('API response is not an array:', facultyData);
+        }
+      })
+      .catch((error) => { 
+        message.error('Failed to fetch faculty data');
+        console.error('Error fetching faculty:', error);
+        setFaculty([]); 
+      })  
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const handleAddFaculty = () => {
@@ -79,6 +69,7 @@ const AdminFacultyList = () => {
           setFaculty([...faculty, newFaculty]);
           message.success('Faculty added successfully!');
         }}
+        closePopup={closePopup}
       />
     );
   };

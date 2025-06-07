@@ -4,6 +4,8 @@ import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddStudent from './AdminAddStudent';
 import AdminEditStudent from './AdminEditStudent';
+import axios from 'axios';
+import config from '../../config';
 
 const departments = [
   'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
@@ -28,41 +30,32 @@ const qualifications = [
 const maritalStatuses = ['Single', 'Married', 'Divorced'];
 
 const AdminStudentList = () => {
-  const [students, setStudents] = useState([]);
+  const [students, setStudents] = useState([]); // Already initialized as empty array
   const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(false);
   const { showPopup, closePopup, PopupWrapper } = usePopup();
 
   useEffect(() => {
     setLoading(true);
-    setTimeout(() => {
-      setStudents([
-        {
-          id: '25CSE00001',
-          name: 'John Doe',
-          age: 21,
-          dob: '2002-05-15',
-          gender: 'Male',
-          email: 'john.doe@example.com',
-          phone: '9876543210',
-          fatherName: 'Robert Doe',
-          aadhaarNo: '123456789012',
-          semesterFee: 130000,
-          qualification: '12th Grade',
-          startYear: 2025,
-          endYear: 2029,
-          status: true,
-          currentYear: '1',
-          currentSemester: '1',
-          department: 'CSE',
-          maritalStatus: 'Single',
-          motherTongue: 'English',
-          nationality: 'Indian',
-          address: '123 Main Street, Bangalore, Karnataka'
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
+    axios.get(`${config.url}/admin/viewstudents`)
+      .then((response) => {
+        // Ensure we always set an array, even if response.data is null/undefined
+        const studentsData = response.data;
+        if (Array.isArray(studentsData)) {
+          setStudents(studentsData);
+        } else {
+          setStudents([]);
+          console.warn('API response is not an array:', studentsData);
+        }
+      })
+      .catch((error) => {
+        message.error('Failed to fetch students');
+        console.error('Error fetching students:', error);
+        setStudents([]); // Ensure students is always an array even on error
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const handleAddStudent = () => {
@@ -76,6 +69,7 @@ const AdminStudentList = () => {
           setStudents([...students, newStudent]);
           message.success('Student added successfully!');
         }}
+        closePopup={closePopup}
       />
     );
   };
@@ -106,19 +100,28 @@ const AdminStudentList = () => {
       okText: 'Yes, Make Inactive',
       cancelText: 'Cancel',
       onOk: () => {
-        const updatedStudents = students.map(s => 
-          s.id === record.id ? { ...s, status: false } : s
-        );
-        setStudents(updatedStudents);
-        message.success(`${record.name}'s status changed to Inactive`);
+        try {
+          const updatedStudents = students.map(s => 
+            s.id === record.id ? { ...s, status: false } : s
+          );
+          setStudents(updatedStudents);
+          message.success(`${record.name}'s status changed to Inactive`);
+        } catch (error) {
+          console.error('Error updating student status:', error);
+          message.error('Failed to update student status');
+        }
+      },
+      onCancel: () => {
+        // Handle cancel if needed
       }
     });
   };
 
-  const filteredStudents = students.filter(student => 
-    student.name.toLowerCase().includes(searchText.toLowerCase()) ||
-    student.id.toLowerCase().includes(searchText.toLowerCase())
-  );
+  // Add safety check to ensure students is always an array before filtering
+  const filteredStudents = Array.isArray(students) ? students.filter(student => 
+    student.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+    student.id?.toLowerCase().includes(searchText.toLowerCase())
+  ) : [];
 
   const columns = [
     {
@@ -188,8 +191,8 @@ const AdminStudentList = () => {
       title: 'Semester Fee',
       dataIndex: 'semesterFee',
       key: 'semesterFee',
-      render: fee => `₹${fee.toLocaleString('en-IN')}`,
-      sorter: (a, b) => a.semesterFee - b.semesterFee,
+      render: fee => `₹${fee?.toLocaleString('en-IN') || 0}`,
+      sorter: (a, b) => (a.semesterFee || 0) - (b.semesterFee || 0),
     },
     {
       title: 'Qualification',
@@ -207,13 +210,13 @@ const AdminStudentList = () => {
       title: 'Start Year',
       dataIndex: 'startYear',
       key: 'startYear',
-      sorter: (a, b) => a.startYear - b.startYear,
+      sorter: (a, b) => (a.startYear || 0) - (b.startYear || 0),
     },
     {
       title: 'End Year',
       dataIndex: 'endYear',
       key: 'endYear',
-      sorter: (a, b) => a.endYear - b.endYear,
+      sorter: (a, b) => (a.endYear || 0) - (b.endYear || 0),
     },
     {
       title: 'Status',
@@ -235,14 +238,14 @@ const AdminStudentList = () => {
       dataIndex: 'currentYear',
       key: 'currentYear',
       render: year => `${year}${year === '1' ? 'st' : year === '2' ? 'nd' : year === '3' ? 'rd' : 'th'} Year`,
-      sorter: (a, b) => a.currentYear - b.currentYear,
+      sorter: (a, b) => (a.currentYear || 0) - (b.currentYear || 0),
     },
     {
       title: 'Current Semester',
       dataIndex: 'currentSemester',
       key: 'currentSemester',
       render: semester => `Semester ${semester}`,
-      sorter: (a, b) => a.currentSemester - b.currentSemester,
+      sorter: (a, b) => (a.currentSemester || 0) - (b.currentSemester || 0),
     },
     {
       title: 'Marital Status',

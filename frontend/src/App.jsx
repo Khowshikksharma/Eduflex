@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 
 import Landing from './pages/Landing';
-import AllCourses from './pages/Allcourses';  
+import AllCourses from './pages/Allcourses';
 import Faculty from './pages/Faculty';
 import About from './pages/About';
 
@@ -44,82 +44,148 @@ import AdminAddCourse from './modules/Admin/AdminAddCourse';
 import AdminEditCourse from './modules/Admin/AdminEditCourse';
 
 const App = () => {
+  // Helper function to check localStorage
+  const checkAuthState = () => ({
+    isAdminLoggedIn: localStorage.getItem('admin') !== null,
+    isFacultyLoggedIn: localStorage.getItem('faculty') !== null,
+    isStudentLoggedIn: localStorage.getItem('student') !== null
+  });
+
+  const [authState, setAuthState] = useState(checkAuthState);
+
+  const handleLogout = (role) => {
+    // Clear localStorage
+    localStorage.removeItem(role);
+    
+    // Update state immediately
+    const newAuthState = {
+      isAdminLoggedIn: false,
+      isFacultyLoggedIn: false,
+      isStudentLoggedIn: false
+    };
+    
+    setAuthState(newAuthState);
+    
+    // Force a re-render by updating the state again after a brief delay
+    setTimeout(() => {
+      setAuthState(checkAuthState());
+    }, 100);
+  };
+  
+  // Check localStorage on component mount and when needed
+  useEffect(() => {
+    const checkAuth = () => {
+      const currentAuthState = checkAuthState();
+      const stateChanged = 
+        currentAuthState.isAdminLoggedIn !== authState.isAdminLoggedIn ||
+        currentAuthState.isFacultyLoggedIn !== authState.isFacultyLoggedIn ||
+        currentAuthState.isStudentLoggedIn !== authState.isStudentLoggedIn;
+      
+      if (stateChanged) {
+        setAuthState(currentAuthState);
+      }
+    };
+
+    // Check immediately on mount
+    checkAuth();
+
+    // Handle storage events (for cross-tab synchronization)
+    const handleStorageChange = () => {
+      checkAuth();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events (in case you need to trigger updates manually)
+    const handleAuthChange = () => {
+      checkAuth();
+    };
+    
+    window.addEventListener('authStateChange', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('authStateChange', handleAuthChange);
+    };
+  }, [authState]);
+
+  // // Debug logging (remove in production)
+  // console.log('Current auth state:', authState);
+  // console.log('localStorage admin:', localStorage.getItem('admin'));
+  // console.log('localStorage faculty:', localStorage.getItem('faculty'));
+  // console.log('localStorage student:', localStorage.getItem('student'));
+
   return (
     <Router>
       <Routes>
         {/* Student Routes */}
-        <Route path="/student" element={<StudentLayout />}>
-          <Route index element={<Navigate to="/student/home/dashboard" replace />} />
-          <Route path="home">
-            <Route path="dashboard" element={<StudentHome />} />
+        {authState.isStudentLoggedIn ? (
+          <Route path="/student" element={<StudentLayout onLogout={() => handleLogout('student')}/>}>
+            <Route index element={<Navigate to="/student/home/dashboard" replace />} />
+            <Route path="home/dashboard" element={<StudentHome />} />
+            <Route path="mycourse/grades" element={<StudentGrade />} />
+            <Route path="mycourse/course-registration" element={<StudentCourseRegistration />} />
+            <Route path="mycourse/attendance" element={<StudentAttendance />} />
+            <Route path="mycourse/circular" element={<StudentCircular />} />
+            <Route path="mycourse/materials" element={<StudentMaterials />} />
+            <Route path="timetable/class" element={<StudentClass />} />
+            <Route path="timetable/academic" element={<StudentAcademic />} />
+            <Route path="editprofile" element={<StudentEditProfile />} />
           </Route>
-          <Route path="mycourse">
-            <Route path="grades" element={<StudentGrade />} />
-            <Route path="course-registration" element={<StudentCourseRegistration />} />
-            <Route path="attendance" element={<StudentAttendance />} />
-            <Route path="circular" element={<StudentCircular />} />
-            <Route path="materials" element={<StudentMaterials />} />
-          </Route>
-          <Route path="timetable">
-            <Route path="class" element={<StudentClass />} />
-            <Route path="academic" element={<StudentAcademic />} />
-          </Route>
-          <Route path="editprofile" element={<StudentEditProfile />} />
-        </Route>
+        ) : null}
 
         {/* Faculty Routes */}
-        <Route path="/faculty" element={<FacultyLayout />}>
-          <Route index element={<Navigate to="/faculty/home/dashboard" replace />} />
-          <Route path="home">
-            <Route path="dashboard" element={<FacultyHome />} />
+        {authState.isFacultyLoggedIn ? (
+          <Route path="/faculty" element={<FacultyLayout onLogout={() => handleLogout('faculty')}/>}>
+            <Route index element={<Navigate to="/faculty/home/dashboard" replace />} />
+            <Route path="home/dashboard" element={<FacultyHome />} />
+            <Route path="mydept/course-details" element={<FacultyMyCourseDetails />} />
+            <Route path="mydept/give-grades" element={<FacultyGiveGrades />} />
+            <Route path="mydept/upload-materials" element={<FacultyUploadMaterials />} />
+            <Route path="mydept/take-attendance" element={<FacultyTakeAttendance />} />
+            <Route path="mydept/circular" element={<FacultyCircular />} />
+            <Route path="timetable/class" element={<FacultyClass />} />
+            <Route path="timetable/academic" element={<FacultyAcademic />} />
+            <Route path="editprofile" element={<FacultyEditProfile />} />
           </Route>
-          <Route path="mydept">
-            <Route path="course-details" element={<FacultyMyCourseDetails />} />
-            <Route path="give-grades" element={<FacultyGiveGrades />} />
-            <Route path="upload-materials" element={<FacultyUploadMaterials />} />
-            <Route path="take-attendance" element={<FacultyTakeAttendance />} />
-            <Route path="circular" element={<FacultyCircular />} />
-          </Route>
-          <Route path="timetable">
-            <Route path="class" element={<FacultyClass />} />
-            <Route path="academic" element={<FacultyAcademic />} />
-          </Route>
-          <Route path="editprofile" element={<FacultyEditProfile />} />
-        </Route>
+        ) : null}
 
         {/* Admin Routes */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Navigate to="/admin/home/dashboard" replace />} />
-          <Route path="home">
-            <Route path="dashboard" element={<AdminHome />} />
+        {authState.isAdminLoggedIn ? (
+          <Route path="/admin" element={<AdminLayout onLogout={() => handleLogout('admin')}/>}>
+            <Route index element={<Navigate to="/admin/home/dashboard" replace />} />
+            <Route path="home/dashboard" element={<AdminHome />} />
+            <Route path="student/list" element={<AdminStudentList />} />
+            <Route path="student/add" element={<AdminAddStudent />} />
+            <Route path="student/edit/:id" element={<AdminEditStudent />} />
+            <Route path="student/circular" element={<AdminStudentCircular />} />
+            <Route path="faculty/list" element={<AdminFacultyList />} />
+            <Route path="faculty/circular" element={<AdminFacultyCircular />} />
+            <Route path="course/list" element={<AdminCourseList />} />
+            <Route path="course/add" element={<AdminAddCourse />} />
+            <Route path="course/edit/:courseCode" element={<AdminEditCourse />} />
+            <Route path="course/mapping" element={<AdminCourseMapping />} />
+            <Route path="editprofile" element={<AdminEditProfile />} />
           </Route>
-          <Route path="student">
-            <Route path="list" element={<AdminStudentList />} />
-            <Route path="add" element={<AdminAddStudent />} />
-            <Route path="edit/:id" element={<AdminEditStudent />} />
-            <Route path="circular" element={<AdminStudentCircular />} />
-          </Route>
-          <Route path="faculty">
-            <Route path="list" element={<AdminFacultyList />} />
-            <Route path="circular" element={<AdminFacultyCircular />} />
-          </Route>
-          <Route path="course">
-            <Route path="list" element={<AdminCourseList />} />
-            <Route path="add" element={<AdminAddCourse />} />
-            <Route path="edit/:courseCode" element={<AdminEditCourse />} />
-            <Route path="mapping" element={<AdminCourseMapping />} />
-          </Route>
-          <Route path="editprofile" element={<AdminEditProfile />} />
-        </Route>
+        ) : null}
 
-        {/* Landing Page */}
-        <Route path="/" element={<Landing />} />
-        <Route path="/courses" element={<AllCourses />} />
-        <Route path="/facultys" element={<Faculty />} />
-        <Route path="/about" element={<About />} />
+        {/* Public Routes - Only show when no one is logged in */}
+        {!authState.isAdminLoggedIn && !authState.isFacultyLoggedIn && !authState.isStudentLoggedIn ? (
+          <>
+            <Route path="/" element={<Landing setAuthState={setAuthState}/>}/>
+            <Route path="/courses" element={<AllCourses setAuthState={setAuthState}/>} />
+            <Route path="/facultys" element={<Faculty setAuthState={setAuthState}/>} />
+            <Route path="/about" element={<About />} />
+          </>
+        ) : null}
 
-        {/* Fallback Route */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Fallback route - handles redirects after refresh */}
+        <Route path="*" element={
+          authState.isAdminLoggedIn ? <Navigate to="/admin/home/dashboard" replace /> :
+          authState.isFacultyLoggedIn ? <Navigate to="/faculty/home/dashboard" replace /> :
+          authState.isStudentLoggedIn ? <Navigate to="/student/home/dashboard" replace /> :
+          <Navigate to="/" replace />
+        } />
       </Routes>
     </Router>
   );

@@ -6,7 +6,7 @@ import usePopup from '../components/usePopup';
 import About from './About';
 import LoginPopup from './LoginPopup';
 
-const Landing = () => {
+const Landing = ({ setAuthState }) => {
   const [click, setClick] = useState(false);
   const { showPopup, PopupWrapper } = usePopup(); // Initialize the popup hook
 
@@ -38,7 +38,7 @@ const Landing = () => {
 
   const handleLoginClick = (e) => {
     e.preventDefault();
-    showPopup(<LoginPopup />);
+    showPopup(<LoginPopup setAuthState={setAuthState}/>);
     setClick(false);
   };
 

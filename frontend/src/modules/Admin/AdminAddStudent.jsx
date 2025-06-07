@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Form, Input, Button, DatePicker, Select, Radio, Space, InputNumber, message } from 'antd';
 import { UserOutlined, MailOutlined, PhoneOutlined, IdcardOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import axios from 'axios';
+import config from '../../config';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -19,34 +21,42 @@ const AdminAddStudent = ({
   departments, 
   semesterFees, 
   qualifications,
-  maritalStatuses 
+  maritalStatuses,
+  closePopup
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  const onFinish = (values) => {
-    setLoading(true);
-    
-    const age = values.dob ? dayjs().diff(dayjs(values.dob), 'year') : null;
-    const studentId = generateStudentId(values.department, values.startYear);
+  const onFinish = async (values) => {
+  setLoading(true);
+  
+  const age = values.dob ? dayjs().diff(dayjs(values.dob), 'year') : null;
+  const studentId = generateStudentId(values.department, values.startYear);
 
-    const newStudent = {
-      id: studentId,
-      ...values,
-      dob: values.dob ? dayjs(values.dob).format('YYYY-MM-DD') : null,
-      status: true,
-      currentYear: '1',
-      currentSemester: '1',
-      age,
-    };
-
-    setTimeout(() => {
-      onSuccess(newStudent);
-      message.success('Student added successfully!');
-      setLoading(false);
-      form.resetFields();
-    }, 1000);
+  const newStudent = {
+    id: studentId,
+    ...values,
+    dob: values.dob ? dayjs(values.dob).format('YYYY-MM-DD') : null,
+    status: true,
+    currentYear: '1',
+    currentSemester: '1',
+    age,
   };
+
+  try {
+    await axios.post(`${config.url}/admin/insertstudent`, newStudent);
+    message.success('Student added successfully!');
+    onSuccess(newStudent);
+    form.resetFields();
+    closePopup();
+  } catch (error) {
+    console.error(error);
+    message.error('Failed to add student. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const validatePhoneNumber = (_, value) => {
     if (!value) {
@@ -246,6 +256,15 @@ const AdminAddStudent = ({
           rules={[{ required: true, message: 'Please input address!' }]}
         >
           <TextArea rows={4} placeholder="Address" size="large" />
+        </Form.Item>
+
+        <Form.Item
+          label="Password"
+          name="password"
+          rules={[{ required: true, message: 'Please input password!' }]}
+          initialValue="123" // Default password  
+        >
+          <Input.Password placeholder="Password" />
         </Form.Item>
 
         <Form.Item style={{ marginTop: 32 }}>

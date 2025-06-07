@@ -14,7 +14,7 @@ const facultySchema = new mongoose.Schema({
   fatherName: { type: String, required: true },
   startYear: { type: Number, required: true },
   status: { type: Boolean, default: true },
-  resignedDate: { type: Date },
+  resignedDate: { type: Date,default: null },
   maritalStatus: { type: String, required: true },
   motherTongue: { type: String, required: true },
   nationality: { type: String, required: true },

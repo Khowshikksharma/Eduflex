@@ -1,5 +1,6 @@
 import React from 'react';
 import Khowshikk from '../assets/khowshikk.jpg'
+import Tarun from '../assets/tarun.jpeg'
 const About = () => {
   const styles = {
     aboutPopupContent: {
@@ -158,7 +159,7 @@ const About = () => {
           {/* Developer 2 */}
           <div style={styles.developerCard}>
             <img 
-              src={Khowshikk}
+              src={Tarun}
               alt="S. Tarun Kumar" 
               style={styles.developerImage}
             />

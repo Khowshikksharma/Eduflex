@@ -16,9 +16,11 @@ app.use(cors());
 
 const adminRoutes = require("./routes/adminroutes");
 const studentRoutes = require("./routes/studentroutes");
+const facultyRoutes = require("./routes/facultyroutes");
 
 app.use("/admin", adminRoutes);
 app.use("/student", studentRoutes);
+app.use("/faculty", facultyRoutes);
 
 const port = process.env.PORT || 2032;
 app.listen(port, () => {

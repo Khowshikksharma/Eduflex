@@ -24,7 +24,7 @@ import Contact from '../../pages/Contact';
 
 const { Header, Sider, Content, Footer } = Layout;
 
-const StudentLayout = () => {
+const StudentLayout = ({onLogout}) => {
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
@@ -37,6 +37,24 @@ const StudentLayout = () => {
 
   const checkIsMobile = () => {
     setIsMobile(window.innerWidth < 768);
+  };
+
+  const handleLogout = () => {
+    try {
+      localStorage.clear();
+      if (onLogout) {
+        onLogout();
+      }
+      window.dispatchEvent(new Event('authStateChange'));
+      navigate('/', { replace: true });
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.href = '/';
+    }
   };
 
   useEffect(() => {
@@ -292,7 +310,7 @@ const StudentLayout = () => {
             </Button>
             <Button
               style={buttonStyle}
-              onClick={() => navigate('/')}
+              onClick={handleLogout}
               onMouseEnter={(e) => (e.currentTarget.style.background = buttonHoverStyle.background)}
               onMouseLeave={(e) => (e.currentTarget.style.background = buttonStyle.background)}
               onMouseDown={(e) => (e.currentTarget.style.transform = buttonActiveStyle.transform)}

@@ -1,8 +1,6 @@
 const Admin = require('../models/admin');
 const Student = require('../models/Student');
 const Faculty = require('../models/Faculty');
-const express = require('express');
-const bcrypt = require('bcryptjs');
 
 const checkAdminLogin = async (req, res) => {
     try{

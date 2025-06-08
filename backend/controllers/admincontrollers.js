@@ -68,10 +68,26 @@ const viewfaculties = async(request,response) =>{
         response.status(500).send(error.message);
     }
 }
+
+const analysis = async (req,res) =>{
+  try{
+    const studentCount = await Student.countDocuments();
+    const facultyCount = await Faculty.countDocuments();
+    res.json({
+      studentCount: studentCount,
+      facultyCount: facultyCount
+    });
+  }
+  catch(error){
+    res.status(500).send(error.message);
+  }
+}
+
 module.exports = {
     checkAdminLogin,
     insertstudent,
     viewstudents,
     insertfaculty,
-    viewfaculties
+    viewfaculties,
+    analysis,
 };

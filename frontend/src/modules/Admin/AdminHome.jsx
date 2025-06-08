@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Row, Col, Table, Progress } from 'antd';
 import {
   UserOutlined,
@@ -11,39 +11,57 @@ import {
 } from '@ant-design/icons';
 import { Bar, Pie, Line } from 'react-chartjs-2';
 import 'chart.js/auto';
+import config from './../../config';
+import axios from 'axios';
 
 const AdminHome = () => {
+  const [counts, setCounts] = useState(null);
+
+  useEffect(() => {
+    fetchCounts();
+  }, []);
+
+  const fetchCounts = async () => {
+    try {
+      const response = await axios.get(`${config.url}/admin/analysis`);
+      setCounts(response.data);
+    } catch (error) {
+      console.error(error.message)
+    }
+  };
+
   // Statistics data
   const stats = [
-    {
-      title: 'Total Students',
-      value: '1,254',
-      icon: <UserOutlined style={{ fontSize: '24px', color: '#1890ff' }} />,
-      color: '#1890ff',
-      progress: 78
-    },
-    {
-      title: 'Total Faculty',
-      value: '68',
-      icon: <TeamOutlined style={{ fontSize: '24px', color: '#52c41a' }} />,
-      color: '#52c41a',
-      progress: 65
-    },
-    {
-      title: 'Active Courses',
-      value: '42',
-      icon: <BookOutlined style={{ fontSize: '24px', color: '#faad14' }} />,
-      color: '#faad14',
-      progress: 85
-    },
-    {
-      title: 'Departments',
-      value: '8',
-      icon: <BankOutlined style={{ fontSize: '24px', color: '#f5222d' }} />,
-      color: '#f5222d',
-      progress: 92
-    }
+  {
+    title: 'Total Students',
+    value: counts ? counts.studentCount.toLocaleString() : '...',
+    icon: <UserOutlined style={{ fontSize: '24px', color: '#1890ff' }} />,
+    color: '#1890ff',
+    progress: counts ? Math.min(100, Math.round((counts.studentCount / 1500) * 100)) : 0
+  },
+  {
+    title: 'Total Faculty',
+    value: counts ? counts.facultyCount.toLocaleString() : '...',
+    icon: <TeamOutlined style={{ fontSize: '24px', color: '#52c41a' }} />,
+    color: '#52c41a',
+    progress: counts ? Math.min(100, Math.round((counts.facultyCount / 100) * 100)) : 0
+  },
+  {
+    title: 'Active Courses',
+    value: '42',
+    icon: <BookOutlined style={{ fontSize: '24px', color: '#faad14' }} />,
+    color: '#faad14',
+    progress: 85
+  },
+  {
+    title: 'Departments',
+    value: '8',
+    icon: <BankOutlined style={{ fontSize: '24px', color: '#f5222d' }} />,
+    color: '#f5222d',
+    progress: 92
+  }
   ];
+
 
   // Recent activities data
   const activities = [

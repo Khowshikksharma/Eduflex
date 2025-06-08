@@ -7,5 +7,6 @@ adminrouter.post("/insertstudent",admincontroller.insertstudent);
 adminrouter.post("/insertfaculty", admincontroller.insertfaculty);
 adminrouter.get("/viewstudents", admincontroller.viewstudents);
 adminrouter.get("/viewfaculties", admincontroller.viewfaculties);
+adminrouter.get("/analysis",admincontroller.analysis);
 
 module.exports = adminrouter;

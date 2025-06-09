@@ -56,7 +56,7 @@ const LoginPopup = ({ onClose,setAuthState}) => {
       });
       navigate('/student/home/dashboard');
     } else {
-      setError('Invalid email or password for all roles');
+      setError('Invalid email or password');
     }
   } catch (e) {
     setError('Login error: ' + (e.response?.data?.message || e.message));

@@ -1,28 +1,41 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Select, InputNumber, message, Space } from 'antd';
 import { BookOutlined } from '@ant-design/icons';
-
+import axios from 'axios';
+import config from '../../config'; 
 const { Option } = Select;
 
-const AdminAddCourse = ({ onSuccess, departments }) => {
+const AdminAddCourse = ({ onSuccess, departments,closePopup }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  const onFinish = (values) => {
-    setLoading(true);
-    
-    const newCourse = {
-      ...values,
-      status: true,
-    };
+const onFinish = async (values) => {
+  setLoading(true);
 
-    setTimeout(() => {
-      onSuccess(newCourse);
-      message.success('Course added successfully!');
-      setLoading(false);
-      form.resetFields();
-    }, 1000);
+  const newCourse = {
+    ccode: values.courseCode,
+    cname: values.courseName,
+    cshortname: values.courseShortName,
+    academicYear: values.academicYear,
+    semester: values.semester,
+    credits: values.credits,
+    department: values.department,
+    status: true,
   };
+
+  try {
+    await axios.post(`${config.url}/admin/insertCourse`, newCourse);
+    message.success('Course added successfully!');
+    onSuccess(newCourse);
+    form.resetFields();
+    closePopup();
+  } catch (error) {
+    console.error(error);
+    message.error('Failed to add course. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const generateAcademicYears = () => {
     const currentYear = new Date().getFullYear();

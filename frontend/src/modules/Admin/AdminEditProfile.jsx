@@ -13,6 +13,8 @@ import { useNavigate } from 'react-router-dom';
 import usePopup from '../../components/usePopup';
 import AdminChangePassword from './AdminChangePassword';
 import dayjs from 'dayjs';
+import axios from 'axios';
+import config from '../../config';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -73,16 +75,26 @@ const AdminEditProfile = () => {
 
       const formattedValues = {
         ...values,
-        dob: values.dob ? dayjs(values.dob).format('YYYY-MM-DD') : null
+        adminid: adminData?.id,
+        dob: values.dob
+          ? dayjs(values.dob).format('YYYY-MM-DD')
+          : adminData?.dob || null
       };
 
-      // Save to localStorage
-      localStorage.setItem('adminProfile', JSON.stringify(formattedValues));
-      setAdminData(formattedValues);
+      const response = await axios.put(`${config.url}/admin/updateprofile`, formattedValues);
 
-      message.success('Profile updated successfully!');
+      if (response.status === 200) {
+        const updatedData = { ...adminData, ...formattedValues };
+        localStorage.setItem('admin', JSON.stringify(updatedData));
+        setAdminData(updatedData);
+        message.success('Profile updated successfully!');
+        window.location.reload();
+      } else {
+        message.error('Failed to update profile');
+      }
     } catch (error) {
-      console.error('Validation failed:', error);
+      console.error('Update error:', error);
+      message.error('An error occurred while updating the profile.');
     } finally {
       setLoading(false);
     }

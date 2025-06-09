@@ -4,9 +4,11 @@ import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddCourse from './AdminAddCourse';
 import AdminEditCourse from './AdminEditCourse';
+import axios from 'axios';
+import config from '../../config';
 
 const departments = [
-  'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
+  'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE',
   'ASE', 'AUT', 'AGE', 'BIO', 'BME', 'CEE', 'CER'
 ];
 
@@ -19,76 +21,109 @@ const AdminCourseList = () => {
   const calculateLTP = (credits) => {
     let remainingCredits = credits;
     const result = { L: 0, T: 0, P: 0, S: 0 };
-    
+
     result.L = Math.floor(remainingCredits / 1.75);
     remainingCredits = remainingCredits % 1.75;
-    
+
     if (remainingCredits >= 1.5) {
       result.P = Math.floor(remainingCredits / 1.5);
       remainingCredits = remainingCredits % 1.5;
     }
-    
+
     if (remainingCredits >= 0.25) {
       result.T = Math.floor(remainingCredits / 0.25);
       remainingCredits = remainingCredits % 0.25;
     }
-    
+
     if (remainingCredits > 0) {
       result.S += 1;
     }
-    
+
     return `${result.L}-${result.T}-${result.P}-${result.S}`;
   };
 
   useEffect(() => {
     setLoading(true);
-    setTimeout(() => {
-      setCourses([
-        {
-          courseCode: 'CS101',
-          courseName: 'Introduction to Computer Science',
-          courseShortName: 'CS',
-          academicYear: '2023-2024',
-          semester: '1',
-          credits: 4,
-          status: true,
-          department: 'CSE'
-        },
-        {
-          courseCode: 'MA201',
-          courseName: 'Advanced Mathematics',
-          courseShortName: 'Math',
-          academicYear: '2023-2024',
-          semester: '2',
-          credits: 3,
-          status: true,
-          department: 'CSE'
+    axios.get(`${config.url}/admin/viewCourses`)
+      .then((response) => {
+        const coursesData = response.data;
+        if (Array.isArray(coursesData)) {
+          const mappedCourses = coursesData.map(c => ({
+            courseCode: c.ccode,
+            courseName: c.cname,
+            courseShortName: c.cshortname,
+            academicYear: c.academicYear,
+            semester: c.semester,
+            credits: c.credits,
+            department: c.department,
+            status: c.status
+          }));
+          setCourses(mappedCourses);
+        } else {
+          setCourses([]);
+          console.warn('API response is not an array:', coursesData);
         }
-      ]);
-      setLoading(false);
-    }, 1000);
+      })
+      .catch((error) => {
+        message.error('Failed to fetch courses');
+        console.error('Error fetching courses:', error);
+        setCourses([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const handleAddCourse = () => {
     showPopup(
-      <AdminAddCourse 
+      <AdminAddCourse
         departments={departments}
         onSuccess={(newCourse) => {
-          setCourses([...courses, newCourse]);
+          const mapped = {
+            courseCode: newCourse.ccode,
+            courseName: newCourse.cname,
+            courseShortName: newCourse.cshortname,
+            academicYear: newCourse.academicYear,
+            semester: newCourse.semester,
+            credits: newCourse.credits,
+            department: newCourse.department,
+            status: newCourse.status
+          };
+          setCourses([...courses, mapped]);
           message.success('Course added successfully!');
         }}
+        closePopup={closePopup}
       />
     );
   };
 
   const handleEditCourse = (record) => {
     showPopup(
-      <AdminEditCourse 
-        courseData={record}
+      <AdminEditCourse
+        courseData={{
+          ccode: record.courseCode,
+          cname: record.courseName,
+          cshortname: record.courseShortName,
+          academicYear: record.academicYear,
+          semester: record.semester,
+          credits: record.credits,
+          department: record.department,
+          status: record.status
+        }}
         departments={departments}
         onUpdate={(updatedCourse) => {
-          setCourses(courses.map(c => 
-            c.courseCode === updatedCourse.courseCode ? updatedCourse : c
+          const mapped = {
+            courseCode: updatedCourse.ccode,
+            courseName: updatedCourse.cname,
+            courseShortName: updatedCourse.cshortname,
+            academicYear: updatedCourse.academicYear,
+            semester: updatedCourse.semester,
+            credits: updatedCourse.credits,
+            department: updatedCourse.department,
+            status: updatedCourse.status
+          };
+          setCourses(courses.map(c =>
+            c.courseCode === mapped.courseCode ? mapped : c
           ));
           message.success('Course updated successfully!');
         }}
@@ -104,7 +139,7 @@ const AdminCourseList = () => {
       okText: 'Yes, Make Inactive',
       cancelText: 'Cancel',
       onOk: () => {
-        const updatedCourses = courses.map(c => 
+        const updatedCourses = courses.map(c =>
           c.courseCode === record.courseCode ? { ...c, status: false } : c
         );
         setCourses(updatedCourses);
@@ -113,7 +148,7 @@ const AdminCourseList = () => {
     });
   };
 
-  const filteredCourses = courses.filter(course => 
+  const filteredCourses = courses.filter(course =>
     course.courseName.toLowerCase().includes(searchText.toLowerCase()) ||
     course.courseCode.toLowerCase().includes(searchText.toLowerCase())
   );
@@ -196,15 +231,15 @@ const AdminCourseList = () => {
       fixed: 'right',
       render: (_, record) => (
         <Space size="middle">
-          <Button 
-            type="link" 
+          <Button
+            type="link"
             onClick={() => handleEditCourse(record)}
           >
             Edit
           </Button>
-          <Button 
-            type="link" 
-            danger 
+          <Button
+            type="link"
+            danger
             onClick={() => handleDeleteCourse(record)}
             disabled={!record.status}
           >
@@ -217,11 +252,11 @@ const AdminCourseList = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: '20px' 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px'
       }}>
         <h1 style={{ margin: 0 }}>Course List</h1>
         <div style={{ display: 'flex', gap: '10px' }}>
@@ -232,8 +267,8 @@ const AdminCourseList = () => {
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             icon={<PlusOutlined />}
             onClick={handleAddCourse}
           >

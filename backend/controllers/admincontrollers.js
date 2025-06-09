@@ -1,6 +1,7 @@
-const Admin = require('../models/admin');
+const Admin = require('../models/Admin');
 const Student = require('../models/Student');
 const Faculty = require('../models/Faculty');
+const Course = require('../models/Course');
 
 const checkAdminLogin = async (req, res) => {
     try{
@@ -12,6 +13,28 @@ const checkAdminLogin = async (req, res) => {
         response.status(500).send(error.message); 
     }
 }
+
+const updateProfile = async (req, res) => {
+  try {
+    const input = req.body;
+    const adminId = input.adminid; 
+
+    const updatedAdmin = await Admin.findOneAndUpdate(
+      { id: adminId }, 
+      input,
+      { new: true }
+    );
+
+    if (!updatedAdmin) {
+      return res.status(404).send('Admin not found');
+    }
+
+    res.json(updatedAdmin);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
 
 const insertstudent = async (request, response) => {
     try 
@@ -83,11 +106,41 @@ const analysis = async (req,res) =>{
   }
 }
 
+const insertCourse = async (request, response) => {
+    try 
+    {
+      const input = request.body;
+      const course = new Course(input);
+      await course.save();
+      response.send('Course Registered Successfully');
+    } 
+    catch(e) 
+    {
+      response.status(500).send(e.message);
+    }
+};
+
+const viewCourses = async (request, response) => {
+    try {
+        const courses = await Course.find();
+        if(courses.length == 0) {
+            response.send("No courses found");
+        } else {
+            response.json(courses);
+        }
+    } catch (error) {
+        response.status(500).send(error.message);
+    }
+};
+
 module.exports = {
     checkAdminLogin,
+    updateProfile,
     insertstudent,
     viewstudents,
     insertfaculty,
     viewfaculties,
     analysis,
+    insertCourse,
+    viewCourses,
 };

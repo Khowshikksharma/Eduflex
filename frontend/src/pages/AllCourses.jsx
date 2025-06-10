@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./landingstyle.css";
 import EduflexLogo from '../assets/edufelxlogo.jpg';
@@ -7,32 +7,44 @@ import About from './About';
 import LoginPopup from './LoginPopup';
 import { Table, Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
+import config from "../config";
+import axios from "axios";
 
 const AllCourses = ({setAuthState}) => {
   const [click, setClick] = useState(false);
   const [searchText, setSearchText] = useState("");
   const { showPopup, PopupWrapper } = usePopup();
+  const [allCourses, setAllCourses] = useState([]);
 
-  const allCourses = [
-    { sNo: 1, code: "CS101", name: "Introduction to Programming", credits: 4 },
-    { sNo: 2, code: "CS201", name: "Data Structures", credits: 5 },
-    { sNo: 3, code: "CS301", name: "Database Systems", credits: 4 },
-    { sNo: 4, code: "CS401", name: "Operating Systems", credits: 5 },
-    { sNo: 5, code: "CS501", name: "Computer Networks", credits: 4 },
-    { sNo: 6, code: "CS601", name: "Artificial Intelligence", credits: 5 },
-    { sNo: 7, code: "CS701", name: "Machine Learning", credits: 5 },
-    { sNo: 8, code: "CS801", name: "Deep Learning", credits: 5 },
-    { sNo: 9, code: "CS901", name: "Cloud Computing", credits: 4 },
-    { sNo: 10, code: "CS1001", name: "Blockchain Technology", credits: 4 },
-    { sNo: 11, code: "CS1101", name: "Cybersecurity", credits: 5 },
-    { sNo: 12, code: "CS1201", name: "Internet of Things", credits: 4 },
-  ];
+  useEffect(() => {
+    axios.get(`${config.url}/admin/viewCourses`)
+      .then((response) => {
+        const coursesData = response.data;
+        if (Array.isArray(coursesData)) {
+          const mappedCourses = coursesData.map((c,index) => ({
+            sNo: index + 1,
+            ccode: c.ccode,
+            cname: c.cname,
+            credits: c.credits,
+          }));
+          setAllCourses(mappedCourses);
+        } else {
+          setAllCourses([]);
+          console.warn('API response is not an array:', coursesData);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching courses:', error);
+        setAllCourses([]);
+      })
+  }, []);
+
 
   const topCourses = allCourses.slice(0, 6);
 
   const filteredCourses = allCourses.filter(course =>
-    course.code.toLowerCase().includes(searchText.toLowerCase()) ||
-    course.name.toLowerCase().includes(searchText.toLowerCase())
+    course.ccode.toLowerCase().includes(searchText.toLowerCase()) ||
+    course.cname.toLowerCase().includes(searchText.toLowerCase())
   );
 
   const columns = [
@@ -45,15 +57,15 @@ const AllCourses = ({setAuthState}) => {
     },
     {
       title: 'Course Code',
-      dataIndex: 'code',
-      key: 'code',
-      sorter: (a, b) => a.code.localeCompare(b.code),
+      dataIndex: 'ccode',
+      key: 'ccode',
+      sorter: (a, b) => a.ccode.localeCompare(b.code),
     },
     {
       title: 'Course Name',
-      dataIndex: 'name',
-      key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      dataIndex: 'cname',
+      key: 'cname',
+      sorter: (a, b) => a.cname.localeCompare(b.name),
     },
     {
       title: 'Credits',

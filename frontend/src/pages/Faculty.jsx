@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./landingstyle.css";
 import EduflexLogo from '../assets/edufelxlogo.jpg';
@@ -7,26 +7,32 @@ import About from './About';
 import LoginPopup from './LoginPopup';
 import { Table, Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
+import axios from "axios";
+import config from "../config";
 
 const Faculty = ({setAuthState}) => {
   const [click, setClick] = useState(false);
   const [searchText, setSearchText] = useState("");
   const { showPopup, PopupWrapper } = usePopup();
+  const [allFaculty, setAllFaculty] = useState([]);
 
-  const allFaculty = [
-    { sNo: 1, id: "CSE001", name: "Dr. John Smith", gender: "Male", department: "Computer Science" },
-    { sNo: 2, id: "ECE002", name: "Dr. Sarah Johnson", gender: "Female", department: "Electronics" },
-    { sNo: 3, id: "ME003", name: "Dr. Michael Chen", gender: "Male", department: "Mechanical" },
-    { sNo: 4, id: "CSE004", name: "Dr. Robert Williams", gender: "Male", department: "Computer Science" },
-    { sNo: 5, id: "ECE005", name: "Dr. Emily Davis", gender: "Female", department: "Electronics" },
-    { sNo: 6, id: "ME006", name: "Dr. James Brown", gender: "Male", department: "Mechanical" },
-    { sNo: 7, id: "CSE007", name: "Dr. Patricia Miller", gender: "Female", department: "Computer Science" },
-    { sNo: 8, id: "ECE008", name: "Dr. Thomas Wilson", gender: "Male", department: "Electronics" },
-    { sNo: 9, id: "ME009", name: "Dr. Jennifer Moore", gender: "Female", department: "Mechanical" },
-    { sNo: 10, id: "CSE010", name: "Dr. David Taylor", gender: "Male", department: "Computer Science" },
-    { sNo: 11, id: "ECE011", name: "Dr. Jessica Anderson", gender: "Female", department: "Electronics" },
-    { sNo: 12, id: "ME012", name: "Dr. Charles Thomas", gender: "Male", department: "Mechanical" },
-  ];
+  useEffect(() => {
+    const fetchFaculty = async () => {
+      try {
+        const response = await axios.get(`${config.url}/admin/viewfaculties`);
+        const facultyData = response.data.map((faculty, index) => ({
+          ...faculty,
+          sNo: index + 1
+        }));
+        setAllFaculty(facultyData);
+      } catch (error) {
+        console.error("Failed to fetch faculty list", error);
+      }
+    };
+
+    fetchFaculty();
+  }, []);
+
 
   const filteredFaculty = allFaculty.filter(faculty =>
     faculty.id.toLowerCase().includes(searchText.toLowerCase()) ||

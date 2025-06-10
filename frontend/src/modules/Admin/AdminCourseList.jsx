@@ -132,20 +132,19 @@ const AdminCourseList = () => {
     );
   };
 
-  const handleDeleteCourse = (record) => {
-    Modal.confirm({
-      title: 'Confirm Status Change',
-      content: `Are you sure you want to change ${record.courseName}'s status to Inactive?`,
-      okText: 'Yes, Make Inactive',
-      cancelText: 'Cancel',
-      onOk: () => {
-        const updatedCourses = courses.map(c =>
-          c.courseCode === record.courseCode ? { ...c, status: false } : c
-        );
-        setCourses(updatedCourses);
-        message.success(`${record.courseName}'s status changed to Inactive`);
+  const handleDeleteCourse = async (record) => {
+      const response = await axios.put(`${config.url}/admin/changeCourseStatus`, {
+        ccode: record.courseCode,
+        status: !record.status // Toggle status
+      });
+      if (response.status === 200) {
+        setCourses(courses.map(c =>
+          c.courseCode === record.courseCode ? { ...c, status: !c.status } : c
+        ));
+        message.success('Course status updated successfully!');
+      } else {
+        message.error('Failed to update course status');
       }
-    });
   };
 
   const filteredCourses = courses.filter(course =>

@@ -93,28 +93,19 @@ const AdminStudentList = () => {
     );
   };
 
-  const handleDeleteStudent = (record) => {
-    Modal.confirm({
-      title: 'Confirm Status Change',
-      content: `Are you sure you want to change ${record.name}'s status to Inactive?`,
-      okText: 'Yes, Make Inactive',
-      cancelText: 'Cancel',
-      onOk: () => {
-        try {
-          const updatedStudents = students.map(s => 
-            s.id === record.id ? { ...s, status: false } : s
-          );
-          setStudents(updatedStudents);
-          message.success(`${record.name}'s status changed to Inactive`);
-        } catch (error) {
-          console.error('Error updating student status:', error);
-          message.error('Failed to update student status');
-        }
-      },
-      onCancel: () => {
-        // Handle cancel if needed
-      }
+  const handleDeleteStudent = async (record) => {
+    const response = await axios.put(`${config.url}/admin/changeStudentStatus`, {
+      id: record.id,
+      status: !record.status // Toggle status
     });
+    if (response.status === 200) {
+      setStudents(students.map(s => 
+        s.id === record.id ? { ...s, status: !s.status } : s
+      ));
+      message.success(`Student ${record.status ? 'deactivated' : 'activated'} successfully!`);
+    } else {
+      message.error('Failed to change student status');
+    }
   };
 
   // Add safety check to ensure students is always an array before filtering

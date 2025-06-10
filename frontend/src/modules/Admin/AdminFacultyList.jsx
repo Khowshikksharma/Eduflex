@@ -93,20 +93,19 @@ const AdminFacultyList = () => {
     );
   };
 
-  const handleDeleteFaculty = (record) => {
-    Modal.confirm({
-      title: 'Confirm Status Change',
-      content: `Are you sure you want to mark ${record.name} as Resigned?`,
-      okText: 'Yes, Mark Resigned',
-      cancelText: 'Cancel',
-      onOk: () => {
-        const updatedFaculty = faculty.map(f => 
-          f.id === record.id ? { ...f, status: false } : f
-        );
-        setFaculty(updatedFaculty);
-        message.success(`${record.name} marked as Resigned`);
-      }
+  const handleDeleteFaculty = async (record) => {
+    const response = await axios.put(`${config.url}/admin/changeFacultyStatus`, {
+      id: record.id,
+      status: !record.status // Toggle status
     });
+    if (response.status === 200) {
+      setFaculty(faculty.map(f => 
+        f.id === record.id ? { ...f, status: !f.status } : f
+      ));
+      message.success('Faculty status updated successfully!');
+    } else {
+      message.error('Failed to update faculty status');
+    }
   };
 
   const filteredFaculty = faculty.filter(f => 

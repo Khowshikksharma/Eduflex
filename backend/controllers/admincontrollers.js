@@ -79,6 +79,23 @@ const updateStudent = async (req, res) => {
   }
 }
 
+const changeStudentStatus = async (req, res) => {
+  try {
+    const { id, status } = req.body;
+    const updatedStudent = await Student.findOneAndUpdate(
+      { id: id },
+      { status: status },
+      { new: true }
+    );
+    if (!updatedStudent) {
+      return res.status(404).send('Student not found');
+    }
+    res.json(updatedStudent);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+}
+
 const insertfaculty = async (request, response) => {
     try 
     {
@@ -119,6 +136,23 @@ const updateFaculty = async (req, res) => {
     res.json(updatedFaculty);
   }
   catch (error) {
+    res.status(500).send(error.message);
+  }
+}
+
+const changeFacultyStatus = async (req, res) => {
+  try {
+    const { id, status } = req.body;
+    const updatedFaculty = await Faculty.findOneAndUpdate(
+      { id: id },
+      { status: status },
+      { new: true }
+    );
+    if (!updatedFaculty) {
+      return res.status(404).send('Faculty not found');
+    }
+    res.json(updatedFaculty);
+  } catch (error) {
     res.status(500).send(error.message);
   }
 }
@@ -181,17 +215,41 @@ const updateCourse = async (req, res) => {
   }
 }
 
+const changeCourseStatus = async (req, res) => {
+  try {
+    const { ccode, status } = req.body;
+    const updatedCourse = await Course.findOneAndUpdate(
+      { ccode: ccode },
+      { status: status },
+      { new: true }
+    );
+    if (!updatedCourse) {
+      return res.status(404).send('Course not found');
+    }
+    res.json(updatedCourse);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+}
+
 module.exports = {
     checkAdminLogin,
     updateProfile,
+
     insertstudent,
     viewstudents,
     updateStudent,
+    changeStudentStatus,
+
     insertfaculty,
     viewfaculties,
     updateFaculty,
+    changeFacultyStatus,
+
     analysis,
+
     insertCourse,
     viewCourses,
     updateCourse,
+    changeCourseStatus,
 };

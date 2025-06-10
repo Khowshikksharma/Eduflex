@@ -4,6 +4,8 @@ import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddCourseMapping from './AdminAddCourseMapping';
 import AdminEditCourseMapping from './AdminEditCourseMappping';
+import config from '../../config';
+import axios from 'axios';
 
 const departments = ['CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE'];
 
@@ -11,27 +13,98 @@ const AdminCourseMapping = () => {
   const [mappings, setMappings] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorCount, setErrorCount] = useState(0);
   const { showPopup, closePopup, PopupWrapper } = usePopup();
 
+  const fetchFacultyDetails = async (facultyId) => {
+    try {
+      const response = await axios.get(`${config.url}/admin/viewFacultyById/${facultyId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Failed to fetch faculty ${facultyId}`, error);
+      return {
+        name: 'Unknown Faculty',
+        department: 'Unknown',
+        error: true
+      };
+    }
+  };
+
+  const fetchCourseDetails = async (ccode) => {
+    try {
+      const response = await axios.get(`${config.url}/admin/viewCourseById/${ccode}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Failed to fetch course ${ccode}`, error);
+      return {
+        cname: 'Unknown Course',
+        cshortName: 'Unknown',
+        credits: 0,
+        error: true
+      };
+    }
+  };
+
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setMappings([
-        {
-          mappingId: 'MAP001',
-          courseId: 'CS101',
-          courseName: 'Introduction to Programming',
-          courseShortName: 'Intro Prog',
-          facultyId: 'FAC001',
-          facultyName: 'Dr. Smith',
-          credits: 4,
-          component: 'Core',
-          department: 'CSE',
-          status: true
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
+    const fetchMappings = async () => {
+      setLoading(true);
+      setErrorCount(0);
+      
+      try {
+        const response = await axios.get(`${config.url}/admin/viewFCMapping`);
+        const baseMappings = response.data;
+
+        const enrichedMappings = await Promise.all(
+          baseMappings.map(async (map) => {
+            try {
+              const [facultyData, courseData] = await Promise.all([
+                fetchFacultyDetails(map.facultyId),
+                fetchCourseDetails(map.ccode)
+              ]);
+
+              if (facultyData.error || courseData.error) {
+                setErrorCount(prev => prev + 1);
+              }
+
+              return {
+                ...map,
+                name: facultyData.name,
+                department: facultyData.department,
+                cname: courseData.cname,
+                cshortname: courseData.cshortname,
+                credits: courseData.credits,
+                hasError: facultyData.error || courseData.error
+              };
+            } catch (innerErr) {
+              console.error(`Failed to process mapping ${map.fmapid}`, innerErr);
+              setErrorCount(prev => prev + 1);
+              return {
+                ...map,
+                name: 'Error loading',
+                department: 'Error',
+                cname: 'Error loading',
+                cshortname: 'Error',
+                credits: 0,
+                hasError: true
+              };
+            }
+          })
+        );
+        
+        setMappings(enrichedMappings);
+        
+        if (errorCount > 0) {
+          message.warning(`Loaded with ${errorCount} mapping(s) having incomplete data`);
+        }
+      } catch (error) {
+        message.error('Failed to load mappings');
+        console.error('Error fetching mappings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMappings();
   }, []);
 
   const handleAddMapping = () => {
@@ -42,6 +115,7 @@ const AdminCourseMapping = () => {
           setMappings([...mappings, newMapping]);
           message.success('Mapping added successfully!');
         }}
+        closePopup={closePopup}
       />
     );
   };
@@ -53,7 +127,7 @@ const AdminCourseMapping = () => {
         departments={departments}
         onUpdate={(updatedMapping) => {
           setMappings(mappings.map(m => 
-            m.mappingId === updatedMapping.mappingId ? updatedMapping : m
+            m.fmapid === updatedMapping.fmapid ? updatedMapping : m
           ));
           message.success('Mapping updated successfully!');
         }}
@@ -70,7 +144,7 @@ const AdminCourseMapping = () => {
       cancelText: 'Cancel',
       onOk: () => {
         const updatedMappings = mappings.map(m => 
-          m.mappingId === record.mappingId ? { ...m, status: false } : m
+          m.fmapid === record.fmapid ? { ...m, status: false } : m
         );
         setMappings(updatedMappings);
         message.success('Mapping status changed to Inactive');
@@ -78,10 +152,22 @@ const AdminCourseMapping = () => {
     });
   };
 
-  const filteredMappings = mappings.filter(mapping => 
-    mapping.courseName.toLowerCase().includes(searchText.toLowerCase()) ||
-    mapping.facultyName.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const filteredMappings = mappings.filter(mapping => {
+    if (!mapping) return false;
+    if (!searchText) return true;
+    
+    const searchLower = searchText.toLowerCase();
+    return (
+      (mapping.cname || '').toLowerCase().includes(searchLower) ||
+      (mapping.name || '').toLowerCase().includes(searchLower) ||
+      (mapping.ccode || '').toLowerCase().includes(searchLower) ||
+      (mapping.facultyId || '').toLowerCase().includes(searchLower) ||
+      (mapping.department || '').toLowerCase().includes(searchLower) ||
+      (mapping.fmapid || '').toLowerCase().includes(searchLower) ||
+      (mapping.component || '').toLowerCase().includes(searchLower) ||
+      (mapping.cshortname || '').toLowerCase().includes(searchLower)
+    );
+  });
 
   const columns = [
     {
@@ -93,23 +179,23 @@ const AdminCourseMapping = () => {
     },
     {
       title: 'Mapping ID',
-      dataIndex: 'mappingId',
-      key: 'mappingId',
+      dataIndex: 'fmapid',
+      key: 'fmapid',
     },
     {
       title: 'Course ID',
-      dataIndex: 'courseId',
-      key: 'courseId',
+      dataIndex: 'ccode',
+      key: 'ccode',
     },
     {
       title: 'Course Name',
-      dataIndex: 'courseName',
-      key: 'courseName',
+      dataIndex: 'cname',
+      key: 'cname',
     },
     {
       title: 'Short Name',
-      dataIndex: 'courseShortName',
-      key: 'courseShortName',
+      dataIndex: 'cshortname',
+      key: 'cshortname',
     },
     {
       title: 'Faculty ID',
@@ -118,8 +204,8 @@ const AdminCourseMapping = () => {
     },
     {
       title: 'Faculty Name',
-      dataIndex: 'facultyName',
-      key: 'facultyName',
+      dataIndex: 'name',
+      key: 'name',
     },
     {
       title: 'Credits',
@@ -208,7 +294,7 @@ const AdminCourseMapping = () => {
       <Table
         columns={columns}
         dataSource={filteredMappings}
-        rowKey="mappingId"
+        rowKey="fmapid"
         loading={loading}
         scroll={{ x: 'max-content' }}
         bordered

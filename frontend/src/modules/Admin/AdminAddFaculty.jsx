@@ -244,7 +244,7 @@ const AdminAddFaculty = ({
             label="Password"
             name="password"
             rules={[{ required: true, message: 'Please input password!' }]}
-            initialValue="123" // Default password  
+            initialValue="123" 
           >
             <Input.Password placeholder="Password" />
         </Form.Item>

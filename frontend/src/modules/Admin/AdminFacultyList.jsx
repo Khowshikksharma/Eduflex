@@ -251,12 +251,12 @@ const AdminFacultyList = () => {
       key: 'subjects',
       render: subjects => subjects?.join(', '),
     },
-    {
-      title: 'Research Areas',
-      dataIndex: 'researchAreas',
-      key: 'researchAreas',
-      render: areas => areas?.join(', '),
-    },
+    // {
+    //   title: 'Research Areas',
+    //   dataIndex: 'researchAreas',
+    //   key: 'researchAreas',
+    //   render: areas => areas?.join(', '),
+    // },
     {
       title: 'Address',
       dataIndex: 'address',

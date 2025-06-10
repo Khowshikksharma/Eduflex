@@ -202,7 +202,7 @@ const AdminCourseList = () => {
       render: (_, record) => calculateLTP(record.credits),
     },
     {
-      title: 'Department',
+      title: 'Departments',
       dataIndex: 'department',
       key: 'department',
       filters: departments.map(dept => ({ text: dept, value: dept })),

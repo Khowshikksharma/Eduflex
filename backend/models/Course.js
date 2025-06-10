@@ -8,7 +8,7 @@ const courseSchema = new mongoose.Schema({
     academicYear: { type: String, required: true },
     semester: { type: String, required: true },
     credits: { type: Number, required: true },
-    department: { type: String, required: true },
+    department: { type: [String], required: true },
     status: { type: Boolean, default: true }
 }, {
     timestamps: true

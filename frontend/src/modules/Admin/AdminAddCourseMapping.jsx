@@ -1,56 +1,99 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Input, Button, Select, message, Space } from 'antd';
 import { LinkOutlined } from '@ant-design/icons';
+import axios from 'axios';
+import config from '../../config';
 
 const { Option } = Select;
 
-const AdminAddCourseMapping = ({ onSuccess, departments }) => {
+const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [selectedDept, setSelectedDept] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [faculties, setFaculties] = useState([]);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  // Mock data - in real app, these would come from API
-  const courses = [
-    { id: 'CS101', name: 'Introduction to Programming', shortName: 'Intro Prog', credits: 4, component: 'Core', department: 'CSE' },
-    { id: 'CS102', name: 'Data Structures', shortName: 'DS', credits: 4, component: 'Core', department: 'CSE' },
-  ];
+  // Reset everything when component mounts (popup opens)
+  useEffect(() => {
+    form.resetFields();
+    setSelectedDept(null);
+    setErrorMsg('');
+  }, []);
 
-  const faculties = [
-    { id: 'FAC001', name: 'Dr. Smith', department: 'CSE' },
-    { id: 'FAC002', name: 'Dr. Johnson', department: 'CSE' },
-  ];
-
-  const onFinish = (values) => {
-    setLoading(true);
-    
-    const newMapping = {
-      ...values,
-      mappingId: `MAP${Math.floor(1000 + Math.random() * 9000)}`,
-      status: true
+  // Fetch courses and faculties
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [coursesRes, facultiesRes] = await Promise.all([
+          axios.get(`${config.url}/admin/viewCourses`),
+          axios.get(`${config.url}/admin/viewfaculties`)
+        ]);
+        setCourses(coursesRes.data);
+        setFaculties(facultiesRes.data);
+      } catch (err) {
+        message.error('Failed to load data');
+        console.error('Error fetching data:', err);
+      }
     };
+    fetchData();
+  }, []);
 
-    setTimeout(() => {
-      onSuccess(newMapping);
-      message.success('Mapping added successfully!');
+  const onFinish = async (values) => {
+    setLoading(true);
+    try {
+      const newMapping = {
+        ...values,
+        fmapid: `MAP${Math.floor(1000 + Math.random() * 9000)}`,
+        status: true
+      };
+
+      const res = await axios.post(`${config.url}/admin/addCourseMapping`, newMapping);
+
+      if (res.status === 200) {
+        setErrorMsg('');
+        message.success('Mapping created successfully!');
+        onSuccess(newMapping);
+        form.resetFields();
+        closePopup(); 
+        window.location.reload();
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to create mapping';
+      console.error('Error creating mapping:', err);
+      setErrorMsg(msg);
+      message.error(msg);
+    } finally {
       setLoading(false);
-      form.resetFields();
-    }, 1000);
+    }
   };
 
-  const filteredCourses = courses.filter(course => 
-    selectedDept ? course.department === selectedDept : true
-  );
+  const handleDepartmentChange = useCallback((value) => {
+    setSelectedDept(value);
+    form.setFieldsValue({
+      ccode: undefined,
+      facultyId: undefined
+    });
+  }, [form]);
 
-  const filteredFaculties = faculties.filter(faculty => 
-    selectedDept ? faculty.department === selectedDept : true
-  );
+  const filteredCourses = selectedDept
+    ? courses.filter(course => course.department === selectedDept)
+    : [];
+
+  const filteredFaculties = selectedDept
+    ? faculties.filter(faculty => faculty.department === selectedDept)
+    : [];
 
   return (
     <div style={{ padding: '0 20px' }}>
       <h2 style={{ marginBottom: 24, color: '#333', fontSize: '20px', fontWeight: '600' }}>
         Adding New Course-Faculty Mapping
       </h2>
-      
+      {errorMsg && (
+        <div style={{ color: 'red', marginBottom: '16px' }}>
+          ⚠️ {errorMsg}
+        </div>
+      )}
       <Form
         form={form}
         layout="vertical"
@@ -62,10 +105,11 @@ const AdminAddCourseMapping = ({ onSuccess, departments }) => {
           name="department"
           rules={[{ required: true, message: 'Please select department!' }]}
         >
-          <Select 
-            placeholder="Select department" 
+          <Select
+            placeholder="Select department"
             size="large"
-            onChange={(value) => setSelectedDept(value)}
+            allowClear
+            onChange={handleDepartmentChange}
           >
             {departments.map(dept => (
               <Option key={dept} value={dept}>{dept}</Option>
@@ -75,17 +119,17 @@ const AdminAddCourseMapping = ({ onSuccess, departments }) => {
 
         <Form.Item
           label="Course"
-          name="courseId"
+          name="ccode"
           rules={[{ required: true, message: 'Please select course!' }]}
         >
-          <Select 
-            placeholder="Select course" 
+          <Select
+            placeholder="Select course"
             size="large"
             disabled={!selectedDept}
           >
             {filteredCourses.map(course => (
-              <Option key={course.id} value={course.id}>
-                {course.name} ({course.id})
+              <Option key={course.ccode} value={course.ccode}>
+                {course.cname} ({course.ccode})
               </Option>
             ))}
           </Select>
@@ -96,8 +140,8 @@ const AdminAddCourseMapping = ({ onSuccess, departments }) => {
           name="facultyId"
           rules={[{ required: true, message: 'Please select faculty!' }]}
         >
-          <Select 
-            placeholder="Select faculty" 
+          <Select
+            placeholder="Select faculty"
             size="large"
             disabled={!selectedDept}
           >
@@ -111,10 +155,24 @@ const AdminAddCourseMapping = ({ onSuccess, departments }) => {
 
         <Form.Item style={{ marginTop: 32 }}>
           <Space>
-            <Button type="primary" htmlType="submit" loading={loading} size="large" icon={<LinkOutlined />}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              size="large"
+              icon={<LinkOutlined />}
+            >
               Create Mapping
             </Button>
-            <Button htmlType="button" onClick={() => form.resetFields()} size="large">
+            <Button
+              htmlType="button"
+              onClick={() => {
+                form.resetFields();
+                setSelectedDept(null);
+                setErrorMsg('');
+              }}
+              size="large"
+            >
               Reset
             </Button>
           </Space>

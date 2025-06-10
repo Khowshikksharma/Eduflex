@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, Select, Space, message, Typography, InputNumber, Radio } from 'antd';
+import config from './../../config';
+import axios from 'axios';
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -21,7 +23,7 @@ const AdminEditCourse = ({ courseData, onUpdate, onClose, departments }) => {
     }
   }, [courseData, form]);
 
-  const onFinish = (values) => {
+  const onFinish = async (values) => {
     setLoading(true);
     
     const updatedCourse = {
@@ -30,12 +32,23 @@ const AdminEditCourse = ({ courseData, onUpdate, onClose, departments }) => {
       status: values.status
     };
 
-    setTimeout(() => {
-      onUpdate(updatedCourse);
-      message.success('Course updated successfully!');
+    try{
+      const response = await axios.put(`${config.url}/admin/updateCourse`, updatedCourse);
+      if(response.status === 200) {
+        message.success('Course updated successfully');
+        onUpdate(updatedCourse);
+        onClose();
+        window.location.reload();
+      }
+      else {
+        message.error('Failed to update course');
+      }
+    }catch(error) {
+      console.error('Error updating course:', error);
+      message.error('An error occurred while updating the course');
+    }finally {
       setLoading(false);
-      onClose();
-    }, 1000);
+    }
   };
 
   const handleStatusChange = (e) => {
@@ -67,12 +80,12 @@ const AdminEditCourse = ({ courseData, onUpdate, onClose, departments }) => {
         autoComplete="off"
       >
         <Form.Item label="Course Code">
-          <Text strong>{courseData?.courseCode}</Text>
+          <Text strong>{courseData?.ccode}</Text>
         </Form.Item>
 
         <Form.Item
           label="Course Name"
-          name="courseName"
+          name="cname"
           rules={[{ required: true, message: 'Please input course name!' }]}
         >
           <Input placeholder="Course Name" size="large" />
@@ -80,7 +93,7 @@ const AdminEditCourse = ({ courseData, onUpdate, onClose, departments }) => {
         
         <Form.Item
           label="Course Short Name"
-          name="courseShortName"
+          name="cshortname"
           rules={[
             { required: true, message: 'Please input course short name!' },
             { max: 20, message: 'Short name must be 20 characters or less' }

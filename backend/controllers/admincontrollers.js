@@ -50,6 +50,35 @@ const insertstudent = async (request, response) => {
     }
 };
 
+const viewstudents = async(request,response) =>{
+  try {
+    const students = await Student.find();
+    if(students.length==0){
+      response.send("DATA NOT FOUND");
+    }
+    else{
+      response.json(students);
+    }
+  } catch (error) {
+    response.status(500).send(error.message);
+  }
+ }
+
+const updateStudent = async (req, res) => {
+  try {
+    const { id, ...updateData } = req.body;
+    const updatedStudent = await Student.findOneAndUpdate
+      ({ id: id }, updateData, { new: true });
+    if (!updatedStudent) {
+      return res.status(404).send('Student not found');
+    }
+    res.json(updatedStudent);
+  }
+  catch (error) {
+    res.status(500).send(error.message);
+  }
+}
+
 const insertfaculty = async (request, response) => {
     try 
     {
@@ -64,19 +93,6 @@ const insertfaculty = async (request, response) => {
     }
 }
 
-const viewstudents = async(request,response) =>{
-  try {
-    const students = await Student.find();
-    if(students.length==0){
-      response.send("DATA NOT FOUND");
-    }
-    else{
-      response.json(students);
-    }
-  } catch (error) {
-    response.status(500).send(error.message);
-  }
- }
 
 const viewfaculties = async(request,response) =>{
     try {
@@ -92,13 +108,30 @@ const viewfaculties = async(request,response) =>{
     }
 }
 
+const updateFaculty = async (req, res) => {
+  try {
+    const { id, ...updateData } = req.body;
+    const updatedFaculty = await Faculty.findOneAndUpdate
+      ({ id: id }, updateData, { new: true });
+    if (!updatedFaculty) {  
+      return res.status(404).send('Faculty not found');
+    }
+    res.json(updatedFaculty);
+  }
+  catch (error) {
+    res.status(500).send(error.message);
+  }
+}
+
 const analysis = async (req,res) =>{
   try{
     const studentCount = await Student.countDocuments();
     const facultyCount = await Faculty.countDocuments();
+    const courseCount = await Course.countDocuments();
     res.json({
       studentCount: studentCount,
-      facultyCount: facultyCount
+      facultyCount: facultyCount,
+      courseCount: courseCount
     });
   }
   catch(error){
@@ -133,14 +166,32 @@ const viewCourses = async (request, response) => {
     }
 };
 
+const updateCourse = async (req, res) => {
+  try {
+    const { ccode, ...updateData } = req.body;
+    const updatedCourse = await Course.findOneAndUpdate
+      ({ ccode: ccode }, updateData, { new: true });
+    if (!updatedCourse) {
+      return res.status(404).send('Course not found');
+    }
+    res.json(updatedCourse);
+  }
+  catch (error) {
+    res.status(500).send(error.message);
+  }
+}
+
 module.exports = {
     checkAdminLogin,
     updateProfile,
     insertstudent,
     viewstudents,
+    updateStudent,
     insertfaculty,
     viewfaculties,
+    updateFaculty,
     analysis,
     insertCourse,
     viewCourses,
+    updateCourse,
 };

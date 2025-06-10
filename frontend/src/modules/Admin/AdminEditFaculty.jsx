@@ -3,6 +3,8 @@ import { Form, Input, Button, DatePicker, Select, Radio, Space, message, Typogra
 import { MailOutlined, PhoneOutlined, IdcardOutlined, UserOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
+import axios from 'axios';
+import config from '../../config';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -36,7 +38,7 @@ const AdminEditFaculty = ({
     }
   }, [facultyData, form]);
 
-  const onFinish = (values) => {
+  const onFinish = async (values) => {
     setLoading(true);
     
     const updatedFaculty = {
@@ -52,12 +54,22 @@ const AdminEditFaculty = ({
       resignedDate: values.resignedDate ? values.resignedDate.format('YYYY-MM-DD') : facultyData.resignedDate
     };
 
-    setTimeout(() => {
-      onUpdate(updatedFaculty);
-      message.success('Faculty updated successfully!');
+    try{
+      const response = await axios.put(`${config.url}/admin/updatefaculty`, updatedFaculty);
+      if(response.status === 200) {
+        message.success('Faculty updated successfully!');
+        onUpdate(updatedFaculty);
+        onClose();
+        window.location.reload();
+      }else {
+        message.error('Failed to update faculty. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating faculty:', error);
+      message.error('Failed to update faculty. Please try again.');
+    }finally {
       setLoading(false);
-      onClose();
-    }, 1000);
+    }
   };
 
   const handleStatusChange = (e) => {

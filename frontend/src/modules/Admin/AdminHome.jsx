@@ -48,10 +48,10 @@ const AdminHome = () => {
   },
   {
     title: 'Active Courses',
-    value: '42',
+    value: counts ? counts.courseCount.toLocaleString() : '...',
     icon: <BookOutlined style={{ fontSize: '24px', color: '#faad14' }} />,
     color: '#faad14',
-    progress: 85
+    progress: counts ? Math.min(100, Math.round((counts.courseCount / 200) * 100)) : 0
   },
   {
     title: 'Departments',

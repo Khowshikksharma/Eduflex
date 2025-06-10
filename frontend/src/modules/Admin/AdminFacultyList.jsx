@@ -206,8 +206,8 @@ const AdminFacultyList = () => {
     },
     {
       title: 'Joining Date',
-      dataIndex: 'joiningDate',
-      key: 'joiningDate',
+      dataIndex: 'startYear',
+      key: 'startYear',
     },
     {
       title: 'Experience',

@@ -3,13 +3,14 @@ import { Form, Input, Button, DatePicker, Select, Radio, Space, message, Typogra
 import { MailOutlined, PhoneOutlined, IdcardOutlined, UserOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
+import axios from 'axios';
+import config from '../../config';
 
 const { Option } = Select;
 const { TextArea } = Input;
 const { Text } = Typography;
 
 const AdminEditStudent = ({ studentData, onUpdate, onClose, qualifications, maritalStatuses }) => {
-  //, departments, semesterFees
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [isActive, setIsActive] = useState(true);
@@ -28,29 +29,39 @@ const AdminEditStudent = ({ studentData, onUpdate, onClose, qualifications, mari
     }
   }, [studentData, form]);
 
-  const onFinish = (values) => {
+  const onFinish = async (values) => {
     setLoading(true);
     
-    const updatedStudent = {
-      ...studentData,
-      ...values,
-      dob: studentData.dob, // Keep original DOB as it's not editable
-      aadhaarNo: studentData.aadhaarNo, // Keep original Aadhaar as it's not editable
-      semesterFee: studentData.semesterFee, // Keep original fee as it's not editable
-      startYear: studentData.startYear, // Keep original start year as it's not editable
-      motherTongue: studentData.motherTongue, // Keep original as it's not editable
-      nationality: studentData.nationality, // Keep original as it's not editable
-      department: studentData.department, // Keep original department as it's not editable
-      status: values.status,
-      age: studentData.age // Keep original age as it's not editable
-    };
+    try {
+      const updatedStudent = {
+        ...studentData,
+        ...values,
+        dob: studentData?.dob, 
+        aadhaarNo: studentData?.aadhaarNo,
+        semesterFee: studentData?.semesterFee,
+        startYear: studentData?.startYear,
+        motherTongue: studentData?.motherTongue,
+        nationality: studentData?.nationality,
+        department: studentData?.department,
+        status: values.status,
+        age: studentData?.age
+      };
 
-    setTimeout(() => {
-      onUpdate(updatedStudent);
-      message.success('Student updated successfully!');
+      const response = await axios.put(`${config.url}/admin/updatestudent`, updatedStudent);
+      if (response.status === 200) {
+        message.success('Student updated successfully!');
+        onUpdate(updatedStudent); // Pass the updated student data back
+        onClose();
+        window.location.reload();
+      } else {
+        message.error('Failed to update student. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating student:', error);
+      message.error('Failed to update student. Please try again.');
+    } finally {
       setLoading(false);
-      onClose();
-    }, 1000);
+    }
   };
 
   const handleStatusChange = (e) => {
@@ -71,6 +82,10 @@ const AdminEditStudent = ({ studentData, onUpdate, onClose, qualifications, mari
     return dateString ? dayjs(dateString).format('DD-MM-YYYY') : '-';
   };
 
+  if (!studentData) {
+    return <div>Loading student data...</div>;
+  }
+
   return (
     <div style={{ padding: '0 20px' }}>
       <h2 style={{ 
@@ -79,7 +94,7 @@ const AdminEditStudent = ({ studentData, onUpdate, onClose, qualifications, mari
         fontSize: '20px',
         fontWeight: '600'
       }}>
-        Editing Student: {studentData?.name}
+        Editing Student: {studentData?.name || 'Unknown'}
       </h2>
       
       <Form
@@ -212,19 +227,21 @@ const AdminEditStudent = ({ studentData, onUpdate, onClose, qualifications, mari
           label="Status"
           name="status"
         >
-          <Radio.Group 
-            onChange={handleStatusChange} 
-            value={isActive}
-            disabled={isActive}
-          >
-            <Radio value={true}>Active</Radio>
-            <Radio value={false}>Inactive</Radio>
-          </Radio.Group>
-          {isActive && (
-            <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
-              Status can only be changed to Inactive via the Delete button
-            </Text>
-          )}
+          <div>
+            <Radio.Group 
+              onChange={handleStatusChange} 
+              value={isActive}
+              disabled={isActive}
+            >
+              <Radio value={true}>Active</Radio>
+              <Radio value={false}>Inactive</Radio>
+            </Radio.Group>
+            {isActive && (
+              <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
+                Status can only be changed to Inactive via the Delete button
+              </Text>
+            )}
+          </div>
         </Form.Item>
 
         {/* Current Year (Editable) */}
@@ -307,18 +324,15 @@ const AdminEditStudent = ({ studentData, onUpdate, onClose, qualifications, mari
 };
 
 AdminEditStudent.propTypes = {
-  studentData: PropTypes.object.isRequired,
+  studentData: PropTypes.object,
   onUpdate: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
-  departments: PropTypes.arrayOf(PropTypes.string).isRequired,
-  semesterFees: PropTypes.arrayOf(PropTypes.number).isRequired,
-  qualifications: PropTypes.arrayOf(PropTypes.string).isRequired,
-  maritalStatuses: PropTypes.arrayOf(PropTypes.string).isRequired
+  qualifications: PropTypes.arrayOf(PropTypes.string),
+  maritalStatuses: PropTypes.arrayOf(PropTypes.string)
 };
 
 AdminEditStudent.defaultProps = {
-  departments: [],
-  semesterFees: [],
+  studentData: null,
   qualifications: [],
   maritalStatuses: []
 };

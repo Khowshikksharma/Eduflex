@@ -161,8 +161,7 @@ const changeFacultyStatus = async (req, res) => {
 const viewFacultyById = async (req, res) => {
   try {
     const facultyId = req.params.facultyId;
-    const faculty = await Faculty.findOne({ id: facultyId });
-    // console.log(faculty);
+    const faculty = await Faculty.findById(facultyId);
     if (!faculty) {
       return res.status(404).send('Faculty not found');
     }
@@ -250,8 +249,7 @@ const changeCourseStatus = async (req, res) => {
 const viewCourseById = async (req, res) => {
   try {
     const ccode = req.params.ccode;
-    const course = await Course.findOne
-      ({ ccode: ccode });
+    const course = await Course.findById(ccode);
     if (!course) {
       return res.status(404).send('Course not found');
     }
@@ -263,43 +261,62 @@ const viewCourseById = async (req, res) => {
 
 const createFCMapping = async (req, res) => {
     try {
-    const { facultyId, ccode, department } = req.body;
+        const { facultyId, ccode, department } = req.body;
 
-    // Validate required fields
-    if (!facultyId || !ccode || !department) {
-      return res.status(400).json({ 
-        message: 'Missing required fields: facultyId, ccode, or department' 
-      });
+        if (!facultyId || !ccode || !department) {
+            return res.status(400).json({ 
+                message: 'Missing required fields: facultyId, ccode, or department' 
+            });
+        }
+
+        const faculty = await Faculty.findOne({ id: facultyId });
+        if (!faculty) {
+            return res.status(404).json({ 
+                message: 'Faculty not found' 
+            });
+        }
+
+        const course = await Course.findOne({ ccode: ccode });
+        if (!course) {
+            return res.status(404).json({ 
+                message: 'Course not found' 
+            });
+        }
+
+        const existingMapping = await FacultyCourseMapping.findOne({
+            facultyId: faculty._id,
+            ccode: course._id
+        });
+
+        if (existingMapping) {
+            return res.status(409).json({ 
+                message: 'Mapping already exists for this faculty and course' 
+            });
+        }
+
+        const newMapping = new FacultyCourseMapping({
+            facultyId: faculty._id,
+            ccode: course._id,
+            department,
+            fmapid: req.body.fmapid || `MAP${Math.floor(1000 + Math.random() * 9000)}`,
+            status: true
+        });
+
+        await newMapping.save();
+
+        const populatedMapping = await FacultyCourseMapping.findById(newMapping._id)
+            .populate('facultyId')
+            .populate('ccode');
+            
+        res.status(201).json(populatedMapping);
+    } catch (error) {
+        console.error('Error creating mapping:', error);
+        res.status(500).json({ 
+            message: error.message || 'Failed to create faculty-course mapping' 
+        });
     }
-    
-    const existingMapping = await FacultyCourseMapping.findOne({
-      facultyId,
-      ccode
-    });
-
-    if (existingMapping) {
-      return res.status(409).json({ 
-        message: 'Mapping already exists for this faculty and course' 
-      });
-    }
-
-    const newMapping = new FacultyCourseMapping({
-      facultyId,
-      ccode,
-      department,
-      fmapid: req.body.fmapid || `MAP${Math.floor(1000 + Math.random() * 9000)}`,
-      status: true
-    });
-
-    await newMapping.save();
-    res.status(200).json(newMapping);
-  } catch (error) {
-    console.error('Error creating mapping:', error);
-    res.status(500).json({ 
-      message: error.message || 'Failed to create faculty-course mapping' 
-    });
-  }
 };
+
 
 const viewFCMapping = async (req, res) => {
   try {
@@ -311,6 +328,67 @@ const viewFCMapping = async (req, res) => {
   } catch (error) {
     console.error('Error fetching mappings:', error);
     res.status(500).json({ message: error.message || 'Failed to fetch faculty-course mappings' });
+  }
+}
+
+const updateFCMapping = async (req, res) => {
+  try {
+    const { fmapid, facultyId, ccode, ...updateData } = req.body;
+
+    const faculty = await Faculty.findOne({ id: facultyId });
+    if (!faculty) return res.status(404).json({ message: 'Faculty not found' });
+
+    const course = await Course.findOne({ ccode });
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+
+    const existing = await FacultyCourseMapping.findOne({
+      facultyId: faculty._id,
+      ccode: course._id,
+      fmapid: { $ne: fmapid } // prevent false positive on same record
+    });
+
+    if (existing) {
+      return res.status(409).json({
+        message: 'This faculty is already mapped to this course.'
+      });
+    }
+
+    const updated = await FacultyCourseMapping.findOneAndUpdate(
+      { fmapid },
+      {
+        ...updateData,
+        facultyId: faculty._id,
+        ccode: course._id,
+        department: updateData.department,
+        status: updateData.status
+      },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ message: 'Mapping not found' });
+
+    res.json(updated);
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || 'Server error'
+    });
+  }
+};
+
+const changeMappingStatus = async (req, res) => {
+  try {
+    const { fmapid, status } = req.body;
+    const updatedMapping = await FacultyCourseMapping.findOneAndUpdate(
+      { fmapid: fmapid },
+      { status: status },
+      { new: true }
+    );
+    if (!updatedMapping) {
+      return res.status(404).send('Mapping not found');
+    }
+    res.json(updatedMapping);
+  } catch (error) {
+    res.status(500).send(error.message);
   }
 }
 
@@ -339,4 +417,6 @@ module.exports = {
 
     createFCMapping,
     viewFCMapping,
+    updateFCMapping,
+    changeMappingStatus,
 };

@@ -68,6 +68,8 @@ const AdminCourseMapping = () => {
 
               return {
                 ...map,
+                facultyId: facultyData.id || map.facultyId,
+                ccode: courseData.ccode || map.ccode,
                 name: facultyData.name,
                 department: facultyData.department,
                 cname: courseData.cname,
@@ -136,20 +138,19 @@ const AdminCourseMapping = () => {
     );
   };
 
-  const handleDeleteMapping = (record) => {
-    Modal.confirm({
-      title: 'Confirm Status Change',
-      content: `Are you sure you want to change this mapping's status to Inactive?`,
-      okText: 'Yes, Make Inactive',
-      cancelText: 'Cancel',
-      onOk: () => {
-        const updatedMappings = mappings.map(m => 
-          m.fmapid === record.fmapid ? { ...m, status: false } : m
-        );
-        setMappings(updatedMappings);
-        message.success('Mapping status changed to Inactive');
-      }
+  const handleDeleteMapping = async (record) => {
+    const response = await axios.put(`${config.url}/admin/changeMappingStatus`,{
+      fmapid: record.fmapid,
+      status: !record.status 
     });
+    if(response.status === 200) {
+      setMappings(mappings.map(m => 
+        m.fmapid === record.fmapid ? { ...m, status: !m.status } : m
+      ));
+      message.success(`Mapping ${record.status ? 'deactivated' : 'activated'} successfully!`);
+    }else{
+      message.error('Failed to change mapping status');
+    }
   };
 
   const filteredMappings = mappings.filter(mapping => {
@@ -181,46 +182,55 @@ const AdminCourseMapping = () => {
       title: 'Mapping ID',
       dataIndex: 'fmapid',
       key: 'fmapid',
+      align: 'center',
     },
     {
       title: 'Course ID',
       dataIndex: 'ccode',
       key: 'ccode',
+      align: 'center',
     },
     {
       title: 'Course Name',
       dataIndex: 'cname',
       key: 'cname',
+      align: 'center',
     },
     {
       title: 'Short Name',
       dataIndex: 'cshortname',
       key: 'cshortname',
+      align: 'center',
     },
     {
       title: 'Faculty ID',
       dataIndex: 'facultyId',
       key: 'facultyId',
+      align: 'center',
     },
     {
       title: 'Faculty Name',
       dataIndex: 'name',
       key: 'name',
+      align: 'center',
     },
     {
       title: 'Credits',
       dataIndex: 'credits',
       key: 'credits',
+      align: 'center',
     },
     {
       title: 'Component',
       dataIndex: 'component',
       key: 'component',
+      align: 'center',
     },
     {
       title: 'Department',
       dataIndex: 'department',
       key: 'department',
+      align: 'center',
       filters: departments.map(dept => ({ text: dept, value: dept })),
       onFilter: (value, record) => record.department === value,
     },
@@ -238,6 +248,7 @@ const AdminCourseMapping = () => {
         { text: 'Inactive', value: false },
       ],
       onFilter: (value, record) => record.status === value,
+      align: 'center',
     },
     {
       title: 'Action → Edit/Delete',

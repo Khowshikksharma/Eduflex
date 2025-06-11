@@ -31,6 +31,7 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
         ]);
         setCourses(coursesRes.data);
         setFaculties(facultiesRes.data);
+        // console.log(coursesRes.data, facultiesRes.data);
       } catch (err) {
         message.error('Failed to load data');
         console.error('Error fetching data:', err);
@@ -50,7 +51,7 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
 
       const res = await axios.post(`${config.url}/admin/addCourseMapping`, newMapping);
 
-      if (res.status === 200) {
+      if (res) {
         setErrorMsg('');
         message.success('Mapping created successfully!');
         onSuccess(newMapping);

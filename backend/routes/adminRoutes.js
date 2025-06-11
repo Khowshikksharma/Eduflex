@@ -26,5 +26,7 @@ adminrouter.get("/viewCourseById/:ccode", admincontroller.viewCourseById);
 
 adminrouter.post("/addCourseMapping", admincontroller.createFCMapping);
 adminrouter.get("/viewFCMapping", admincontroller.viewFCMapping);
+adminrouter.put("/updateFCMapping", admincontroller.updateFCMapping);
+adminrouter.put("/changeMappingStatus", admincontroller.changeMappingStatus);
 
 module.exports = adminrouter;

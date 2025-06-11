@@ -96,7 +96,7 @@ const AdminStudentList = () => {
   const handleDeleteStudent = async (record) => {
     const response = await axios.put(`${config.url}/admin/changeStudentStatus`, {
       id: record.id,
-      status: !record.status // Toggle status
+      status: !record.status 
     });
     if (response.status === 200) {
       setStudents(students.map(s => 

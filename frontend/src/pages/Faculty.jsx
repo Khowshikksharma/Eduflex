@@ -19,7 +19,7 @@ const Faculty = ({setAuthState}) => {
   useEffect(() => {
     const fetchFaculty = async () => {
       try {
-        const response = await axios.get(`${config.url}/admin/viewfaculties`);
+        const response = await axios.get(`${config.url}/viewfaculties`);
         const facultyData = response.data.map((faculty, index) => ({
           ...faculty,
           sNo: index + 1

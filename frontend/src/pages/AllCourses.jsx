@@ -17,7 +17,7 @@ const AllCourses = ({setAuthState}) => {
   const [allCourses, setAllCourses] = useState([]);
 
   useEffect(() => {
-    axios.get(`${config.url}/admin/viewCourses`)
+    axios.get(`${config.url}/viewCourses`)
       .then((response) => {
         const coursesData = response.data;
         if (Array.isArray(coursesData)) {

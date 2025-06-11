@@ -17,10 +17,12 @@ app.use(cors());
 const adminRoutes = require("./routes/adminroutes");
 const studentRoutes = require("./routes/studentroutes");
 const facultyRoutes = require("./routes/facultyroutes");
+const landingRoutes = require("./routes/landingroutes");
 
 app.use("/admin", adminRoutes);
 app.use("/student", studentRoutes);
 app.use("/faculty", facultyRoutes);
+app.use("/", landingRoutes);
 
 const port = process.env.PORT || 2032;
 app.listen(port, () => {

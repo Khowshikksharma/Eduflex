@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Space, Table, Tag, message, Modal } from 'antd';
-import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, Input, Space, Table, Tag, message } from 'antd';
+import { SearchOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddFaculty from './AdminAddFaculty';
 import AdminEditFaculty from './AdminEditFaculty';
+import AdminAddFacultyUpload from './AdminAddFacultyUpload';
 import axios from 'axios';
 import config from '../../config';
 
@@ -37,26 +38,28 @@ const AdminFacultyList = () => {
   const { showPopup, closePopup, PopupWrapper } = usePopup();
 
   useEffect(() => {
-    setLoading(true);
-    axios.get(`${config.url}/admin/viewfaculties`)
-      .then((response) => {
-        const facultyData = response.data;
-        if (Array.isArray(facultyData)) {
-          setFaculty(facultyData);
-        } else {
-          setFaculty([]);
-          console.warn('API response is not an array:', facultyData);
-        }
-      })
-      .catch((error) => { 
-        message.error('Failed to fetch faculty data');
-        console.error('Error fetching faculty:', error);
-        setFaculty([]); 
-      })  
-      .finally(() => {
-        setLoading(false);
-      });
+    fetchFaculty();
   }, []);
+
+  const fetchFaculty = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${config.url}/admin/viewfaculties`);
+      const facultyData = response.data || [];
+      if (Array.isArray(facultyData)) {
+        setFaculty(facultyData);
+      } else {
+        console.warn('API response is not an array:', facultyData);
+        setFaculty([]);
+      }
+    } catch (error) {
+      message.error('Failed to fetch faculty data');
+      console.error('Error fetching faculty:', error);
+      setFaculty([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddFaculty = () => {
     showPopup(
@@ -66,8 +69,22 @@ const AdminFacultyList = () => {
         maritalStatuses={maritalStatuses}
         designations={designations}
         onSuccess={(newFaculty) => {
-          setFaculty([...faculty, newFaculty]);
+          setFaculty(prev => [...prev, newFaculty]);
           message.success('Faculty added successfully!');
+          closePopup();
+        }}
+        closePopup={closePopup}
+      />
+    );
+  };
+
+  const handleImportFaculty = () => {
+    showPopup(
+      <AdminAddFacultyUpload
+        onSuccess={(newFaculty) => {
+          setFaculty(prev => [...prev, ...newFaculty]);
+          message.success('Faculty imported successfully!');
+          closePopup();
         }}
         closePopup={closePopup}
       />
@@ -83,10 +100,11 @@ const AdminFacultyList = () => {
         maritalStatuses={maritalStatuses}
         designations={designations}
         onUpdate={(updatedFaculty) => {
-          setFaculty(faculty.map(f => 
+          setFaculty(prev => prev.map(f => 
             f.id === updatedFaculty.id ? updatedFaculty : f
           ));
           message.success('Faculty updated successfully!');
+          closePopup();
         }}
         onClose={closePopup}
       />
@@ -94,24 +112,30 @@ const AdminFacultyList = () => {
   };
 
   const handleDeleteFaculty = async (record) => {
-    const response = await axios.put(`${config.url}/admin/changeFacultyStatus`, {
-      id: record.id,
-      status: !record.status // Toggle status
-    });
-    if (response.status === 200) {
-      setFaculty(faculty.map(f => 
-        f.id === record.id ? { ...f, status: !f.status } : f
-      ));
-      message.success('Faculty status updated successfully!');
-    } else {
-      message.error('Failed to update faculty status');
+    try {
+      const response = await axios.put(`${config.url}/admin/changeFacultyStatus`, {
+        id: record.id,
+        status: !record.status
+      });
+      if (response.status === 200) {
+        setFaculty(prev => prev.map(f => 
+          f.id === record.id ? { ...f, status: !f.status } : f
+        ));
+        message.success(`Faculty ${record.status ? 'deactivated' : 'activated'} successfully!`);
+      }
+    } catch (error) {
+      message.error('Failed to change faculty status');
+      console.error('Error changing faculty status:', error);
     }
   };
 
-  const filteredFaculty = faculty.filter(f => 
-    f.name.toLowerCase().includes(searchText.toLowerCase()) ||
-    f.id.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const filteredFaculty = faculty.filter(f => {
+    if (!f) return false;
+    return (
+      (f.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+      f.id?.toString().toLowerCase().includes(searchText.toLowerCase()))
+    );
+  });
 
   const columns = [
     {
@@ -125,13 +149,13 @@ const AdminFacultyList = () => {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
-      sorter: (a, b) => a.id.localeCompare(b.id),
+      sorter: (a, b) => (a.id || '').toString().localeCompare((b.id || '').toString()),
     },
     {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      sorter: (a, b) => (a.name || '').localeCompare(b.name || ''),
     },
     {
       title: 'Department',
@@ -144,7 +168,7 @@ const AdminFacultyList = () => {
       title: 'Age',
       dataIndex: 'age',
       key: 'age',
-      sorter: (a, b) => a.age - b.age,
+      sorter: (a, b) => (a.age || 0) - (b.age || 0),
     },
     {
       title: 'Date of Birth',
@@ -181,8 +205,8 @@ const AdminFacultyList = () => {
       title: 'Salary',
       dataIndex: 'salary',
       key: 'salary',
-      render: salary => `₹${salary.toLocaleString('en-IN')}`,
-      sorter: (a, b) => a.salary - b.salary,
+      render: salary => `₹${(salary || 0).toLocaleString('en-IN')}`,
+      sorter: (a, b) => (a.salary || 0) - (b.salary || 0),
     },
     {
       title: 'Qualification',
@@ -251,12 +275,6 @@ const AdminFacultyList = () => {
       key: 'subjects',
       render: subjects => subjects?.join(', '),
     },
-    // {
-    //   title: 'Research Areas',
-    //   dataIndex: 'researchAreas',
-    //   key: 'researchAreas',
-    //   render: areas => areas?.join(', '),
-    // },
     {
       title: 'Address',
       dataIndex: 'address',
@@ -279,7 +297,6 @@ const AdminFacultyList = () => {
             type="link" 
             danger 
             onClick={() => handleDeleteFaculty(record)}
-            disabled={!record.status}
           >
             {record.status ? 'Mark Resigned' : 'Resigned'}
           </Button>
@@ -311,6 +328,13 @@ const AdminFacultyList = () => {
             onClick={handleAddFaculty}
           >
             Add Faculty
+          </Button>
+          <Button 
+            type="primary" 
+            icon={<UploadOutlined />}
+            onClick={handleImportFaculty}
+          >
+            Import Faculty Data
           </Button>
         </div>
       </div>

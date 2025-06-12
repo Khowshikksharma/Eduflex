@@ -12,13 +12,18 @@ import {
   List, 
   Tag,
   Space,
-  Typography 
+  Typography,
+  Select,
+  Checkbox
 } from 'antd';
 import { 
   InboxOutlined, 
   PaperClipOutlined, 
   SendOutlined, 
-  DeleteOutlined 
+  DeleteOutlined,
+  UserOutlined,
+  TeamOutlined,
+  SolutionOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
 import config from '../../config';
@@ -26,9 +31,10 @@ import dayjs from 'dayjs';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
+const { Option } = Select;
 const { Dragger } = Upload;
 
-const AdminFacultyCircular = () => {
+const AdminCircular = () => {
   const [form] = Form.useForm();
   const [circulars, setCirculars] = useState([]);
   const [selectedCircular, setSelectedCircular] = useState(null);
@@ -38,18 +44,32 @@ const AdminFacultyCircular = () => {
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewTitle, setPreviewTitle] = useState('');
   const [previewImage, setPreviewImage] = useState('');
+  const [recipientGroups, setRecipientGroups] = useState(['students', 'faculty', 'staff']);
+  const [selectedDepartments, setSelectedDepartments] = useState([]);
+  const [departments, setDepartments] = useState([]);
 
   useEffect(() => {
     fetchCirculars();
+    fetchDepartments();
   }, []);
 
   const fetchCirculars = async () => {
     try {
-      const response = await axios.get(`${config.url}/admin/circulars`);
+      const response = await axios.get(`${config.url}/admin/all-circulars`);
       setCirculars(response.data);
     } catch (error) {
       message.error('Failed to fetch circulars');
       console.error('Error fetching circulars:', error);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await axios.get(`${config.url}/departments`);
+      setDepartments(response.data);
+    } catch (error) {
+      message.error('Failed to fetch departments');
+      console.error('Error fetching departments:', error);
     }
   };
 
@@ -59,18 +79,20 @@ const AdminFacultyCircular = () => {
     const formData = new FormData();
     formData.append('subject', values.subject);
     formData.append('description', values.description);
+    formData.append('recipientGroups', JSON.stringify(recipientGroups));
+    formData.append('selectedDepartments', JSON.stringify(selectedDepartments));
     
     fileList.forEach(file => {
       formData.append('attachments', file.originFileObj);
     });
 
     try {
-      await axios.post(`${config.url}/admin/send-circular`, formData, {
+      await axios.post(`${config.url}/admin/send-all-circular`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      message.success('Circular sent successfully!');
+      message.success('Circular sent successfully to all recipients!');
       form.resetFields();
       setFileList([]);
       setIsModalVisible(false);
@@ -98,9 +120,12 @@ const AdminFacultyCircular = () => {
       setPreviewTitle(file.name || file.url.substring(file.url.lastIndexOf('/') + 1));
       setPreviewVisible(true);
     } else {
-      // For non-image files, you might want to download them or show a preview in another way
       window.open(file.url || file.thumbUrl, '_blank');
     }
+  };
+
+  const handleRecipientChange = (checkedValues) => {
+    setRecipientGroups(checkedValues);
   };
 
   const columns = [
@@ -110,6 +135,18 @@ const AdminFacultyCircular = () => {
       key: 'subject',
       render: (text, record) => (
         <a onClick={() => setSelectedCircular(record)}>{text}</a>
+      ),
+    },
+    {
+      title: 'Recipients',
+      dataIndex: 'recipientGroups',
+      key: 'recipients',
+      render: (groups) => (
+        <Space>
+          {groups.includes('students') && <Tag icon={<UserOutlined />}>Students</Tag>}
+          {groups.includes('faculty') && <Tag icon={<SolutionOutlined />}>Faculty</Tag>}
+          {groups.includes('staff') && <Tag icon={<TeamOutlined />}>Staff</Tag>}
+        </Space>
       ),
     },
     {
@@ -166,13 +203,13 @@ const AdminFacultyCircular = () => {
   return (
     <div style={{ padding: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <Title level={3}>Faculty Circulars</Title>
+        <Title level={3}>All Circulars</Title>
         <Button 
           type="primary" 
           icon={<SendOutlined />} 
           onClick={() => setIsModalVisible(true)}
         >
-          Send New
+          Send New Circular
         </Button>
       </div>
 
@@ -195,9 +232,25 @@ const AdminFacultyCircular = () => {
           width={800}
         >
           <div style={{ marginBottom: '16px' }}>
-            <Text type="secondary">
-              Sent on {dayjs(selectedCircular.createdAt).format('DD MMM YYYY, hh:mm A')}
-            </Text>
+            <Space direction="vertical">
+              <Text type="secondary">
+                Sent on {dayjs(selectedCircular.createdAt).format('DD MMM YYYY, hh:mm A')}
+              </Text>
+              <div>
+                <Text strong>Sent to: </Text>
+                {selectedCircular.recipientGroups.includes('students') && <Tag icon={<UserOutlined />}>Students</Tag>}
+                {selectedCircular.recipientGroups.includes('faculty') && <Tag icon={<SolutionOutlined />}>Faculty</Tag>}
+                {selectedCircular.recipientGroups.includes('staff') && <Tag icon={<TeamOutlined />}>Staff</Tag>}
+              </div>
+              {selectedCircular.selectedDepartments?.length > 0 && (
+                <div>
+                  <Text strong>Departments: </Text>
+                  {selectedCircular.selectedDepartments.map(dept => (
+                    <Tag key={dept}>{dept}</Tag>
+                  ))}
+                </div>
+              )}
+            </Space>
           </div>
 
           <Divider />
@@ -235,7 +288,7 @@ const AdminFacultyCircular = () => {
 
       {/* Send Circular Modal */}
       <Modal
-        title="Send New Circular"
+        title="Send Circular to All"
         visible={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
@@ -266,6 +319,34 @@ const AdminFacultyCircular = () => {
             <TextArea rows={6} placeholder="Type your message here..." />
           </Form.Item>
 
+          <Form.Item label="Recipient Groups" required>
+            <Checkbox.Group
+              options={[
+                { label: 'Students', value: 'students' },
+                { label: 'Faculty', value: 'faculty' },
+                { label: 'Staff', value: 'staff' },
+              ]}
+              value={recipientGroups}
+              onChange={handleRecipientChange}
+            />
+          </Form.Item>
+
+          {recipientGroups.includes('students') && (
+            <Form.Item label="Select Departments (Optional)">
+              <Select
+                mode="multiple"
+                placeholder="Select departments (leave empty for all)"
+                value={selectedDepartments}
+                onChange={setSelectedDepartments}
+                style={{ width: '100%' }}
+              >
+                {departments.map(dept => (
+                  <Option key={dept} value={dept}>{dept}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+          )}
+
           <Form.Item label="Attachments">
             <Dragger {...uploadProps}>
               <p className="ant-upload-drag-icon">
@@ -285,7 +366,7 @@ const AdminFacultyCircular = () => {
               loading={loading} 
               icon={<SendOutlined />}
             >
-              Send Circular
+              Send to All
             </Button>
             <Button 
               style={{ marginLeft: '8px' }} 
@@ -314,4 +395,4 @@ const AdminFacultyCircular = () => {
   );
 };
 
-export default AdminFacultyCircular;
+export default AdminCircular;

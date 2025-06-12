@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Input, Space, Table, Tag, message, Modal } from 'antd';
-import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
+import { SearchOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddStudent from './AdminAddStudent';
 import AdminEditStudent from './AdminEditStudent';
 import axios from 'axios';
 import config from '../../config';
+import AdminAddStudentUpload from './AdminAddStudentUpload';
 
 const departments = [
   'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
@@ -30,33 +31,34 @@ const qualifications = [
 const maritalStatuses = ['Single', 'Married', 'Divorced'];
 
 const AdminStudentList = () => {
-  const [students, setStudents] = useState([]); // Already initialized as empty array
+  const [students, setStudents] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(false);
   const { showPopup, closePopup, PopupWrapper } = usePopup();
 
   useEffect(() => {
-    setLoading(true);
-    axios.get(`${config.url}/admin/viewstudents`)
-      .then((response) => {
-        // Ensure we always set an array, even if response.data is null/undefined
-        const studentsData = response.data;
-        if (Array.isArray(studentsData)) {
-          setStudents(studentsData);
-        } else {
-          setStudents([]);
-          console.warn('API response is not an array:', studentsData);
-        }
-      })
-      .catch((error) => {
-        message.error('Failed to fetch students');
-        console.error('Error fetching students:', error);
-        setStudents([]); // Ensure students is always an array even on error
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    fetchStudents();
   }, []);
+
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${config.url}/admin/viewstudents`);
+      const studentsData = response.data || [];
+      if (Array.isArray(studentsData)) {
+        setStudents(studentsData);
+      } else {
+        console.warn('API response is not an array:', studentsData);
+        setStudents([]);
+      }
+    } catch (error) {
+      message.error('Failed to fetch students');
+      console.error('Error fetching students:', error);
+      setStudents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddStudent = () => {
     showPopup(
@@ -66,8 +68,22 @@ const AdminStudentList = () => {
         qualifications={qualifications}
         maritalStatuses={maritalStatuses}
         onSuccess={(newStudent) => {
-          setStudents([...students, newStudent]);
+          setStudents(prev => [...prev, newStudent]);
           message.success('Student added successfully!');
+          closePopup();
+        }}
+        closePopup={closePopup}
+      />
+    );
+  };
+
+  const handleImportStudents = () => {
+    showPopup(
+      <AdminAddStudentUpload
+        onSuccess={(newStudents) => {
+          setStudents(prev => [...prev, ...newStudents]);
+          message.success('Students imported successfully!');
+          closePopup();
         }}
         closePopup={closePopup}
       />
@@ -83,10 +99,11 @@ const AdminStudentList = () => {
         qualifications={qualifications}
         maritalStatuses={maritalStatuses}
         onUpdate={(updatedStudent) => {
-          setStudents(students.map(s => 
+          setStudents(prev => prev.map(s => 
             s.id === updatedStudent.id ? updatedStudent : s
           ));
           message.success('Student updated successfully!');
+          closePopup();
         }}
         onClose={closePopup}
       />
@@ -94,25 +111,30 @@ const AdminStudentList = () => {
   };
 
   const handleDeleteStudent = async (record) => {
-    const response = await axios.put(`${config.url}/admin/changeStudentStatus`, {
-      id: record.id,
-      status: !record.status 
-    });
-    if (response.status === 200) {
-      setStudents(students.map(s => 
-        s.id === record.id ? { ...s, status: !s.status } : s
-      ));
-      message.success(`Student ${record.status ? 'deactivated' : 'activated'} successfully!`);
-    } else {
+    try {
+      const response = await axios.put(`${config.url}/admin/changeStudentStatus`, {
+        id: record.id,
+        status: !record.status 
+      });
+      if (response.status === 200) {
+        setStudents(prev => prev.map(s => 
+          s.id === record.id ? { ...s, status: !s.status } : s
+        ));
+        message.success(`Student ${record.status ? 'deactivated' : 'activated'} successfully!`);
+      }
+    } catch (error) {
       message.error('Failed to change student status');
+      console.error('Error changing student status:', error);
     }
   };
 
-  // Add safety check to ensure students is always an array before filtering
-  const filteredStudents = Array.isArray(students) ? students.filter(student => 
-    student.name?.toLowerCase().includes(searchText.toLowerCase()) ||
-    student.id?.toLowerCase().includes(searchText.toLowerCase())
-  ) : [];
+  const filteredStudents = students.filter(student => {
+    if (!student) return false;
+    return (
+      (student.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+      student.id?.toString().toLowerCase().includes(searchText.toLowerCase()))
+    );
+  });
 
   const columns = [
     {
@@ -126,13 +148,13 @@ const AdminStudentList = () => {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
-      sorter: (a, b) => a.id.localeCompare(b.id),
+      sorter: (a, b) => (a.id || '').toString().localeCompare((b.id || '').toString()),
     },
     {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      sorter: (a, b) => (a.name || '').localeCompare(b.name || ''),
     },
     {
       title: 'Department',
@@ -145,7 +167,7 @@ const AdminStudentList = () => {
       title: 'Age',
       dataIndex: 'age',
       key: 'age',
-      sorter: (a, b) => a.age - b.age,
+      sorter: (a, b) => (a.age || 0) - (b.age || 0),
     },
     {
       title: 'Date of Birth',
@@ -182,7 +204,7 @@ const AdminStudentList = () => {
       title: 'Semester Fee',
       dataIndex: 'semesterFee',
       key: 'semesterFee',
-      render: fee => `₹${fee?.toLocaleString('en-IN') || 0}`,
+      render: fee => `₹${(fee || 0).toLocaleString('en-IN')}`,
       sorter: (a, b) => (a.semesterFee || 0) - (b.semesterFee || 0),
     },
     {
@@ -277,7 +299,6 @@ const AdminStudentList = () => {
             type="link" 
             danger 
             onClick={() => handleDeleteStudent(record)}
-            disabled={!record.status}
           >
             {record.status ? 'Make Inactive' : 'Inactive'}
           </Button>
@@ -309,6 +330,13 @@ const AdminStudentList = () => {
             onClick={handleAddStudent}
           >
             Add Student
+          </Button>
+          <Button 
+            type="primary" 
+            icon={<UploadOutlined />}
+            onClick={handleImportStudents}
+          >
+            Import Student Data
           </Button>
         </div>
       </div>

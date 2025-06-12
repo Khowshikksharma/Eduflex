@@ -31,7 +31,6 @@ import FacultyEditProfile from './modules/Faculty/FacultyEditProfile';
 import AdminLayout from './modules/Admin/AdminLayout';
 import AdminHome from './modules/Admin/AdminHome';
 import AdminStudentList from './modules/Admin/AdminStudentList';
-import AdminStudentCircular from './modules/Admin/AdminStudentCircular';
 import AdminFacultyList from './modules/Admin/AdminFacultyList';
 import AdminFacultyCircular from './modules/Admin/AdminFacultyCircular';
 import AdminCourseList from './modules/Admin/AdminCourseList';
@@ -39,9 +38,11 @@ import AdminCourseMapping from './modules/Admin/AdminCourseMapping';
 import AdminEditProfile from './modules/Admin/AdminEditProfile';
 
 import AdminAddStudent from './modules/Admin/AdminAddStudent';
+import AdminAddStudentUpload from './modules/Admin/AdminAddStudentUpload';
 import AdminEditStudent from './modules/Admin/AdminEditStudent';
 import AdminAddCourse from './modules/Admin/AdminAddCourse';
 import AdminEditCourse from './modules/Admin/AdminEditCourse';
+import AdminCircular from './modules/Admin/AdminCircular';
 
 const App = () => {
   // Helper function to check localStorage
@@ -155,10 +156,11 @@ const App = () => {
           <Route path="/admin" element={<AdminLayout onLogout={() => handleLogout('admin')}/>}>
             <Route index element={<Navigate to="/admin/home/dashboard" replace />} />
             <Route path="home/dashboard" element={<AdminHome />} />
+            <Route path="home/circular" element={<AdminCircular />} />
             <Route path="student/list" element={<AdminStudentList />} />
             <Route path="student/add" element={<AdminAddStudent />} />
+            <Route path="student/upload" element={<AdminAddStudentUpload />} />
             <Route path="student/edit/:id" element={<AdminEditStudent />} />
-            <Route path="student/circular" element={<AdminStudentCircular />} />
             <Route path="faculty/list" element={<AdminFacultyList />} />
             <Route path="faculty/circular" element={<AdminFacultyCircular />} />
             <Route path="course/list" element={<AdminCourseList />} />

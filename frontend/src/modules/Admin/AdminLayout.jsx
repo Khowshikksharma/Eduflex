@@ -80,6 +80,12 @@ const AdminLayout = ({onLogout}) => {
           icon: <DashboardFilled style={{ color: '#000' }} />,
           label: 'Dashboard',
           onClick: () => navigate('/admin/home/dashboard'),
+        },
+        {
+          key: 'send-circular',
+          icon: <NotificationOutlined style={{ color: '#000' }} />,
+          label: 'Send Circular',
+          onClick: () => navigate('/admin/home/circular'),
         }
       ];
     } else if (location.pathname.includes('/admin/student')) {
@@ -90,12 +96,7 @@ const AdminLayout = ({onLogout}) => {
           label: 'Student List',
           onClick: () => navigate('/admin/student/list'),
         },
-        {
-          key: 'send-circular',
-          icon: <NotificationOutlined style={{ color: '#000' }} />,
-          label: 'Send Circular',
-          onClick: () => navigate('/admin/student/circular'),
-        }
+        
       ];
     } else if (location.pathname.includes('/admin/faculty')) {
       return [

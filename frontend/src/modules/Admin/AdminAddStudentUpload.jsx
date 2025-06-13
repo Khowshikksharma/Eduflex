@@ -115,6 +115,13 @@
               <li>Excel format (.xlsx or .xls)</li>
               <li>Maximum file size: 5MB</li>
               <li>Follow the template format</li>
+              <a
+              href="/templates/Student_Template.xlsx"
+              download
+              style={{ color: '#1890ff', fontWeight: '500', marginTop: 8, display: 'inline-block' }}
+              >
+                Download Template
+              </a>
             </ul>
           </div>
 

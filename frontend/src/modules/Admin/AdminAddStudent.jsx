@@ -8,13 +8,13 @@ import config from '../../config';
 const { Option } = Select;
 const { TextArea } = Input;
 
-const generateStudentId = (department, startYear) => {
-  const currentYearLastTwoDigits = String(startYear).slice(-2);
-  const deptCode = department.length === 2 ? `0${department}` : department;
-  const randomNumber = Math.floor(Math.random() * 50000) + 1;
-  const serialNumber = String(randomNumber).padStart(5, '0');
-  return `${currentYearLastTwoDigits}${deptCode}${serialNumber}`;
-};
+// const generateStudentId = (department, startYear) => {
+//   const currentYearLastTwoDigits = String(startYear).slice(-2);
+//   const deptCode = department.length === 2 ? `0${department}` : department;
+//   const randomNumber = Math.floor(Math.random() * 50000) + 1;
+//   const serialNumber = String(randomNumber).padStart(5, '0');
+//   return `${currentYearLastTwoDigits}${deptCode}${serialNumber}`;
+// };
 
 const AdminAddStudent = ({ 
   onSuccess, 
@@ -31,10 +31,10 @@ const AdminAddStudent = ({
   setLoading(true);
   
   const age = values.dob ? dayjs().diff(dayjs(values.dob), 'year') : null;
-  const studentId = generateStudentId(values.department, values.startYear);
+  // const studentId = generateStudentId(values.department, values.startYear);
 
   const newStudent = {
-    id: studentId,
+    // id: studentId,
     ...values,
     dob: values.dob ? dayjs(values.dob).format('YYYY-MM-DD') : null,
     status: true,
@@ -49,6 +49,7 @@ const AdminAddStudent = ({
     onSuccess(newStudent);
     form.resetFields();
     closePopup();
+    window.location.reload(); 
   } catch (error) {
     console.error(error);
     message.error('Failed to add student. Please try again.');

@@ -8,12 +8,12 @@ import config from '../../config';
 const { Option } = Select;
 const { TextArea } = Input;
 
-const generateFacultyId = (department) => {
-  const deptCode = department.length === 2 ? `0${department}` : department;
-  const randomNumber = Math.floor(Math.random() * 50000) + 1;
-  const serialNumber = String(randomNumber).padStart(5, '0');
-  return `${deptCode}${serialNumber}`;
-};
+// const generateFacultyId = (department) => {
+//   const deptCode = department.length === 2 ? `0${department}` : department;
+//   const randomNumber = Math.floor(Math.random() * 50000) + 1;
+//   const serialNumber = String(randomNumber).padStart(5, '0');
+//   return `${deptCode}${serialNumber}`;
+// };
 
 const AdminAddFaculty = ({ 
   onSuccess, 
@@ -28,9 +28,9 @@ const AdminAddFaculty = ({
   const onFinish = async (values) => {
     setLoading(true);
     
-    const facultyId = generateFacultyId(values.department);
+    // const facultyId = generateFacultyId(values.department);
     const newFaculty = {
-      id: facultyId,
+      // id: facultyId,
       ...values,
       dob: values.dob ? dayjs(values.dob).format('YYYY-MM-DD') : null,
       startYear: values.startYear ? values.startYear.year() : null,
@@ -45,6 +45,7 @@ const AdminAddFaculty = ({
       onSuccess(newFaculty);
       form.resetFields();
       closePopup();
+      window.location.reload(); 
     }catch (error) {
       console.error(error);
       message.error('Failed to add faculty. Please try again.');

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Upload, Button, message, Form, Space } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import axios from 'axios';
+import * as XLSX from 'xlsx';
 import config from '../../config';
 
-const AdminAddFacultyUpload = ({ closePopup, onSuccess }) => {
+const AdminAddFacultyUpload = ({ closePopup }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fileList, setFileList] = useState([]);
+  const [excelData, setExcelData] = useState(null);
 
   const beforeUpload = (file) => {
     const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
@@ -22,21 +24,28 @@ const AdminAddFacultyUpload = ({ closePopup, onSuccess }) => {
     return isExcel && isLt5M;
   };
 
-  const handleChange = (info) => {
-    let newFileList = [...info.fileList];
-    
-    // Limit to 1 file
-    newFileList = newFileList.slice(-1);
-    
-    // Update file status
-    newFileList = newFileList.map(file => {
-      if (file.response) {
-        file.url = file.response.url;
-      }
-      return file;
-    });
-
+  const handleChange = async (info) => {
+    let newFileList = [...info.fileList].slice(-1); 
     setFileList(newFileList);
+    const file = newFileList[0]?.originFileObj;
+      if (file) {
+        try {
+          const data = await file.arrayBuffer();
+          const workbook = XLSX.read(data, { type: 'array' });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+          if (jsonData.length === 0) {
+            message.error('Excel file is empty or incorrectly formatted.');
+            setExcelData(null);
+          } else {
+            setExcelData(jsonData);
+          }
+        } catch (error) {
+          console.error(error);
+          message.error('Error parsing Excel file.');
+        }
+      }
   };
 
   const onFinish = async () => {
@@ -46,31 +55,25 @@ const AdminAddFacultyUpload = ({ closePopup, onSuccess }) => {
     }
 
     setLoading(true);
-    const formData = new FormData();
-    formData.append('file', fileList[0].originFileObj);
-
     try {
-      const response = await axios.post(`${config.url}/admin/uploadfaculty`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+        const response = await axios.post(`${config.url}/admin/uploadfaculties`, excelData);
+
+        if (response.data.success) {
+          message.success(`Successfully uploaded ${response.data.count} facluties!`);
+          setFileList([]);
+          setExcelData(null);
+          form.resetFields();
+          closePopup();
+          window.location.reload(); 
+        } else {
+          message.error(response.data.message || 'Upload failed. Please check the file format.');
         }
-      });
-      
-      if (response.data.success) {
-        message.success(`Successfully uploaded ${response.data.count} faculty members!`);
-        if (onSuccess && response.data.newFaculty) {
-          onSuccess(response.data.newFaculty);
-        }
-        closePopup();
-      } else {
-        message.error(response.data.message || 'Upload failed. Please check the file format.');
+      } catch (error) {
+        console.error(error);
+        message.error('Failed to upload faculties. Please try again.');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      message.error('Failed to upload faculty. Please try again.');
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -96,6 +99,7 @@ const AdminAddFacultyUpload = ({ closePopup, onSuccess }) => {
             onChange={handleChange}
             accept=".xlsx,.xls"
             maxCount={1}
+            customRequest={({ onSuccess }) => setTimeout(() => onSuccess("ok"), 0)}
           >
             <Button icon={<UploadOutlined />} size="large">
               Select Excel File
@@ -119,7 +123,7 @@ const AdminAddFacultyUpload = ({ closePopup, onSuccess }) => {
               htmlType="submit" 
               loading={loading} 
               size="large"
-              disabled={fileList.length === 0}
+              disabled={!excelData}
             >
               Import Faculty
             </Button>
@@ -127,6 +131,7 @@ const AdminAddFacultyUpload = ({ closePopup, onSuccess }) => {
               htmlType="button" 
               onClick={() => {
                 setFileList([]);
+                setExcelData(null);
                 form.resetFields();
               }} 
               size="large"

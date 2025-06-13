@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 
 const studentSchema = new mongoose.Schema({
-  id: {type: String,required: true,unique: true,},
+  id: {type: String,required: true,unique: true,default: function() { return generateStudentId(this.department, this.startYear)}},
   name: { type: String, required: true },
   age: { type: Number, required: true },
   dob: { type: Date, required: true },
@@ -25,5 +25,13 @@ const studentSchema = new mongoose.Schema({
   address: { type: String, required: true },
   password: { type: String, required: true, default: "123" }
 }, { timestamps: true });
+
+const generateStudentId = (department, startYear) => {
+  const currentYearLastTwoDigits = String(startYear).slice(-2);
+  const deptCode = department.length === 2 ? `0${department}` : department;
+  const randomNumber = Math.floor(Math.random() * 50000) + 1;
+  const serialNumber = String(randomNumber).padStart(5, '0');
+  return `${currentYearLastTwoDigits}${deptCode}${serialNumber}`;
+};
 
 module.exports = mongoose.model('Student', studentSchema);

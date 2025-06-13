@@ -97,6 +97,15 @@ const changeStudentStatus = async (req, res) => {
   }
 }
 
+const studentUpload = async (req, res) => {
+  try{
+    await Student.insertMany(req.body);
+    res.status(200).json({ success: true, message: 'Students uploaded successfully' });
+  }catch(error){
+    res.status(500).json({ message: error.message || 'Failed to upload students' });
+  }
+};
+
 const insertfaculty = async (request, response) => {
     try 
     {
@@ -170,6 +179,15 @@ const viewFacultyById = async (req, res) => {
     res.status(500).send(error.message);
   }
 }
+
+const facultyUpload = async (req, res) => {
+  try{
+    await Faculty.insertMany(req.body);
+    res.status(200).json({ success: true, message: 'Faculties uploaded successfully' });
+  }catch(error){
+    res.status(500).json({ message: error.message || 'Failed to upload faculties' });
+  }
+};
 
 const analysis = async (req,res) =>{
   try{
@@ -400,12 +418,14 @@ module.exports = {
     viewstudents,
     updateStudent,
     changeStudentStatus,
+    studentUpload,
 
     insertfaculty,
     viewfaculties,
     updateFaculty,
     changeFacultyStatus,
     viewFacultyById,
+    facultyUpload,
 
     analysis,
 

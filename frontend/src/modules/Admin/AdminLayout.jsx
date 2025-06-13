@@ -362,18 +362,18 @@ const AdminLayout = ({onLogout}) => {
 
         <Footer
           style={{
-            textAlign: 'center',
-            background: '#636262',
-            position: 'fixed',
-            bottom: 45,
-            zIndex: 1,
-            width: `calc(100% - ${isMobile || collapsed ? (isMobile ? 0 : 80) : 200}px)`,
-            left: isMobile || collapsed ? (isMobile ? 0 : 80) : 200,
-            boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.15)',
-            transition: 'all 0.2s',
-            padding: '16px 24px',
-          }}
-        >
+              textAlign: 'center',
+              background: '#636262',
+              position: 'fixed',
+              bottom: 45,
+              zIndex: 100, // Increased from 1 to ensure it stays above table
+              width: `calc(100% - ${isMobile || collapsed ? (isMobile ? 0 : 80) : 200}px)`,
+              left: isMobile || collapsed ? (isMobile ? 0 : 80) : 200,
+              boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.15)',
+              transition: 'all 0.2s',
+              padding: '16px 24px',
+            }}
+          >
           <div
             style={{
               display: 'flex',
@@ -415,7 +415,7 @@ const AdminLayout = ({onLogout}) => {
             background: '#C9C4C4',
             position: 'fixed',
             bottom: 0,
-            zIndex: 2,
+            zIndex: 101, // Increased from 2 to ensure it stays above the other footer
             width: `calc(100% - ${isMobile || collapsed ? (isMobile ? 0 : 80) : 200}px)`,
             left: isMobile || collapsed ? (isMobile ? 0 : 80) : 200,
             boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.15)',

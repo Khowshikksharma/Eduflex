@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Space, Table, Tag, message, Modal } from 'antd';
-import { SearchOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import { Button, Input, Space, Table, Tag, message } from 'antd';
+import { SearchOutlined, PlusOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddStudent from './AdminAddStudent';
 import AdminEditStudent from './AdminEditStudent';
 import axios from 'axios';
 import config from '../../config';
 import AdminAddStudentUpload from './AdminAddStudentUpload';
+import * as XLSX from 'xlsx';
 
 const departments = [
   'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
@@ -88,6 +89,38 @@ const AdminStudentList = () => {
         closePopup={closePopup}
       />
     );
+  };
+
+  const handleExportStudents = () => {
+    const exportData = students.map(student => ({
+      'ID': student.id,
+      'Name': student.name,
+      'Department': student.department,
+      'Age': student.age,
+      'Date of Birth': student.dob,
+      'Gender': student.gender,
+      'Email': student.email,
+      'Phone No.': student.phone,
+      'Aadhaar No.': student.aadhaarNo,
+      'Semester Fee': `₹${(student.semesterFee || 0).toLocaleString('en-IN')}`,
+      'Qualification': student.qualification,
+      'Father Name': student.fatherName,
+      'Start Year': student.startYear,
+      'End Year': student.endYear,
+      'Status': student.status ? 'Active' : 'Inactive',
+      'Current Year': `${student.currentYear}${student.currentYear === '1' ? 'st' : student.currentYear === '2' ? 'nd' : student.currentYear === '3' ? 'rd' : 'th'} Year`,
+      'Current Semester': `Semester ${student.currentSemester}`,
+      'Marital Status': student.maritalStatus,
+      'Mother Tongue': student.motherTongue,
+      'Nationality': student.nationality,
+      'Address': student.address
+    }));
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Students');
+    XLSX.writeFile(wb, 'Students_Export.xlsx');
+    message.success('Students exported successfully!');
   };
 
   const handleEditStudent = (record) => {
@@ -288,7 +321,7 @@ const AdminStudentList = () => {
       key: 'action',
       fixed: 'right',
       render: (_, record) => (
-        <Space size="middle">
+        <Space size="middle" style={{ zIndex: 0 }}> {/* Add zIndex here */}
           <Button 
             type="link" 
             onClick={() => handleEditStudent(record)}
@@ -338,6 +371,13 @@ const AdminStudentList = () => {
           >
             Import Student Data
           </Button>
+          <Button 
+            type="primary" 
+            icon={<DownloadOutlined />}
+            onClick={handleExportStudents}
+          >
+            Export Students Data
+          </Button>
         </div>
       </div>
 
@@ -348,9 +388,12 @@ const AdminStudentList = () => {
         loading={loading}
         scroll={{ x: 'max-content' }}
         bordered
+        style={{
+          position: 'relative',
+          zIndex: 0 // Ensure table content stays behind footers
+        }}
         pagination={{
-          // pageSize: 10,
-          pageSizeOptions: [10, 20, 50, 100],  // Changed to numbers
+          pageSizeOptions: [10, 20, 50, 100],
           showSizeChanger: true,
           showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} students`,
         }}

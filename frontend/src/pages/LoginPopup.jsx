@@ -3,8 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import loginImage from '../assets/loginrocket.jpg';
 import axios from 'axios';
 import config from '../config';
+import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 
-const LoginPopup = ({ onClose,setAuthState}) => {
+const LoginPopup = ({ onClose, setAuthState }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -12,59 +13,58 @@ const LoginPopup = ({ onClose,setAuthState}) => {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
+    e.preventDefault();
+    setError('');
 
-  if (!email || !password) {
-    setError('Please fill in all fields');
-    return;
-  }
-
-  setLoading(true);
-
-  const payload = { email, password };
-
-  try {
-    const [adminRes, facultyRes, studentRes] = await Promise.allSettled([
-      axios.post(`${config.url}/admin/checkadminlogin`, payload),
-      axios.post(`${config.url}/faculty/checkFacultyLogin`, payload),
-      axios.post(`${config.url}/student/checkStudentLogin`, payload)
-    ]);
-
-    if (adminRes.status === 'fulfilled' && adminRes.value.data) {
-      localStorage.setItem('admin', JSON.stringify(adminRes.value.data));
-      setAuthState({
-        isAdminLoggedIn: true,
-        isFacultyLoggedIn: false,
-        isStudentLoggedIn: false
-      });
-      navigate('/admin/home/dashboard');
-    } else if (facultyRes.status === 'fulfilled' && facultyRes.value.data) {
-      localStorage.setItem('faculty', JSON.stringify(facultyRes.value.data));
-      setAuthState({
-        isAdminLoggedIn: false,
-        isFacultyLoggedIn: true,
-        isStudentLoggedIn: false
-      });
-      navigate('/faculty/home/dashboard');
-    } else if (studentRes.status === 'fulfilled' && studentRes.value.data) {
-      localStorage.setItem('student', JSON.stringify(studentRes.value.data));
-      setAuthState({
-        isAdminLoggedIn: false,
-        isFacultyLoggedIn: false,
-        isStudentLoggedIn: true
-      });
-      navigate('/student/home/dashboard');
-    } else {
-      setError('Invalid email or password');
+    if (!email || !password) {
+      setError('Please fill in all fields');
+      return;
     }
-  } catch (e) {
-    setError('Login error: ' + (e.response?.data?.message || e.message));
-  } finally {
-    setLoading(false);
-  }
-};
 
+    setLoading(true);
+
+    const payload = { email, password };
+
+    try {
+      const [adminRes, facultyRes, studentRes] = await Promise.allSettled([
+        axios.post(`${config.url}/admin/checkadminlogin`, payload),
+        axios.post(`${config.url}/faculty/checkFacultyLogin`, payload),
+        axios.post(`${config.url}/student/checkStudentLogin`, payload)
+      ]);
+
+      if (adminRes.status === 'fulfilled' && adminRes.value.data) {
+        localStorage.setItem('admin', JSON.stringify(adminRes.value.data));
+        setAuthState({
+          isAdminLoggedIn: true,
+          isFacultyLoggedIn: false,
+          isStudentLoggedIn: false
+        });
+        navigate('/admin/home/dashboard');
+      } else if (facultyRes.status === 'fulfilled' && facultyRes.value.data) {
+        localStorage.setItem('faculty', JSON.stringify(facultyRes.value.data));
+        setAuthState({
+          isAdminLoggedIn: false,
+          isFacultyLoggedIn: true,
+          isStudentLoggedIn: false
+        });
+        navigate('/faculty/home/dashboard');
+      } else if (studentRes.status === 'fulfilled' && studentRes.value.data) {
+        localStorage.setItem('student', JSON.stringify(studentRes.value.data));
+        setAuthState({
+          isAdminLoggedIn: false,
+          isFacultyLoggedIn: false,
+          isStudentLoggedIn: true
+        });
+        navigate('/student/home/dashboard');
+      } else {
+        setError('Invalid email or password');
+      }
+    } catch (e) {
+      setError('Login error: ' + (e.response?.data?.message || e.message));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // --- Styles ---
   const containerStyle = {
@@ -155,6 +155,12 @@ const LoginPopup = ({ onClose,setAuthState}) => {
     fontSize: '0.9rem'
   };
 
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <div style={containerStyle}>
       <div style={formContainerStyle}>
@@ -177,15 +183,30 @@ const LoginPopup = ({ onClose,setAuthState}) => {
           
           <div style={formGroupStyle}>
             <label style={labelStyle} htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              style={inputStyle}
-              disabled={loading}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                style={inputStyle}
+                disabled={loading}
+              />
+              <span
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  cursor: 'pointer',
+                  userSelect: 'none'
+                }}
+                onClick={togglePasswordVisibility}
+              >
+                {showPassword ? <EyeTwoTone /> : <EyeInvisibleOutlined />}
+              </span>
+            </div>
           </div>
           
           <button 

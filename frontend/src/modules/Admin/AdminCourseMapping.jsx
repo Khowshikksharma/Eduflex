@@ -107,7 +107,7 @@ const AdminCourseMapping = () => {
     };
 
     fetchMappings();
-  }, []);
+  }, [errorCount]);
 
   const handleAddMapping = () => {
     showPopup(

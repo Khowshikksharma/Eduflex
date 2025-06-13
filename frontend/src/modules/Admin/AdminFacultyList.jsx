@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Input, Space, Table, Tag, message } from 'antd';
-import { SearchOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import { SearchOutlined, PlusOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddFaculty from './AdminAddFaculty';
 import AdminEditFaculty from './AdminEditFaculty';
 import AdminAddFacultyUpload from './AdminAddFacultyUpload';
 import axios from 'axios';
 import config from '../../config';
+import * as XLSX from 'xlsx';
 
 const departments = [
   'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
@@ -89,6 +90,38 @@ const AdminFacultyList = () => {
         closePopup={closePopup}
       />
     );
+  };
+
+  const handleExportFaculty = () => {
+    const exportData = faculty.map(f => ({
+      'ID': f.id,
+      'Name': f.name,
+      'Department': f.department,
+      'Age': f.age,
+      'Date of Birth': f.dob,
+      'Gender': f.gender,
+      'Email': f.email,
+      'Phone No.': f.phone,
+      'Aadhaar No.': f.aadhaarNo,
+      'Salary': `₹${(f.salary || 0).toLocaleString('en-IN')}`,
+      'Qualification': f.qualification,
+      'Designation': f.designation,
+      'Father Name': f.fatherName,
+      'Joining Date': f.startYear,
+      'Experience': f.experience,
+      'Status': f.status ? 'Active' : 'Resigned',
+      'Marital Status': f.maritalStatus,
+      'Mother Tongue': f.motherTongue,
+      'Nationality': f.nationality,
+      'Subjects': f.subjects?.join(', '),
+      'Address': f.address
+    }));
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Faculty');
+    XLSX.writeFile(wb, 'Faculty_Export.xlsx');
+    message.success('Faculty exported successfully!');
   };
 
   const handleEditFaculty = (record) => {
@@ -286,7 +319,7 @@ const AdminFacultyList = () => {
       key: 'action',
       fixed: 'right',
       render: (_, record) => (
-        <Space size="middle">
+        <Space size="middle" style={{ zIndex: 0 }}> {/* Add zIndex here */}
           <Button 
             type="link" 
             onClick={() => handleEditFaculty(record)}
@@ -298,7 +331,7 @@ const AdminFacultyList = () => {
             danger 
             onClick={() => handleDeleteFaculty(record)}
           >
-            {record.status ? 'Mark Resigned' : 'Resigned'}
+            {record.status ? 'Make Inactive' : 'Inactive'}
           </Button>
         </Space>
       ),
@@ -336,6 +369,13 @@ const AdminFacultyList = () => {
           >
             Import Faculty Data
           </Button>
+          <Button 
+            type="primary" 
+            icon={<DownloadOutlined />}
+            onClick={handleExportFaculty}
+          >
+            Export Faculty Data
+          </Button>
         </div>
       </div>
 
@@ -346,11 +386,14 @@ const AdminFacultyList = () => {
         loading={loading}
         scroll={{ x: 'max-content' }}
         bordered
+        style={{
+          position: 'relative',
+          zIndex: 0 // Ensure table content stays behind footers
+        }}
         pagination={{
-          // pageSize: 10,
-          showSizeChanger: true,
           pageSizeOptions: [10, 20, 50, 100],
-          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} faculty members`,
+          showSizeChanger: true,
+          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} students`,
         }}
       />
       <PopupWrapper />

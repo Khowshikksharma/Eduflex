@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Input, Space, Table, Tag, message, Modal } from 'antd';
-import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
+import { SearchOutlined, PlusOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddCourse from './AdminAddCourse';
 import AdminEditCourse from './AdminEditCourse';
+import AdminAddCourseUpload from './AdminAddCourseUpload';
 import axios from 'axios';
 import config from '../../config';
+import * as XLSX from 'xlsx';
 
 const departments = [
   'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE',
@@ -43,6 +45,10 @@ const AdminCourseList = () => {
   };
 
   useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = () => {
     setLoading(true);
     axios.get(`${config.url}/admin/viewCourses`)
       .then((response) => {
@@ -72,7 +78,7 @@ const AdminCourseList = () => {
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  };
 
   const handleAddCourse = () => {
     showPopup(
@@ -95,6 +101,42 @@ const AdminCourseList = () => {
         closePopup={closePopup}
       />
     );
+  };
+
+  const handleImportCourses = () => {
+    showPopup(
+      <AdminAddCourseUpload
+        onSuccess={() => {
+          fetchCourses(); // Refresh the course list
+          message.success('Courses imported successfully!');
+        }}
+        closePopup={closePopup}
+      />
+    );
+  };
+
+  const handleExportCourses = () => {
+    // data for export
+    const exportData = courses.map(course => ({
+      'Course Code': course.courseCode,
+      'Course Name': course.courseName,
+      'Course Short Name': course.courseShortName,
+      'Academic Year': course.academicYear,
+      'Semester': course.semester,
+      'Credits': course.credits,
+      'Department': course.department,
+      'Status': course.status ? 'Active' : 'Inactive',
+      'L-T-P-S': calculateLTP(course.credits)
+    }));
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    
+    XLSX.utils.book_append_sheet(wb, ws, 'Courses');
+    
+    XLSX.writeFile(wb, 'Courses_Export.xlsx');
+    
+    message.success('Courses exported successfully!');
   };
 
   const handleEditCourse = (record) => {
@@ -133,6 +175,7 @@ const AdminCourseList = () => {
   };
 
   const handleDeleteCourse = async (record) => {
+    try {
       const response = await axios.put(`${config.url}/admin/changeCourseStatus`, {
         ccode: record.courseCode,
         status: !record.status // Toggle status
@@ -145,6 +188,10 @@ const AdminCourseList = () => {
       } else {
         message.error('Failed to update course status');
       }
+    } catch (error) {
+      message.error('Failed to update course status');
+      console.error('Error updating course status:', error);
+    }
   };
 
   const filteredCourses = courses.filter(course =>
@@ -238,18 +285,17 @@ const AdminCourseList = () => {
       key: 'action',
       fixed: 'right',
       render: (_, record) => (
-        <Space size="middle">
-          <Button
-            type="link"
+        <Space size="middle" style={{ zIndex: 0 }}> {/* Add zIndex here */}
+          <Button 
+            type="link" 
             onClick={() => handleEditCourse(record)}
           >
             Edit
           </Button>
-          <Button
-            type="link"
-            danger
+          <Button 
+            type="link" 
+            danger 
             onClick={() => handleDeleteCourse(record)}
-            disabled={!record.status}
           >
             {record.status ? 'Make Inactive' : 'Inactive'}
           </Button>
@@ -282,23 +328,40 @@ const AdminCourseList = () => {
           >
             Add Course
           </Button>
+          <Button
+            type="primary"
+            icon={<UploadOutlined />}
+            onClick={handleImportCourses}
+          >
+            Import Courses Data
+          </Button>
+          <Button
+            type="primary"
+            icon={<DownloadOutlined />}
+            onClick={handleExportCourses}
+          >
+            Export Courses Data
+          </Button>
         </div>
       </div>
 
       <Table
-        columns={columns}
-        dataSource={filteredCourses}
-        rowKey="courseCode"
-        loading={loading}
-        scroll={{ x: 'max-content' }}
-        bordered
-        pagination={{
-          // pageSize: 10,
-          showSizeChanger: true,
-          pageSizeOptions: [10, 20, 50, 100],
-          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} courses`,
-        }}
-      />
+      columns={columns}
+      dataSource={filteredCourses}
+      rowKey="courseCode"
+      loading={loading}
+      scroll={{ x: 'max-content' }}
+      bordered
+      style={{
+        position: 'relative',
+        zIndex: 0
+      }}
+      pagination={{
+        pageSizeOptions: [10, 20, 50, 100],
+        showSizeChanger: true,
+        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} students`,
+      }}
+    />
       <PopupWrapper />
     </div>
   );

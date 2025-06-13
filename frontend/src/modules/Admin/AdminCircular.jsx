@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Button, 
-  Table, 
-  Modal, 
-  Form, 
-  Input, 
-  Upload, 
-  message, 
-  Card, 
-  Divider, 
-  List, 
+import {
+  Button,
+  Table,
+  Modal,
+  Form,
+  Input,
+  Upload,
+  message,
+  Card,
+  Divider,
+  List,
   Tag,
   Space,
   Typography,
   Select,
   Checkbox
 } from 'antd';
-import { 
-  InboxOutlined, 
-  PaperClipOutlined, 
-  SendOutlined, 
+import {
+  InboxOutlined,
+  PaperClipOutlined,
+  SendOutlined,
   DeleteOutlined,
   UserOutlined,
   TeamOutlined,

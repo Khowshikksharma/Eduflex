@@ -2,13 +2,9 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require('dotenv').config();
+const connectDB = require("./config/db")
 
-const dburl = process.env.MONGO_URL;
-mongoose.connect(dburl).then(async () => {
-    console.log("Connected to DB Successfully");
-  }).catch((e) => {
-    console.log(e.message);
-});
+connectDB();
 
 const app = express();
 app.use(express.json());

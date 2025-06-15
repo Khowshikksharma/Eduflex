@@ -23,7 +23,13 @@ import {
   DeleteOutlined,
   UserOutlined,
   TeamOutlined,
-  SolutionOutlined
+  SolutionOutlined,
+  FilePdfOutlined,
+  FileWordOutlined,
+  FileExcelOutlined,
+  FilePptOutlined,
+  FileImageOutlined,
+  FileOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
 import config from '../../config';
@@ -33,6 +39,12 @@ const { TextArea } = Input;
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { Dragger } = Upload;
+
+// Default departments list
+const departments = [
+  'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
+  'ASE', 'AUT', 'AGE', 'BIO', 'BME', 'CEE', 'CER'
+];
 
 const AdminCircular = () => {
   const [form] = Form.useForm();
@@ -44,13 +56,11 @@ const AdminCircular = () => {
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewTitle, setPreviewTitle] = useState('');
   const [previewImage, setPreviewImage] = useState('');
-  const [recipientGroups, setRecipientGroups] = useState(['students', 'faculty', 'staff']);
+  const [recipientGroups, setRecipientGroups] = useState(['students', 'faculty']);
   const [selectedDepartments, setSelectedDepartments] = useState([]);
-  const [departments, setDepartments] = useState([]);
 
   useEffect(() => {
     fetchCirculars();
-    fetchDepartments();
   }, []);
 
   const fetchCirculars = async () => {
@@ -60,16 +70,6 @@ const AdminCircular = () => {
     } catch (error) {
       message.error('Failed to fetch circulars');
       console.error('Error fetching circulars:', error);
-    }
-  };
-
-  const fetchDepartments = async () => {
-    try {
-      const response = await axios.get(`${config.url}/departments`);
-      setDepartments(response.data);
-    } catch (error) {
-      message.error('Failed to fetch departments');
-      console.error('Error fetching departments:', error);
     }
   };
 
@@ -130,6 +130,13 @@ const AdminCircular = () => {
 
   const columns = [
     {
+      title: 'S.No',
+      key: 'sno',
+      render: (text, record, index) => index + 1,
+      width: 70,
+      align: 'center',
+    },
+    {
       title: 'Subject',
       dataIndex: 'subject',
       key: 'subject',
@@ -145,7 +152,6 @@ const AdminCircular = () => {
         <Space>
           {groups.includes('students') && <Tag icon={<UserOutlined />}>Students</Tag>}
           {groups.includes('faculty') && <Tag icon={<SolutionOutlined />}>Faculty</Tag>}
-          {groups.includes('staff') && <Tag icon={<TeamOutlined />}>Staff</Tag>}
         </Space>
       ),
     },
@@ -164,6 +170,16 @@ const AdminCircular = () => {
           <Tag icon={<PaperClipOutlined />}>{attachments.length}</Tag>
         ) : null
       ),
+    },
+    {
+      title: 'View',
+      key: 'view',
+      render: (text, record) => (
+        <Button type="link" onClick={() => setSelectedCircular(record)}>
+          View
+        </Button>
+      ),
+      align: 'center',
     },
   ];
 
@@ -226,7 +242,7 @@ const AdminCircular = () => {
       {selectedCircular && (
         <Modal
           title={selectedCircular.subject}
-          visible={!!selectedCircular}
+          open={!!selectedCircular}
           onCancel={() => setSelectedCircular(null)}
           footer={null}
           width={800}
@@ -240,7 +256,6 @@ const AdminCircular = () => {
                 <Text strong>Sent to: </Text>
                 {selectedCircular.recipientGroups.includes('students') && <Tag icon={<UserOutlined />}>Students</Tag>}
                 {selectedCircular.recipientGroups.includes('faculty') && <Tag icon={<SolutionOutlined />}>Faculty</Tag>}
-                {selectedCircular.recipientGroups.includes('staff') && <Tag icon={<TeamOutlined />}>Staff</Tag>}
               </div>
               {selectedCircular.selectedDepartments?.length > 0 && (
                 <div>
@@ -269,13 +284,13 @@ const AdminCircular = () => {
                   <List.Item>
                     <Space>
                       {fileTypeIcon(file.name)}
-                      <a 
-                        href={`${config.url}/uploads/${file.path}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                      >
-                        {file.name}
-                      </a>
+                        <a 
+                          href={`${config.uploadsUrl}/${file.path}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                        >
+                          {file.name}
+                        </a>
                       <Text type="secondary">({(file.size / 1024).toFixed(1)} KB)</Text>
                     </Space>
                   </List.Item>
@@ -289,7 +304,7 @@ const AdminCircular = () => {
       {/* Send Circular Modal */}
       <Modal
         title="Send Circular to All"
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
           form.resetFields();
@@ -324,7 +339,6 @@ const AdminCircular = () => {
               options={[
                 { label: 'Students', value: 'students' },
                 { label: 'Faculty', value: 'faculty' },
-                { label: 'Staff', value: 'staff' },
               ]}
               value={recipientGroups}
               onChange={handleRecipientChange}
@@ -384,7 +398,7 @@ const AdminCircular = () => {
 
       {/* Image Preview Modal */}
       <Modal
-        visible={previewVisible}
+        open={previewVisible}
         title={previewTitle}
         footer={null}
         onCancel={() => setPreviewVisible(false)}

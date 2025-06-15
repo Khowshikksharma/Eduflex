@@ -4,7 +4,8 @@ export const TOKEN_KEY = 'eduflex-auth-token';
 export const USER_KEY = 'eduflex-user-data';
 const config = {
     // url: 'https://backendapp-jr9d.onrender.com'
-    url: 'http://localhost:5000'
+    url: 'http://localhost:5000',
+    uploadsUrl: 'http://localhost:5000/uploads'
 };
 
 export default config;

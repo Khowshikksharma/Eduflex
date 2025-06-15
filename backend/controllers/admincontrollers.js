@@ -3,6 +3,8 @@ const Student = require('../models/Student');
 const Faculty = require('../models/Faculty');
 const Course = require('../models/Course');
 const FacultyCourseMapping = require('../models/FacultyCourseMapping');
+const Circular = require('../models/Circular');
+const path = require('path');
 
 const checkAdminLogin = async (req, res) => {
     try{
@@ -410,6 +412,44 @@ const changeMappingStatus = async (req, res) => {
   }
 }
 
+const sendCircular = async (req, res) => {
+  try {
+    const { subject, description, recipientGroups, selectedDepartments } = req.body;
+
+    let attachments = [];
+    if (req.files && req.files.length > 0) {
+      attachments = req.files.map(file => ({
+        name: file.originalname,
+        path: file.filename,
+        size: file.size
+      }));
+    }
+
+    const newCircular = new Circular({
+      subject,
+      description,
+      recipientGroups: JSON.parse(recipientGroups),
+      selectedDepartments: JSON.parse(selectedDepartments || '[]'),
+      attachments
+    });
+
+    await newCircular.save();
+    res.status(201).json({ message: 'Circular sent successfully' });
+  } catch (error) {
+    console.error('Send Circular Error:', error);
+    res.status(500).json({ error: 'Server Error' });
+  }
+};
+
+const getAllCirculars = async (req, res) => {
+  try {
+    const circulars = await Circular.find().sort({ createdAt: -1 });
+    res.json(circulars);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch circulars' });
+  }
+};
+
 module.exports = {
     checkAdminLogin,
     updateProfile,
@@ -439,4 +479,7 @@ module.exports = {
     viewFCMapping,
     updateFCMapping,
     changeMappingStatus,
+
+    sendCircular,
+    getAllCirculars,
 };

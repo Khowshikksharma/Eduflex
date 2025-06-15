@@ -1,6 +1,18 @@
 const admincontroller = require('../controllers/admincontrollers');
 const express = require('express');
 const adminrouter = express.Router();
+const multer = require('multer');
+const path = require('path')
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); 
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '_' + file.originalname);
+  }
+});
+const upload = multer({ storage });
 
 adminrouter.post("/checkadminlogin", admincontroller.checkAdminLogin);
 adminrouter.put("/updateprofile", admincontroller.updateProfile);
@@ -30,5 +42,12 @@ adminrouter.post("/addCourseMapping", admincontroller.createFCMapping);
 adminrouter.get("/viewFCMapping", admincontroller.viewFCMapping);
 adminrouter.put("/updateFCMapping", admincontroller.updateFCMapping);
 adminrouter.put("/changeMappingStatus", admincontroller.changeMappingStatus);
+
+adminrouter.post(
+  "/send-all-circular",
+  upload.array("attachments", 10),
+  admincontroller.sendCircular
+);
+adminrouter.get("/all-circulars", admincontroller.getAllCirculars);
 
 module.exports = adminrouter;

@@ -3,6 +3,7 @@ import { Button, Input, Space, Table, Tag, message } from 'antd';
 import { SearchOutlined, PlusOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddStudent from './AdminAddStudent';
+import AdminStudentViewPopup from './AdminStudentViewPopup';
 import AdminEditStudent from './AdminEditStudent';
 import axios from 'axios';
 import config from '../../config';
@@ -122,6 +123,19 @@ const AdminStudentList = () => {
     XLSX.writeFile(wb, 'Students_Export.xlsx');
     message.success('Students exported successfully!');
   };
+
+  const handleViewStudent = (record) => {
+  showPopup(
+    <AdminStudentViewPopup 
+      studentData={record}
+      onEdit={(studentData) => {
+        closePopup(); // Close the view popup first
+        handleEditStudent(studentData); // Then open the edit popup
+      }}
+      onClose={closePopup}
+    />
+  );
+};
 
   const handleEditStudent = (record) => {
     showPopup(
@@ -317,11 +331,17 @@ const AdminStudentList = () => {
       ellipsis: true,
     },
     {
-      title: 'Action → Edit/Delete',
+      title: 'Action → View/Edit/Delete',
       key: 'action',
       fixed: 'right',
       render: (_, record) => (
-        <Space size="middle" style={{ zIndex: 0 }}> {/* Add zIndex here */}
+        <Space size="middle" style={{ zIndex: 0 }}>
+          <Button 
+            type="link" 
+            onClick={() => handleViewStudent(record)}
+          >
+            View
+          </Button>
           <Button 
             type="link" 
             onClick={() => handleEditStudent(record)}

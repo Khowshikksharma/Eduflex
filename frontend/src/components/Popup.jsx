@@ -102,7 +102,7 @@ const styles = {
     maxHeight: '90vh',
     overflowY: 'auto',
     position: 'relative',
-    border: '4px solid black',
+    border: '1px solid black',
     marginTop: '20px',
   },
   logoContainer: {

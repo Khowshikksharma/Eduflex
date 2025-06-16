@@ -71,7 +71,13 @@ const StudentLayout = ({onLogout}) => {
           icon: <DashboardFilled style={{ color: '#000' }} />,
           label: 'Dashboard',
           onClick: () => navigate('/student/home/dashboard'),
-        }
+        },
+        {
+          key: 'circulars',
+          icon: <NotificationOutlined style={{ color: '#000' }} />,
+          label: 'Circulars',
+          onClick: () => navigate('/student/home/circular'),
+        },
       ];
     } else if (location.pathname.includes('/student/mycourse')) {
       return [
@@ -100,10 +106,10 @@ const StudentLayout = ({onLogout}) => {
           onClick: () => navigate('/student/mycourse/attendance'),
         },
         {
-          key: 'circulars',
+          key: 'faculty-circulars',
           icon: <NotificationOutlined style={{ color: '#000' }} />,
-          label: 'Circulars',
-          onClick: () => navigate('/student/mycourse/circular'),
+          label: 'Faculty Circulars',
+          onClick: () => navigate('/student/mycourse/facultycirculars'),
         },
       ];
     } else if (location.pathname.includes('/student/timetable')) {
@@ -128,11 +134,12 @@ const StudentLayout = ({onLogout}) => {
   const getDefaultSelectedKey = () => {
     const path = location.pathname;
     if (path.includes('dashboard')) return ['dashboard'];
+    if (path.includes('circular')) return ['circulars'];
     if (path.includes('grades')) return ['grades'];
     if (path.includes('course-registration')) return ['course-registration'];
     if (path.includes('materials')) return ['materials'];
     if (path.includes('attendance')) return ['attendance'];
-    if (path.includes('circular')) return ['circular'];
+    if (path.includes('facultycirculars')) return ['faculty-circulars'];
     if (path.includes('class')) return ['class'];
     if (path.includes('academic')) return ['academic'];
     return ['dashboard'];

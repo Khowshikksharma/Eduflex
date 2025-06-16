@@ -71,7 +71,7 @@ const AdminLayout = ({onLogout}) => {
 
   const getSidebarItems = () => {
     if (location.pathname.includes('/admin/editprofile')) {
-      return []; // Empty sidebar for edit profile
+      return [];
     }
     if (location.pathname.includes('/admin/home')) {
       return [
@@ -145,8 +145,8 @@ const AdminLayout = ({onLogout}) => {
     }
     const path = location.pathname;
     if (path.includes('home/dashboard')) return ['home-dashboard'];
+    if (path.includes('/home/circular')) return ['send-circular'];
     if (path.includes('student/list')) return ['student-list'];
-    if (path.includes('student/circular')) return ['send-circular'];
     if (path.includes('faculty/list')) return ['faculty-list'];
     if (path.includes('faculty/circular')) return ['send-circular'];
     if (path.includes('course/list')) return ['course-list'];

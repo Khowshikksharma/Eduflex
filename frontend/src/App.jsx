@@ -12,6 +12,7 @@ import StudentGrade from './modules/Student/StudentGrade';
 import StudentCourseRegistration from './modules/Student/StudentCourseRegisteration';
 import StudentAttendance from './modules/Student/StudentAttendance';
 import StudentCircular from './modules/Student/StudentCircular';
+import StudentFacultyCircular from './modules/Student/StudentFacultyCircular';
 import StudentClass from './modules/Student/StudentClass';
 import StudentAcademic from './modules/Student/StudentAcademic';
 import StudentEditProfile from './modules/Student/StudentEditProfle';
@@ -124,11 +125,12 @@ const App = () => {
           <Route path="/student" element={<StudentLayout onLogout={() => handleLogout('student')}/>}>
             <Route index element={<Navigate to="/student/home/dashboard" replace />} />
             <Route path="home/dashboard" element={<StudentHome />} />
+            <Route path="home/circular" element={<StudentCircular />} />
             <Route path="mycourse/grades" element={<StudentGrade />} />
             <Route path="mycourse/course-registration" element={<StudentCourseRegistration />} />
             <Route path="mycourse/attendance" element={<StudentAttendance />} />
-            <Route path="mycourse/circular" element={<StudentCircular />} />
             <Route path="mycourse/materials" element={<StudentMaterials />} />
+            <Route path="mycourse/facultycirculars" element={<StudentFacultyCircular />} />
             <Route path="timetable/class" element={<StudentClass />} />
             <Route path="timetable/academic" element={<StudentAcademic />} />
             <Route path="editprofile" element={<StudentEditProfile />} />

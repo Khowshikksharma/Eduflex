@@ -1,10 +1,176 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const StudentCircular = () => {
+  const [emails, setEmails] = useState([
+    {
+      id: 1,
+      subject: 'Welcome to the new semester',
+      sender: 'registrar@university.edu',
+      date: '2023-05-15T10:30:00',
+      body: 'Dear students,\n\nWe are pleased to welcome you to the new semester. Classes will begin on June 1st.\n\nBest regards,\nRegistrar Office',
+      read: false,
+      attachments: ['Academic_Calendar.pdf']
+    },
+    {
+      id: 2,
+      subject: 'Library hours during holidays',
+      sender: 'library@university.edu',
+      date: '2023-05-10T14:15:00',
+      body: 'The library will have special hours during the upcoming holidays. Please check the attached schedule for details.',
+      read: true,
+      attachments: ['Library_Holiday_Hours.pdf']
+    },
+    {
+      id: 3,
+      subject: 'Important: Tuition fee payment deadline',
+      sender: 'finance@university.edu',
+      date: '2023-05-05T09:00:00',
+      body: 'This is a reminder that the tuition fee payment deadline is approaching. Please ensure your payment is made by May 20th to avoid late fees.',
+      read: false,
+      attachments: []
+    },
+  ]);
+
+  const [selectedEmail, setSelectedEmail] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Format date to a more readable form
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  };
+
+  // Handle email selection
+  const handleEmailClick = (email) => {
+    setSelectedEmail(email);
+    // Mark as read
+    setEmails(emails.map(e => 
+      e.id === email.id ? {...e, read: true} : e
+    ));
+  };
+
+  const filteredEmails = emails.filter(email => 
+    email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    email.sender.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    email.body.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div>
-      <h1>Welcome to the My Course Circular Page</h1>
-      <p>This is the content of the home page.</p>
+    <div className="email-container" style={{ display: 'flex', height: '100vh', fontFamily: 'Arial, sans-serif' }}>
+      <div className="email-list" style={{ width: '35%', borderRight: '1px solid #ddd', overflowY: 'auto' }}>
+      <h1>Circulars</h1>
+        <div className="search-bar" style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+          <input
+            type="text"
+            placeholder="Search emails..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+          />
+        </div>
+        
+        {filteredEmails.map((email) => (
+          <div
+            key={email.id}
+            onClick={() => handleEmailClick(email)}
+            style={{
+              padding: '15px',
+              borderBottom: '1px solid #eee',
+              cursor: 'pointer',
+              backgroundColor: email.read ? '#fff' : '#f0f7ff',
+              fontWeight: email.read ? 'normal' : 'bold',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+              <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{email.sender}</span>
+              <span style={{ fontSize: '12px', color: '#666' }}>{formatDate(email.date)}</span>
+            </div>
+            <div style={{ fontSize: '14px', marginBottom: '5px' }}>{email.subject}</div>
+            <div style={{ fontSize: '12px', color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {email.body.split('\n')[0]}
+            </div>
+            {email.attachments.length > 0 && (
+              <div style={{ fontSize: '12px', color: '#0078d4', marginTop: '5px' }}>
+                <i className="fa fa-paperclip" style={{ marginRight: '5px' }}></i>
+                {email.attachments.length} attachment{email.attachments.length !== 1 ? 's' : ''}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="email-content" style={{ width: '65%', padding: '20px', overflowY: 'auto' }}>
+        {selectedEmail ? (
+          <div>
+            <h2 style={{ marginBottom: '10px' }}>{selectedEmail.subject}</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', color: '#666' }}>
+              <div>
+                <span style={{ fontWeight: 'bold', color: '#333' }}>From: </span>
+                {selectedEmail.sender}
+              </div>
+              <div>{formatDate(selectedEmail.date)}</div>
+            </div>
+            
+            <div style={{ 
+              whiteSpace: 'pre-wrap', 
+              lineHeight: '1.6',
+              padding: '15px',
+              backgroundColor: '#f9f9f9',
+              borderRadius: '4px'
+            }}>
+              {selectedEmail.body}
+            </div>
+            
+            {selectedEmail.attachments.length > 0 && (
+              <div style={{ marginTop: '20px' }}>
+                <h3 style={{ marginBottom: '10px' }}>Attachments</h3>
+                <ul style={{ listStyle: 'none', padding: 0 }}>
+                  {selectedEmail.attachments.map((file, index) => (
+                    <li key={index} style={{ 
+                      padding: '8px', 
+                      border: '1px solid #ddd', 
+                      borderRadius: '4px', 
+                      marginBottom: '5px',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}>
+                      <i className="fa fa-file" style={{ marginRight: '10px', color: '#666' }}></i>
+                      {file}
+                      <button style={{ 
+                        marginLeft: 'auto', 
+                        backgroundColor: '#0078d4', 
+                        color: 'white', 
+                        border: 'none', 
+                        padding: '5px 10px', 
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}>
+                        Download
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100%',
+            color: '#666'
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <i className="fa fa-envelope-open" style={{ fontSize: '48px', marginBottom: '20px' }}></i>
+              <h2>Select an email to read</h2>
+              <p>Choose a message from the list to view its contents</p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

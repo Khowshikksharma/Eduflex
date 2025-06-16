@@ -71,6 +71,7 @@ const fetchCourseMappings = async () => {
     const updatedMappings = {};
 
     for (let map of mappings) {
+      if(!map.status) continue;
       try {
         const facultyRes = await axios.get(`${config.url}/admin/viewFacultyById/${map.facultyId}`);
         const facultyStringId = facultyRes.data.id;

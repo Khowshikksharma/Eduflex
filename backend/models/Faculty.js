@@ -12,6 +12,8 @@ const facultySchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   phone: { type: String, required: true },
   aadhaarNo: { type: String, required: true },
+  experience: { type: Number, required: true },
+  designation: { type: String, required: true },
   fatherName: { type: String, required: true },
   startYear: { type: Number, required: true },
   status: { type: Boolean, default: true },

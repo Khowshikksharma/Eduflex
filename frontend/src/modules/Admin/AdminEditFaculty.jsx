@@ -15,6 +15,7 @@ const AdminEditFaculty = ({
   onUpdate, 
   onClose,
   departments,
+  designations,
   qualifications,
   maritalStatuses
 }) => {
@@ -183,6 +184,35 @@ const AdminEditFaculty = ({
         {/* Aadhaar No (Not Editable) */}
         <Form.Item label="Aadhaar Number">
           <Text strong>{facultyData?.aadhaarNo || '-'}</Text>
+        </Form.Item>
+
+        {/* Designation (Editable) */}
+        <Form.Item
+          label="Designation"
+          name="designation"
+          rules={[{ required: true, message: 'Please select designation!' }]}
+        >
+          <Select placeholder="Select designation" size="large">
+            {designations?.map(desig => (
+              <Option key={desig} value={desig}>{desig}</Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        {/* Experience (Editable) */}
+        <Form.Item
+          label="Experience"
+          name="experience"
+          rules={[{ required: true, message: 'Please input experience!' }]}
+        >
+          <InputNumber
+            style={{ width: '100%' }}
+            min={0}
+            precision={1}
+            step={0.1}
+            placeholder="Experience"
+            size="large"
+          />
         </Form.Item>
 
         {/* Salary (Editable) */}

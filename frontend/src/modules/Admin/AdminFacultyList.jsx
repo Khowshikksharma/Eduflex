@@ -69,6 +69,7 @@ const AdminFacultyList = () => {
         qualifications={qualifications}
         maritalStatuses={maritalStatuses}
         designations={designations}
+        
         onSuccess={(newFaculty) => {
           setFaculty(prev => [...prev, newFaculty]);
           message.success('Faculty added successfully!');

@@ -16,9 +16,10 @@ const { TextArea } = Input;
 // };
 
 const AdminAddFaculty = ({ 
-  onSuccess, 
-  departments, 
+  onSuccess,
+  departments,
   qualifications,
+  designations,
   maritalStatuses,
   closePopup
 }) => {
@@ -155,6 +156,26 @@ const AdminAddFaculty = ({
             maxLength={12} 
             size="large"
           />
+        </Form.Item>
+
+        <Form.Item
+          label="Designation"
+          name="designation"
+          rules={[{ required: true, message: 'Please select designation!' }]}
+        >
+          <Select placeholder="Select designation" size="large">
+            {designations.map(desig => (
+              <Option key={desig} value={desig}>{desig}</Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        <Form.Item
+            label="Experience (Years)"
+            name="experience"
+            rules={[{ required: true, message: 'Please input experience!' }]}
+        >
+            <InputNumber style={{ width: '100%' }} min={0} precision={1} step={0.1} placeholder="Experience" size="large" />
         </Form.Item>
 
         <Form.Item

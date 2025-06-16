@@ -29,7 +29,8 @@ import {
   FileExcelOutlined,
   FilePptOutlined,
   FileImageOutlined,
-  FileOutlined
+  FileOutlined,
+  ClockCircleOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
 import config from '../../config';
@@ -58,6 +59,23 @@ const AdminCircular = () => {
   const [previewImage, setPreviewImage] = useState('');
   const [recipientGroups, setRecipientGroups] = useState(['students', 'faculty']);
   const [selectedDepartments, setSelectedDepartments] = useState([]);
+
+  const fileTypeToName = (extension) => {
+    const types = {
+      pdf: 'PDF Document',
+      doc: 'Word Document',
+      docx: 'Word Document',
+      xls: 'Excel Spreadsheet',
+      xlsx: 'Excel Spreadsheet',
+      ppt: 'PowerPoint',
+      pptx: 'PowerPoint',
+      jpg: 'JPEG Image',
+      jpeg: 'JPEG Image',
+      png: 'PNG Image',
+      gif: 'GIF Image'
+    };
+    return types[extension.toLowerCase()] || 'File';
+  };
 
   useEffect(() => {
     fetchCirculars();
@@ -115,7 +133,7 @@ const AdminCircular = () => {
   };
 
   const handlePreview = async (file) => {
-    if (file.type.includes('image')) {
+    if (file.type && file.type.includes('image')) {
       setPreviewImage(file.url || file.thumbUrl);
       setPreviewTitle(file.name || file.url.substring(file.url.lastIndexOf('/') + 1));
       setPreviewVisible(true);
@@ -141,8 +159,19 @@ const AdminCircular = () => {
       dataIndex: 'subject',
       key: 'subject',
       render: (text, record) => (
-        <a onClick={() => setSelectedCircular(record)}>{text}</a>
+        <div 
+          style={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: '250px',
+          }}
+          title={text}
+        >
+          <a onClick={() => setSelectedCircular(record)}>{text}</a>
+        </div>
       ),
+      width: 250,
     },
     {
       title: 'Recipients',
@@ -235,72 +264,127 @@ const AdminCircular = () => {
           dataSource={circulars} 
           rowKey="_id" 
           pagination={{ pageSize: 10 }}
+          scroll={{ x: true }}
         />
       </Card>
 
       {/* Circular Details Modal */}
-      {selectedCircular && (
-        <Modal
-          title={selectedCircular.subject}
-          open={!!selectedCircular}
-          onCancel={() => setSelectedCircular(null)}
-          footer={null}
-          width={800}
-        >
-          <div style={{ marginBottom: '16px' }}>
-            <Space direction="vertical">
-              <Text type="secondary">
-                Sent on {dayjs(selectedCircular.createdAt).format('DD MMM YYYY, hh:mm A')}
-              </Text>
-              <div>
-                <Text strong>Sent to: </Text>
-                {selectedCircular.recipientGroups.includes('students') && <Tag icon={<UserOutlined />}>Students</Tag>}
-                {selectedCircular.recipientGroups.includes('faculty') && <Tag icon={<SolutionOutlined />}>Faculty</Tag>}
+      <div>
+        {selectedCircular && (
+          <Modal
+            title={
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <SolutionOutlined style={{ fontSize: '24px', color: '#1890ff', marginRight: '12px' }} />
+                <span style={{ fontSize: '18px', fontWeight: '500' }}>Circular Details</span>
               </div>
+            }
+            open={!!selectedCircular}
+            onCancel={() => setSelectedCircular(null)}
+            footer={null}
+            width={800}
+            centered
+            bodyStyle={{ padding: '24px' }}
+          >
+            <div style={{ marginBottom: '24px', borderBottom: '1px solid #f0f0f0', paddingBottom: '16px' }}>
+              <Title level={4} style={{ marginBottom: '8px' }}>
+                {selectedCircular.subject}
+              </Title>
+              
+              <Space size="middle" style={{ marginBottom: '12px' }}>
+                {selectedCircular.recipientGroups.includes('students') && (
+                  <Tag icon={<UserOutlined />} color="blue">Students</Tag>
+                )}
+                {selectedCircular.recipientGroups.includes('faculty') && (
+                  <Tag icon={<SolutionOutlined />} color="purple">Faculty</Tag>
+                )}
+                <Text type="secondary">
+                  <ClockCircleOutlined style={{ marginRight: '4px' }} />
+                  {dayjs(selectedCircular.createdAt).format('DD MMM YYYY, hh:mm A')}
+                </Text>
+              </Space>
+              
               {selectedCircular.selectedDepartments?.length > 0 && (
-                <div>
-                  <Text strong>Departments: </Text>
+                <div style={{ marginTop: '8px' }}>
+                  <Text strong style={{ marginRight: '8px' }}>Departments:</Text>
                   {selectedCircular.selectedDepartments.map(dept => (
-                    <Tag key={dept}>{dept}</Tag>
+                    <Tag key={dept} color="cyan">{dept}</Tag>
                   ))}
                 </div>
               )}
-            </Space>
-          </div>
+            </div>
 
-          <Divider />
-
-          <div 
-            dangerouslySetInnerHTML={{ __html: selectedCircular.description }} 
-            style={{ marginBottom: '24px' }}
-          />
-
-          {selectedCircular.attachments?.length > 0 && (
-            <>
-              <Divider orientation="left">Attachments</Divider>
-              <List
-                dataSource={selectedCircular.attachments}
-                renderItem={file => (
-                  <List.Item>
-                    <Space>
-                      {fileTypeIcon(file.name)}
-                        <a 
-                          href={`${config.uploadsUrl}/${file.path}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                        >
-                          {file.name}
-                        </a>
-                      <Text type="secondary">({(file.size / 1024).toFixed(1)} KB)</Text>
-                    </Space>
-                  </List.Item>
-                )}
+            <Card 
+              bordered={false} 
+              bodyStyle={{ 
+                padding: '16px',
+                backgroundColor: '#fafafa',
+                borderRadius: '4px'
+              }}
+            >
+              <div 
+                dangerouslySetInnerHTML={{ __html: selectedCircular.description }} 
+                style={{ 
+                  lineHeight: '1.6',
+                  fontSize: '15px'
+                }}
               />
-            </>
-          )}
-        </Modal>
-      )}
+            </Card>
 
+            {selectedCircular.attachments?.length > 0 && (
+              <div style={{ marginTop: '24px' }}>
+                <Title level={5} style={{ marginBottom: '16px' }}>
+                  <PaperClipOutlined style={{ marginRight: '8px' }} />
+                  Attachments ({selectedCircular.attachments.length})
+                </Title>
+                <List
+                  dataSource={selectedCircular.attachments}
+                  renderItem={file => (
+                    <List.Item 
+                      style={{ 
+                        padding: '12px 16px',
+                        border: '1px solid #f0f0f0',
+                        borderRadius: '4px',
+                        marginBottom: '8px',
+                        backgroundColor: '#fff'
+                      }}
+                    >
+                      <List.Item.Meta
+                        avatar={fileTypeIcon(file.name)}
+                        title={
+                          <a 
+                            href={`${config.uploadsUrl}/${file.path}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            style={{ display: 'flex', alignItems: 'center' }}
+                          >
+                            {file.name}
+                          </a>
+                        }
+                        description={
+                          <Text type="secondary">
+                            {fileTypeToName(file.name.split('.').pop())} • {(file.size / 1024).toFixed(1)} KB
+                          </Text>
+                        }
+                      />
+                    </List.Item>
+                  )}
+                />
+              </div>
+            )}
+
+            <div style={{ marginTop: '24px', textAlign: 'right' }}>
+              <Button 
+                type="primary" 
+                onClick={() => setSelectedCircular(null)}
+                style={{ minWidth: '100px' }}
+              >
+                Close
+              </Button>
+            </div>
+          </Modal>
+        )}
+      </div>
+      
       {/* Send Circular Modal */}
       <Modal
         title="Send Circular to All"

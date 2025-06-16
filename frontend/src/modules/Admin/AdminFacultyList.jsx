@@ -5,6 +5,7 @@ import usePopup from '../../components/usePopup';
 import AdminAddFaculty from './AdminAddFaculty';
 import AdminEditFaculty from './AdminEditFaculty';
 import AdminAddFacultyUpload from './AdminAddFacultyUpload';
+import AdminFacultyViewPopup from './AdminFacultyViewPopup';
 import axios from 'axios';
 import config from '../../config';
 import * as XLSX from 'xlsx';
@@ -169,6 +170,19 @@ const handleExportFaculty = () => {
   XLSX.utils.book_append_sheet(wb, ws, 'Faculty');
   XLSX.writeFile(wb, 'Faculty_Export.xlsx');
   message.success('Faculty exported successfully!');
+};
+
+const handleViewFaculty = (record) => {
+  showPopup(
+    <AdminFacultyViewPopup 
+      facultyData={record}
+      onEdit={(facultyData) => {
+        closePopup(); // Close the view popup first
+        handleEditFaculty(facultyData); // Then open the edit popup
+      }}
+      onClose={closePopup}
+    />
+  );
 };
 
 const handleEditFaculty = (record) => {
@@ -365,11 +379,17 @@ const columns = [
     ellipsis: true,
   },
   {
-    title: 'Action → Edit/Delete',
+    title: 'Action → View/Edit/Delete',
     key: 'action',
     fixed: 'right',
     render: (_, record) => (
-      <Space size="middle" style={{ zIndex: 0 }}> {/* Add zIndex here */}
+      <Space size="middle" style={{ zIndex: 0 }}>
+        <Button 
+          type="link" 
+          onClick={() => handleViewFaculty(record)}
+        >
+          View
+        </Button>
         <Button 
           type="link" 
           onClick={() => handleEditFaculty(record)}

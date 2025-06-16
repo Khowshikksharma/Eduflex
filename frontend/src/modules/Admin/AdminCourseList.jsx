@@ -10,7 +10,7 @@ import config from '../../config';
 import * as XLSX from 'xlsx';
 
 const departments = [
-  'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE',
+  'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
   'ASE', 'AUT', 'AGE', 'BIO', 'BME', 'CEE', 'CER'
 ];
 

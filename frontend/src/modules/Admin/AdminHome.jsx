@@ -16,19 +16,49 @@ import axios from 'axios';
 
 const AdminHome = () => {
   const [counts, setCounts] = useState(null);
+  const [departmentsData, setDepartmentsData] = useState(null);
+
 
   useEffect(() => {
     fetchCounts();
   }, []);
 
-  const fetchCounts = async () => {
-    try {
-      const response = await axios.get(`${config.url}/admin/analysis`);
-      setCounts(response.data);
-    } catch (error) {
-      console.error(error.message)
+const fetchCounts = async () => {
+  try {
+    const response = await axios.get(`${config.url}/admin/analysis`);
+    const data = response.data;
+    setCounts(data);
+
+    if (data.departmentWiseCount) {
+      // Filter out departments with 0 count
+      const filtered = Object.entries(data.departmentWiseCount)
+        .filter(([, count]) => count > 0);
+
+      const labels = filtered.map(([dept]) => dept);
+      const values = filtered.map(([, count]) => count);
+      const backgroundColors = labels.map((_, i) => [
+        '#1890ff', '#36cfc9', '#faad14', '#f759ab', '#52c41a',
+        '#722ed1', '#fa8c16', '#f5222d', '#13c2c2', '#eb2f96',
+        '#2f54eb', '#a0d911', '#d46b08', '#262626', '#bfbfbf'
+      ][i % 15]);
+
+      setDepartmentsData({
+        labels,
+        datasets: [
+          {
+            data: values,
+            backgroundColor: backgroundColors,
+            borderWidth: 1
+          }
+        ]
+      });
     }
-  };
+  } catch (error) {
+    console.error(error.message);
+  }
+};
+
+
 
   // Statistics data
   const stats = [
@@ -98,25 +128,25 @@ const AdminHome = () => {
   ];
 
   // Departments distribution data
-  const departmentsData = {
-    labels: ['CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'AERO', 'AI/ML', 'IT'],
-    datasets: [
-      {
-        data: [320, 180, 150, 120, 90, 80, 210, 140],
-        backgroundColor: [
-          '#1890ff',
-          '#36cfc9',
-          '#faad14',
-          '#f759ab',
-          '#52c41a',
-          '#722ed1',
-          '#fa8c16',
-          '#f5222d'
-        ],
-        borderWidth: 1
-      }
-    ]
-  };
+  // const departmentsData = {
+  //   labels: ['CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'AERO', 'AI/ML', 'IT'],
+  //   datasets: [
+  //     {
+  //       data: [320, 180, 150, 120, 90, 80, 210, 140],
+  //       backgroundColor: [
+  //         '#1890ff',
+  //         '#36cfc9',
+  //         '#faad14',
+  //         '#f759ab',
+  //         '#52c41a',
+  //         '#722ed1',
+  //         '#fa8c16',
+  //         '#f5222d'
+  //       ],
+  //       borderWidth: 1
+  //     }
+  //   ]
+  // };
 
   // Enrollment trend data
   const enrollmentData = {
@@ -313,18 +343,20 @@ const AdminHome = () => {
               Departments Distribution
             </h3>
             <div style={{ flex: 1, position: 'relative' }}>
-              <Pie
-                data={departmentsData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      position: 'right'
-                    }
-                  }
-                }}
-              />
+              {departmentsData && (
+                  <Pie
+                    data={departmentsData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: 'right'
+                        }
+                      }
+                    }}
+                  />
+                )}
             </div>
           </div>
         </Col>

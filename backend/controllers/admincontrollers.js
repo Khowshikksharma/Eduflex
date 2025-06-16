@@ -6,6 +6,11 @@ const FacultyCourseMapping = require('../models/FacultyCourseMapping');
 const Circular = require('../models/Circular');
 const path = require('path');
 
+const departments = [
+  'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
+  'ASE', 'AUT', 'AGE', 'BIO', 'BME', 'CEE', 'CER'
+];
+
 const checkAdminLogin = async (req, res) => {
     try{
         const input = req.body;
@@ -182,6 +187,18 @@ const viewFacultyById = async (req, res) => {
   }
 }
 
+const getFacultyID = async(req,res) => {
+  try{
+    const facultyID = req.params.facultyId;
+    const faculty = await Faculty.findById(facultyID);
+    if(!faculty)
+      return res.status(404).send('Faculty not found');
+    res.json(faculty.id);
+  }catch(error){
+    res.status(500).send(error.message);
+  }
+}
+
 const facultyUpload = async (req, res) => {
   try{
     await Faculty.insertMany(req.body);
@@ -191,21 +208,28 @@ const facultyUpload = async (req, res) => {
   }
 };
 
-const analysis = async (req,res) =>{
-  try{
+const analysis = async (req, res) => {
+  try {
     const studentCount = await Student.countDocuments();
     const facultyCount = await Faculty.countDocuments();
     const courseCount = await Course.countDocuments();
+
+    const departmentWiseCount = {};
+    for (const dept of departments) {
+      const count = await Student.countDocuments({ department: dept });
+      departmentWiseCount[dept] = count;
+    }
+
     res.json({
-      studentCount: studentCount,
-      facultyCount: facultyCount,
-      courseCount: courseCount
+      studentCount,
+      facultyCount,
+      courseCount,
+      departmentWiseCount
     });
-  }
-  catch(error){
+  } catch (error) {
     res.status(500).send(error.message);
   }
-}
+};
 
 const insertCourse = async (request, response) => {
     try 
@@ -466,6 +490,7 @@ module.exports = {
     changeFacultyStatus,
     viewFacultyById,
     facultyUpload,
+    getFacultyID,
 
     analysis,
 

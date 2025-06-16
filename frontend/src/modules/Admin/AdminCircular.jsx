@@ -452,7 +452,8 @@ const AdminCircular = () => {
               </p>
               <p className="ant-upload-text">Click or drag files to this area to upload</p>
               <p className="ant-upload-hint">
-                Supports multiple file uploads. Max file size: 10MB
+                Supported file types: JPG, PNG, PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX<br />
+                Max file size: 10MB • Max files: 10
               </p>
             </Dragger>
           </Form.Item>

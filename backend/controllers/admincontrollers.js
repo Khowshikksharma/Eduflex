@@ -388,7 +388,7 @@ const updateFCMapping = async (req, res) => {
     const existing = await FacultyCourseMapping.findOne({
       facultyId: faculty._id,
       ccode: course._id,
-      fmapid: { $ne: fmapid } // prevent false positive on same record
+      fmapid: { $ne: fmapid } 
     });
 
     if (existing) {

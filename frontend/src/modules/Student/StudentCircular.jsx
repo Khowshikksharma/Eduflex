@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import config from '../../config';
 
@@ -7,18 +7,19 @@ const StudentCircular = () => {
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const [studentData,setSudentData] = useState(null);
+  const [studentData, setStudentData] = useState(null);
   const storedData = localStorage.getItem('student');
-  useEffect(()=>{
-    if(storedData){
-      const parsedData = JSON.parse(storedData);
-      setSudentData(parsedData);
-    }
-  },[storedData]);
+  const intervalRef = useRef(null);
 
   useEffect(() => {
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      setStudentData(parsedData);
+    }
+  }, [storedData]);
+
   const fetchCirculars = async () => {
-    if (!studentData) return; 
+    if (!studentData) return;
 
     try {
       const res = await axios.get(`${config.url}/admin/getCirculars/students`);
@@ -39,9 +40,15 @@ const StudentCircular = () => {
     }
   };
 
-  fetchCirculars();
-}, [studentData]); 
-
+  useEffect(() => {
+    fetchCirculars();
+    intervalRef.current = setInterval(fetchCirculars, 1000);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  },);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -49,18 +56,17 @@ const StudentCircular = () => {
   };
 
   const handleEmailClick = async (email) => {
-  setSelectedEmail(email);
-  setEmails(emails.map(e => e.id === email.id ? { ...e, read: true } : e));
+    setSelectedEmail(email);
+    setEmails(emails.map(e => e.id === email.id ? { ...e, read: true } : e));
 
-  try {
-    await axios.put(`${config.url}/admin/markAsRead/${email.id}`, {
-      user: studentData.id
-    });
-  } catch (err) {
-    console.error('Failed to mark as read:', err);
-  }
-};
-
+    try {
+      await axios.put(`${config.url}/admin/markAsRead/${email.id}`, {
+        user: studentData.id
+      });
+    } catch (err) {
+      console.error('Failed to mark as read:', err);
+    }
+  };
 
   const filteredEmails = emails.filter(email =>
     email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -74,53 +80,92 @@ const StudentCircular = () => {
 
   return (
     <div className="email-container" style={{ display: 'flex', height: '100vh', fontFamily: 'Arial, sans-serif' }}>
-      <div className="email-list" style={{ width: '35%', borderRight: '1px solid #ddd', overflowY: 'auto' }}>
-        <h1 style={{ padding: '10px' }}>Circulars</h1>
+      {/* Left side - Email List */}
+      <div className="email-list" style={{ 
+        width: '35%', 
+        borderRight: '1px solid #ddd',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        overflow: 'hidden'
+      }}>
+        <div style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+          <h1>Student Circulars</h1>
+          <small style={{ color: 'green' }}>Auto-refreshing every second</small>
+        </div>
         <div className="search-bar" style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
           <input
             type="text"
-            placeholder="Search emails..."
+            placeholder="Search circulars..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
           />
         </div>
 
-        {filteredEmails.map((email) => (
-          <div
-            key={email.id}
-            onClick={() => handleEmailClick(email)}
-            style={{
-              padding: '15px',
-              borderBottom: '1px solid #eee',
-              cursor: 'pointer',
-              backgroundColor: email.read ? '#fff' : '#f0f7ff',
-              fontWeight: email.read ? 'normal' : 'bold',
-              display: 'flex',
-              flexDirection: 'column'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-              <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{email.sender}</span>
-              <span style={{ fontSize: '12px', color: '#666' }}>{formatDate(email.date)}</span>
-            </div>
-            <div style={{ fontSize: '14px', marginBottom: '5px' }}>{email.subject}</div>
-            <div style={{ fontSize: '12px', color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {email.body.split('\n')[0]}
-            </div>
-            {email.attachments.length > 0 && (
-              <div style={{ fontSize: '12px', color: '#0078d4', marginTop: '5px' }}>
-                <i className="fa fa-paperclip" style={{ marginRight: '5px' }}></i>
-                {email.attachments.length} attachment{email.attachments.length !== 1 ? 's' : ''}
+        <div style={{ overflowY: 'auto', flex: 1 }}>
+          {filteredEmails.map((email) => (
+            <div
+              key={email.id}
+              onClick={() => handleEmailClick(email)}
+              style={{
+                padding: '15px',
+                borderBottom: '1px solid #eee',
+                cursor: 'pointer',
+                backgroundColor: email.read ? '#fff' : '#f0f7ff',
+                fontWeight: email.read ? 'normal' : 'bold',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{email.sender}</span>
+                <span style={{ fontSize: '12px', color: '#666' }}>{formatDate(email.date)}</span>
               </div>
-            )}
-          </div>
-        ))}
+              <div style={{
+                fontSize: '14px',
+                marginBottom: '5px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}>
+                {email.subject}
+              </div>
+              <div style={{
+                fontSize: '12px',
+                color: '#666',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}>
+                {email.body.split('\n')[0]}
+              </div>
+              {email.attachments.length > 0 && (
+                <div style={{ fontSize: '12px', color: '#0078d4', marginTop: '5px' }}>
+                  <i className="fa fa-paperclip" style={{ marginRight: '5px' }}></i>
+                  {email.attachments.length} attachment{email.attachments.length !== 1 ? 's' : ''}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="email-content" style={{ width: '65%', padding: '20px', overflowY: 'auto' }}>
+      {/* Right side - Email Content */}
+      <div className="email-content" style={{ 
+        width: '65%',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        overflow: 'hidden'
+      }}>
         {selectedEmail ? (
-          <div>
+          <div style={{ 
+            padding: '20px',
+            overflowY: 'auto',
+            flex: 1,
+            wordWrap: 'break-word'
+          }}>
             <h2 style={{ marginBottom: '10px' }}>{selectedEmail.subject}</h2>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', color: '#666' }}>
               <div>
@@ -135,7 +180,8 @@ const StudentCircular = () => {
               lineHeight: '1.6',
               padding: '15px',
               backgroundColor: '#f9f9f9',
-              borderRadius: '4px'
+              borderRadius: '4px',
+              overflowWrap: 'break-word'
             }}>
               {selectedEmail.body}
             </div>
@@ -182,7 +228,7 @@ const StudentCircular = () => {
           }}>
             <div style={{ textAlign: 'center' }}>
               <i className="fa fa-envelope-open" style={{ fontSize: '48px', marginBottom: '20px' }}></i>
-              <h2>Select an email to read</h2>
+              <h2>Select a circular to read</h2>
               <p>Choose a message from the list to view its contents</p>
             </div>
           </div>

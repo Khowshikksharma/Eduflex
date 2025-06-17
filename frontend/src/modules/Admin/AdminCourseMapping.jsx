@@ -309,6 +309,10 @@ const AdminCourseMapping = () => {
         loading={loading}
         scroll={{ x: 'max-content' }}
         bordered
+        style={{
+          position: 'relative',
+          zIndex: 0
+        }}
         pagination={{
           // pageSize: 10,
           showSizeChanger: true,

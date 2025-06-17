@@ -77,12 +77,10 @@ adminrouter.get("/viewFCMapping", admincontroller.viewFCMapping);
 adminrouter.put("/updateFCMapping", admincontroller.updateFCMapping);
 adminrouter.put("/changeMappingStatus", admincontroller.changeMappingStatus);
 
-adminrouter.post(
-  "/send-all-circular",
-  upload,
-  admincontroller.sendCircular
-);
+adminrouter.post("/send-all-circular",upload,admincontroller.sendCircular);
 adminrouter.get("/all-circulars", admincontroller.getAllCirculars);
+adminrouter.get("/getCirculars/:role",admincontroller.getCirculrByRole);
+adminrouter.put("/markAsRead/:id",admincontroller.markAsRead);
 
 adminrouter.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {

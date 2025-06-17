@@ -12,7 +12,8 @@ const circularSchema = new mongoose.Schema({
   recipientGroups: [{ type: String, enum: ['students', 'faculty'] }],
   selectedDepartments: [{ type: String }],
   attachments: [attachmentSchema],
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  readBy: [String]
 });
 
 module.exports = mongoose.model('Circular', circularSchema);

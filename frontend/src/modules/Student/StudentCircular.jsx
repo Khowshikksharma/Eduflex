@@ -14,11 +14,11 @@ const StudentCircular = () => {
       const parsedData = JSON.parse(storedData);
       setSudentData(parsedData);
     }
-  },[]);
+  },[storedData]);
 
   useEffect(() => {
   const fetchCirculars = async () => {
-    if (!studentData) return; // Wait until studentData is loaded
+    if (!studentData) return; 
 
     try {
       const res = await axios.get(`${config.url}/admin/getCirculars/students`);

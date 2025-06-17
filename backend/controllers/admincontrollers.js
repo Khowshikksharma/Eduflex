@@ -438,10 +438,14 @@ const changeMappingStatus = async (req, res) => {
 
 const sendCircular = async (req, res) => {
   try {
+    // console.log('Received files:', req.files); 
+    // console.log('Request body:', req.body);
+
     const { subject, description, recipientGroups, selectedDepartments } = req.body;
 
     let attachments = [];
     if (req.files && req.files.length > 0) {
+      // console.log('Processing files:', req.files);
       attachments = req.files.map(file => ({
         name: file.originalname,
         path: file.filename,
@@ -460,8 +464,12 @@ const sendCircular = async (req, res) => {
     await newCircular.save();
     res.status(201).json({ message: 'Circular sent successfully' });
   } catch (error) {
-    console.error('Send Circular Error:', error);
-    res.status(500).json({ error: 'Server Error' });
+    console.error('Detailed error:', error);
+    res.status(500).json({ 
+      error: 'Server Error',
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 

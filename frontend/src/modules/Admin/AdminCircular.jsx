@@ -72,7 +72,8 @@ const AdminCircular = () => {
       jpg: 'JPEG Image',
       jpeg: 'JPEG Image',
       png: 'PNG Image',
-      gif: 'GIF Image'
+      gif: 'GIF Image',
+      csv: 'Common-Separaed Values'
     };
     return types[extension.toLowerCase()] || 'File';
   };
@@ -92,36 +93,47 @@ const AdminCircular = () => {
   };
 
   const handleSendCircular = async (values) => {
-    setLoading(true);
-    
-    const formData = new FormData();
-    formData.append('subject', values.subject);
-    formData.append('description', values.description);
-    formData.append('recipientGroups', JSON.stringify(recipientGroups));
-    formData.append('selectedDepartments', JSON.stringify(selectedDepartments));
-    
-    fileList.forEach(file => {
-      formData.append('attachments', file.originFileObj);
-    });
+  setLoading(true);
+  
+  const formData = new FormData();
+  formData.append('subject', values.subject);
+  formData.append('description', values.description);
+  formData.append('recipientGroups', JSON.stringify(recipientGroups));
+  formData.append('selectedDepartments', JSON.stringify(selectedDepartments));
+  
+  fileList.forEach((file) => {
+    formData.append('attachments', file.originFileObj);
+  });
 
-    try {
-      await axios.post(`${config.url}/admin/send-all-circular`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      message.success('Circular sent successfully to all recipients!');
-      form.resetFields();
-      setFileList([]);
-      setIsModalVisible(false);
-      fetchCirculars();
-    } catch (error) {
-      message.error('Failed to send circular');
-      console.error('Error sending circular:', error);
-    } finally {
-      setLoading(false);
+  try {
+    await axios.post(`${config.url}/admin/send-all-circular`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    message.success('Circular sent successfully to all recipients!');
+    form.resetFields();
+    setFileList([]);
+    setIsModalVisible(false);
+    fetchCirculars();
+  } catch (error) {
+    console.error('Detailed error:', error);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+      console.error('Response status:', error.response.status);
+      console.error('Response headers:', error.response.headers);
+      message.error(`Error: ${error.response.data.message || error.response.statusText}`);
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+      message.error('No response from server. Please check your connection.');
+    } else {
+      console.error('Request setup error:', error.message);
+      message.error('Request error: ' + error.message);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleFileChange = ({ fileList }) => {
     setFileList(fileList);
@@ -240,6 +252,8 @@ const AdminCircular = () => {
       case 'png':
       case 'gif':
         return <FileImageOutlined style={{ color: '#722ed1' }} />;
+      case 'csv':
+        return <FileImageOutlined style={{color : '#faad14'}} />
       default:
         return <FileOutlined />;
     }
@@ -452,7 +466,7 @@ const AdminCircular = () => {
               </p>
               <p className="ant-upload-text">Click or drag files to this area to upload</p>
               <p className="ant-upload-hint">
-                Supported file types: JPG, PNG, PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX<br />
+                Supported file types: JPG, PNG, PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX,CSV<br />
                 Max file size: 10MB • Max files: 10
               </p>
             </Dragger>

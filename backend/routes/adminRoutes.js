@@ -13,7 +13,9 @@ const allowedFileTypes = [
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.ms-powerpoint',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'text/csv', 
+  'text/plain'
 ];
 
 const storage = multer.diskStorage({
@@ -27,9 +29,11 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
+  console.log('Checking file type:', file.mimetype); // Add this line
   if (allowedFileTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
+    console.log('Invalid file type rejected:', file.mimetype);
     cb(new Error(`Invalid file type: ${file.mimetype}. Only ${allowedFileTypes.join(', ')} are allowed`), false);
   }
 };
@@ -41,7 +45,7 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024,
     files: 10 
   }
-});
+}).array('attachments', 10); 
 
 adminrouter.post("/checkadminlogin", admincontroller.checkAdminLogin);
 adminrouter.put("/updateprofile", admincontroller.updateProfile);
@@ -50,14 +54,14 @@ adminrouter.post("/insertstudent", admincontroller.insertstudent);
 adminrouter.get("/viewstudents", admincontroller.viewstudents);
 adminrouter.put("/updatestudent", admincontroller.updateStudent);
 adminrouter.put("/changeStudentStatus", admincontroller.changeStudentStatus);
-adminrouter.post("/uploadstudents", upload.single('file'), admincontroller.studentUpload);
+adminrouter.post("/uploadstudents", admincontroller.studentUpload);
 
 adminrouter.post("/insertfaculty", admincontroller.insertfaculty);
 adminrouter.get("/viewfaculties", admincontroller.viewfaculties);
 adminrouter.put("/updatefaculty", admincontroller.updateFaculty);
 adminrouter.put("/changeFacultyStatus", admincontroller.changeFacultyStatus);
 adminrouter.get("/viewFacultyById/:facultyId", admincontroller.viewFacultyById);
-adminrouter.post("/uploadfaculties", upload.single('file'), admincontroller.facultyUpload);
+adminrouter.post("/uploadfaculties",admincontroller.facultyUpload);
 // adminrouter.get("/getFacultyID/:facultyId",admincontroller.getFacultyID);
 
 adminrouter.get("/analysis", admincontroller.analysis);
@@ -75,7 +79,7 @@ adminrouter.put("/changeMappingStatus", admincontroller.changeMappingStatus);
 
 adminrouter.post(
   "/send-all-circular",
-  upload.array("attachments", 10),
+  upload,
   admincontroller.sendCircular
 );
 adminrouter.get("/all-circulars", admincontroller.getAllCirculars);

@@ -23,7 +23,13 @@ const StudentCircular = () => {
 
     try {
       const res = await axios.get(`${config.url}/admin/getCirculars/students`);
-      const data = res.data.map((circular) => ({
+      const data = res.data.filter(circular => {
+        return (
+          !circular.selectedDepartments || 
+          circular.selectedDepartments.length === 0 || 
+          circular.selectedDepartments.includes(studentData.department)
+        );
+      }).map((circular) => ({
         id: circular._id,
         subject: circular.subject,
         sender: 'admin@university.edu',

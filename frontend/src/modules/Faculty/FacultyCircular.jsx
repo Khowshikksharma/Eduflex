@@ -22,7 +22,7 @@ const FacultyCircular = () => {
     if (!facultyData) return;
 
     try {
-      const res = await axios.get(`${config.url}/admin/getCirculars/faculty`);
+      const res = await axios.get(`${config.url}/faculty/getCirculars`);
       const data = res.data.map((circular) => ({
         id: circular._id,
         subject: circular.subject,
@@ -48,7 +48,7 @@ const FacultyCircular = () => {
         clearInterval(intervalRef.current);
       }
     };
-  },);
+  });
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -60,7 +60,7 @@ const FacultyCircular = () => {
     setEmails(emails.map(e => e.id === email.id ? { ...e, read: true } : e));
 
     try {
-      await axios.put(`${config.url}/admin/markAsRead/${email.id}`, {
+      await axios.put(`${config.url}/faculty/markAsRead/${email.id}`, {
         user: facultyData.id
       });
     } catch (err) {

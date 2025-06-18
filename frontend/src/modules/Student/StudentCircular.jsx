@@ -22,7 +22,7 @@ const StudentCircular = () => {
     if (!studentData) return;
 
     try {
-      const res = await axios.get(`${config.url}/admin/getCirculars/students`);
+      const res = await axios.get(`${config.url}/student/getCirculars`);
       const data = res.data.filter(circular => {
         return (
           !circular.selectedDepartments || 
@@ -66,7 +66,7 @@ const StudentCircular = () => {
     setEmails(emails.map(e => e.id === email.id ? { ...e, read: true } : e));
 
     try {
-      await axios.put(`${config.url}/admin/markAsRead/${email.id}`, {
+      await axios.put(`${config.url}/student/markAsRead/${email.id}`, {
         user: studentData.id
       });
     } catch (err) {

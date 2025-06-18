@@ -1,4 +1,5 @@
 const Student = require('../models/Student');
+const Circular = require('../models/Circular')
 
 const checkStudentLogin = async (req, res) => {
     try {
@@ -11,6 +12,38 @@ const checkStudentLogin = async (req, res) => {
     }
 }
 
+const getCirculrByRole = async(req,res) => {
+  try{
+    const circulars = await Circular.find({ recipientGroups: { $in: ['students'] } }).sort({createdAt:-1});
+    res.json(circulars);
+  }catch(error){
+    res.status(500).json(error);
+  }
+}
+
+const markAsRead = async(req,res) => {
+  const circularId = req.params.id;
+  const user = req.body.user;
+
+  if (!user) return res.status(400).json({ error: 'User identifier is required' });
+
+  try {
+    const circular = await Circular.findById(circularId);
+    if (!circular) return res.status(404).json({ error: 'Circular not found' });
+
+    if (!circular.readBy.includes(user)) {
+      circular.readBy.push(user);
+      await circular.save();
+    }
+
+    res.json({ message: 'Marked as read' });
+  }catch(error){
+    res.status(500).json({ error: 'Failed to mark as read' });
+  }
+}
+
 module.exports = {
-    checkStudentLogin,   
+    checkStudentLogin,
+    getCirculrByRole,
+    markAsRead,  
 };

@@ -25,8 +25,8 @@ const StudentCircular = () => {
       const res = await axios.get(`${config.url}/student/getCirculars`);
       const data = res.data.filter(circular => {
         return (
-          !circular.selectedDepartments || 
-          circular.selectedDepartments.length === 0 || 
+          !circular.selectedDepartments ||
+          circular.selectedDepartments.length === 0 ||
           circular.selectedDepartments.includes(studentData.department)
         );
       }).map((circular) => ({

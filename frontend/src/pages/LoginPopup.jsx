@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Route, Router, useNavigate } from 'react-router-dom';
 import loginImage from '../assets/loginrocket.jpg';
 import axios from 'axios';
 import config from '../config';
 import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
+import ForgotPassword from './ForgotPassword';
+import ContactAdmin from './ContactAdmin';
 
 const LoginPopup = ({ onClose, setAuthState }) => {
   const [email, setEmail] = useState('');
@@ -221,11 +223,11 @@ const LoginPopup = ({ onClose, setAuthState }) => {
         <div style={footerStyle}>
           <p>
             Having trouble logging in?{' '}
-            <Link to="/forgot-password" onClick={onClose} style={linkStyle}>
+            <Link to="/forgotpassword" onClick={onClose} style={linkStyle}>
               Forgot Password
             </Link>{' '}
             or{' '}
-            <Link to="/contact-admin" onClick={onClose} style={linkStyle}>
+            <Link to="/contactadmin" onClick={onClose} style={linkStyle}>
               Contact Administrator
             </Link>
           </p>
@@ -234,6 +236,7 @@ const LoginPopup = ({ onClose, setAuthState }) => {
 
       <div style={imageContainerStyle}></div>
     </div>
+
   );
 };
 

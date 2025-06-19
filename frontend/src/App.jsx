@@ -44,6 +44,8 @@ import AdminEditStudent from './modules/Admin/AdminEditStudent';
 import AdminAddCourse from './modules/Admin/AdminAddCourse';
 import AdminEditCourse from './modules/Admin/AdminEditCourse';
 import AdminCircular from './modules/Admin/AdminCircular';
+import ForgotPassword from './pages/ForgotPassword';
+import ContactAdmin from './pages/ContactAdmin';
 
 const App = () => {
   // Helper function to check localStorage
@@ -180,6 +182,8 @@ const App = () => {
             <Route path="/courses" element={<AllCourses setAuthState={setAuthState}/>} />
             <Route path="/facultys" element={<Faculty setAuthState={setAuthState}/>} />
             <Route path="/about" element={<About />} />
+            <Route path="/forgotpassword" element={<ForgotPassword />} />
+            <Route path="/contactadmin" element={<ContactAdmin />} />
           </>
         ) : null}
 

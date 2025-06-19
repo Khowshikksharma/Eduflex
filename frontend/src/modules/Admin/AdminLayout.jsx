@@ -106,12 +106,12 @@ const AdminLayout = ({onLogout}) => {
           label: 'Faculty List',
           onClick: () => navigate('/admin/faculty/list'),
         },
-        {
-          key: 'send-circular',
-          icon: <NotificationOutlined style={{ color: '#000' }} />,
-          label: 'Send Circular',
-          onClick: () => navigate('/admin/faculty/circular'),
-        },
+        // {
+        //   key: 'send-circular',
+        //   icon: <NotificationOutlined style={{ color: '#000' }} />,
+        //   label: 'Send Circular',
+        //   onClick: () => navigate('/admin/faculty/circular'),
+        // },
       ];
     } else if (location.pathname.includes('/admin/course')) {
       return [
@@ -148,7 +148,7 @@ const AdminLayout = ({onLogout}) => {
     if (path.includes('/home/circular')) return ['send-circular'];
     if (path.includes('student/list')) return ['student-list'];
     if (path.includes('faculty/list')) return ['faculty-list'];
-    if (path.includes('faculty/circular')) return ['send-circular'];
+    // if (path.includes('faculty/circular')) return ['send-circular'];
     if (path.includes('course/list')) return ['course-list'];
     if (path.includes('course/mapping')) return ['course-faculty-mapping'];
     return ['home-dashboard'];

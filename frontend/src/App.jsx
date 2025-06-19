@@ -58,10 +58,7 @@ const App = () => {
   const [authState, setAuthState] = useState(checkAuthState);
 
   const handleLogout = (role) => {
-    // Clear localStorage
     localStorage.removeItem(role);
-    
-    // Update state immediately
     const newAuthState = {
       isAdminLoggedIn: false,
       isFacultyLoggedIn: false,
@@ -69,14 +66,11 @@ const App = () => {
     };
     
     setAuthState(newAuthState);
-    
-    // Force a re-render by updating the state again after a brief delay
     setTimeout(() => {
       setAuthState(checkAuthState());
     }, 100);
   };
   
-  // Check localStorage on component mount and when needed
   useEffect(() => {
     const checkAuth = () => {
       const currentAuthState = checkAuthState();
@@ -89,31 +83,21 @@ const App = () => {
         setAuthState(currentAuthState);
       }
     };
-
-    // Check immediately on mount
     checkAuth();
-
-    // Handle storage events (for cross-tab synchronization)
     const handleStorageChange = () => {
       checkAuth();
     };
-
     window.addEventListener('storage', handleStorageChange);
-    
-    // Also listen for custom events (in case you need to trigger updates manually)
     const handleAuthChange = () => {
       checkAuth();
     };
-    
     window.addEventListener('authStateChange', handleAuthChange);
-
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('authStateChange', handleAuthChange);
     };
   }, [authState]);
 
-  // // Debug logging (remove in production)
   // console.log('Current auth state:', authState);
   // console.log('localStorage admin:', localStorage.getItem('admin'));
   // console.log('localStorage faculty:', localStorage.getItem('faculty'));

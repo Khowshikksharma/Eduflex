@@ -47,15 +47,9 @@ import AdminAddCourse from './modules/Admin/AdminAddCourse';
 import AdminEditCourse from './modules/Admin/AdminEditCourse';
 import AdminCircular from './modules/Admin/AdminCircular';
 
-
 const App = () => {
   const TIMEOUT_DURATION = 30 * 60 * 1000;
   const timeoutRef = useRef(null);
-
-  const printTime = () => {
-    const now = new Date();
-    console.log(`Current Time: ${now.toLocaleString()}`);
-  };
 
   const checkAuthState = () => {
     const admin = localStorage.getItem('admin');
@@ -204,7 +198,6 @@ const App = () => {
     const handleBeforeUnload = (e) => {
       if (e.returnValue === undefined && !isWindowClosing) {
         isWindowClosing = true;
-        printTime();
         localStorage.removeItem('admin');
         localStorage.removeItem('faculty');
         localStorage.removeItem('student');
@@ -213,7 +206,6 @@ const App = () => {
 
     const handleUnload = () => {
       if (isWindowClosing) {
-        printTime();
         localStorage.removeItem('admin');
         localStorage.removeItem('faculty');
         localStorage.removeItem('student');
@@ -233,7 +225,6 @@ const App = () => {
       if (hiddenTime) {
         const timeDiff = Date.now() - parseInt(hiddenTime);
         if (timeDiff > 5000) {
-          printTime();
           localStorage.removeItem('admin');
           localStorage.removeItem('faculty');
           localStorage.removeItem('student');
@@ -253,16 +244,6 @@ const App = () => {
       window.removeEventListener('unload', handleUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
-
-  useEffect(() => {
-    printTime();
-
-    const timeInterval = setInterval(() => {
-      printTime();
-    }, 60000);
-
-    return () => clearInterval(timeInterval);
   }, []);
 
   useEffect(() => {

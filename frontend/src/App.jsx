@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 
+// Fixed typo in import paths
 import Landing from './pages/Landing';
-import AllCourses from './pages/Allcourses';
+import AllCourses from './pages/AllCourses';
 import Faculty from './pages/Faculty';
 import About from './pages/About';
 import ForgotPassword from './pages/ForgotPassword';
@@ -48,80 +49,84 @@ import AdminEditCourse from './modules/Admin/AdminEditCourse';
 import AdminCircular from './modules/Admin/AdminCircular';
 
 const App = () => {
-  const TIMEOUT_DURATION = 30 * 60 * 1000;
+  const TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
   const timeoutRef = useRef(null);
+  const [authState, setAuthState] = useState({
+    isAdminLoggedIn: false,
+    isFacultyLoggedIn: false,
+    isStudentLoggedIn: false
+  });
 
-  const checkAuthState = () => {
-    const admin = localStorage.getItem('admin');
-    const faculty = localStorage.getItem('faculty');
-    const student = localStorage.getItem('student');
+  const checkAuthState = useCallback(() => {
+    try {
+      const now = Date.now();
+      let expiredRole = null;
+      const roles = ['admin', 'faculty', 'student'];
+      const newAuthState = { isAdminLoggedIn: false, isFacultyLoggedIn: false, isStudentLoggedIn: false };
 
-    const now = Date.now();
-    let expiredRole = null;
+      roles.forEach(role => {
+        const data = localStorage.getItem(role);
+        if (data) {
+          try {
+            const parsedData = JSON.parse(data);
+            if (parsedData.loginTime && (now - parsedData.loginTime) > TIMEOUT_DURATION) {
+              expiredRole = role;
+            } else {
+              newAuthState[`is${role.charAt(0).toUpperCase() + role.slice(1)}LoggedIn`] = true;
+            }
+          } catch (e) {
+            console.error(`Error parsing ${role} data:`, e);
+            localStorage.removeItem(role);
+          }
+        }
+      });
 
-    if (admin) {
-      const adminData = JSON.parse(admin);
-      if (adminData.loginTime && (now - adminData.loginTime) > TIMEOUT_DURATION) {
-        expiredRole = 'admin';
+      if (expiredRole) {
+        localStorage.removeItem(expiredRole);
+        setTimeout(() => {
+          alert('Session expired. You have been logged out due to inactivity.');
+        }, 100);
       }
+
+      return newAuthState;
+    } catch (error) {
+      console.error('Error in checkAuthState:', error);
+      return {
+        isAdminLoggedIn: false,
+        isFacultyLoggedIn: false,
+        isStudentLoggedIn: false
+      };
     }
+  }, [TIMEOUT_DURATION]);
 
-    if (faculty) {
-      const facultyData = JSON.parse(faculty);
-      if (facultyData.loginTime && (now - facultyData.loginTime) > TIMEOUT_DURATION) {
-        expiredRole = 'faculty';
-      }
-    }
-
-    if (student) {
-      const studentData = JSON.parse(student);
-      if (studentData.loginTime && (now - studentData.loginTime) > TIMEOUT_DURATION) {
-        expiredRole = 'student';
-      }
-    }
-
-    if (expiredRole) {
-      localStorage.removeItem(expiredRole);
-      setTimeout(() => {
-        alert('Session expired. You have been logged out due to inactivity.');
-      }, 100);
-    }
-
-    return {
-      isAdminLoggedIn: localStorage.getItem('admin') !== null,
-      isFacultyLoggedIn: localStorage.getItem('faculty') !== null,
-      isStudentLoggedIn: localStorage.getItem('student') !== null
-    };
-  };
-
-  const updateLastActivity = (role) => {
-    const userData = localStorage.getItem(role);
-    if (userData) {
-      try {
+  const updateLastActivity = useCallback((role) => {
+    try {
+      const userData = localStorage.getItem(role);
+      if (userData) {
         const parsedData = JSON.parse(userData);
         parsedData.lastActivity = Date.now();
         localStorage.setItem(role, JSON.stringify(parsedData));
-      } catch (e) {
-        console.error('Error updating last activity:', e);
       }
+    } catch (e) {
+      console.error('Error updating last activity:', e);
     }
-  };
+  }, []);
 
-  const getCurrentRole = () => {
+  const getCurrentRole = useCallback(() => {
     if (localStorage.getItem('admin')) return 'admin';
     if (localStorage.getItem('faculty')) return 'faculty';
     if (localStorage.getItem('student')) return 'student';
     return null;
-  };
+  }, []);
 
-  const getTimeRemaining = () => {
-    const role = getCurrentRole();
-    if (!role) return 0;
-
-    const userData = localStorage.getItem(role);
-    if (!userData) return 0;
-
+  const getTimeRemaining = useCallback(() => {
     try {
+      const role = getCurrentRole();
+      if (!role) return 0;
+
+      const userData = localStorage.getItem(role);
+      if (!userData) return 0;
+
       const parsedData = JSON.parse(userData);
       const lastActivity = parsedData.lastActivity || parsedData.loginTime;
       if (!lastActivity) return 0;
@@ -130,12 +135,14 @@ const App = () => {
       const remaining = TIMEOUT_DURATION - elapsed;
       return Math.max(0, remaining);
     } catch (e) {
-      console.log(e);
+      console.error('Error getting time remaining:', e);
       return 0;
     }
-  };
+  }, [TIMEOUT_DURATION, getCurrentRole]);
 
-  const [authState, setAuthState] = useState(checkAuthState);
+  useEffect(() => {
+    setAuthState(checkAuthState());
+  }, [checkAuthState]);
 
   const autoLogout = useCallback(() => {
     const role = getCurrentRole();
@@ -149,187 +156,110 @@ const App = () => {
       isStudentLoggedIn: false
     });
 
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
 
     alert('Session expired. You have been logged out due to inactivity.');
-  }, []);
+  }, [getCurrentRole]);
 
   const resetTimeout = useCallback(() => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
 
     const role = getCurrentRole();
     if (role) {
       updateLastActivity(role);
     }
 
-    const currentAuthState = checkAuthState();
-    const isLoggedIn = currentAuthState.isAdminLoggedIn ||
-      currentAuthState.isFacultyLoggedIn ||
-      currentAuthState.isStudentLoggedIn;
-
-    if (isLoggedIn) {
-      const timeRemaining = getTimeRemaining();
-
-      if (timeRemaining <= 0) {
-        autoLogout();
-        return;
-      }
-
+    const timeRemaining = getTimeRemaining();
+    if (timeRemaining <= 0) {
+      autoLogout();
+    } else {
       timeoutRef.current = setTimeout(autoLogout, timeRemaining);
     }
-  }, [autoLogout]);
+  }, [autoLogout, getCurrentRole, getTimeRemaining, updateLastActivity]);
 
-  const handleLogout = (role) => {
+  const handleLogout = useCallback((role) => {
     localStorage.removeItem(role);
-    setAuthState({
-      isAdminLoggedIn: false,
-      isFacultyLoggedIn: false,
-      isStudentLoggedIn: false
-    });
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setTimeout(() => {
-      setAuthState(checkAuthState());
-    }, 100);
-  };
-
-  useEffect(() => {
-    let isWindowClosing = false;
-
-    const handleBeforeUnload = (e) => {
-      if (e.returnValue === undefined && !isWindowClosing) {
-        isWindowClosing = true;
-        localStorage.removeItem('admin');
-        localStorage.removeItem('faculty');
-        localStorage.removeItem('student');
-      }
-    };
-
-    const handleUnload = () => {
-      if (isWindowClosing) {
-        localStorage.removeItem('admin');
-        localStorage.removeItem('faculty');
-        localStorage.removeItem('student');
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        sessionStorage.setItem('windowHidden', Date.now().toString());
-      } else if (document.visibilityState === 'visible') {
-        sessionStorage.removeItem('windowHidden');
-      }
-    };
-
-    const checkIfWindowWasClosed = () => {
-      const hiddenTime = sessionStorage.getItem('windowHidden');
-      if (hiddenTime) {
-        const timeDiff = Date.now() - parseInt(hiddenTime);
-        if (timeDiff > 5000) {
-          localStorage.removeItem('admin');
-          localStorage.removeItem('faculty');
-          localStorage.removeItem('student');
-        }
-        sessionStorage.removeItem('windowHidden');
-      }
-    };
-
-    checkIfWindowWasClosed();
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('unload', handleUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('unload', handleUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
+    setAuthState(checkAuthState());
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, [checkAuthState]);
 
   useEffect(() => {
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-
-    const resetTimeoutOnActivity = () => {
-      const currentAuthState = checkAuthState();
-      const isLoggedIn = currentAuthState.isAdminLoggedIn ||
-        currentAuthState.isFacultyLoggedIn ||
-        currentAuthState.isStudentLoggedIn;
-
-      if (isLoggedIn) {
+    const handleActivity = () => {
+      if (getCurrentRole()) {
         resetTimeout();
       }
     };
 
+    const options = { passive: true, capture: true };
     events.forEach(event => {
-      document.addEventListener(event, resetTimeoutOnActivity, true);
+      document.addEventListener(event, handleActivity, options);
     });
+
+    resetTimeout();
 
     return () => {
       events.forEach(event => {
-        document.removeEventListener(event, resetTimeoutOnActivity, true);
+        document.removeEventListener(event, handleActivity, options);
       });
-    };
-  }, [resetTimeout]);
-
-  useEffect(() => {
-    const checkAuth = () => {
-      const currentAuthState = checkAuthState();
-      const stateChanged =
-        currentAuthState.isAdminLoggedIn !== authState.isAdminLoggedIn ||
-        currentAuthState.isFacultyLoggedIn !== authState.isFacultyLoggedIn ||
-        currentAuthState.isStudentLoggedIn !== authState.isStudentLoggedIn;
-
-      if (stateChanged) {
-        setAuthState(currentAuthState);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
     };
+  }, [resetTimeout, getCurrentRole]);
 
-    checkAuth();
-    resetTimeout();
-
+  useEffect(() => {
     const handleStorageChange = () => {
-      checkAuth();
-    };
-
-    const handleAuthChange = () => {
-      checkAuth();
+      setAuthState(checkAuthState());
     };
 
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('authStateChange', handleAuthChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [checkAuthState]);
 
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('authStateChange', handleAuthChange);
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      ['admin', 'faculty', 'student'].forEach(role => {
+        localStorage.removeItem(role);
+      });
     };
-  }, [authState, resetTimeout]);
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      const currentAuthState = checkAuthState();
-      const isLoggedIn = currentAuthState.isAdminLoggedIn ||
-        currentAuthState.isFacultyLoggedIn ||
-        currentAuthState.isStudentLoggedIn;
-
-      if (!isLoggedIn && (authState.isAdminLoggedIn || authState.isFacultyLoggedIn || authState.isStudentLoggedIn)) {
-        setAuthState(currentAuthState);
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      }
+      setAuthState(prevState => {
+        const newState = checkAuthState();
+        if (
+          newState.isAdminLoggedIn !== prevState.isAdminLoggedIn ||
+          newState.isFacultyLoggedIn !== prevState.isFacultyLoggedIn ||
+          newState.isStudentLoggedIn !== prevState.isStudentLoggedIn
+        ) {
+          return newState;
+        }
+        return prevState;
+      });
     }, 30000);
 
     return () => clearInterval(intervalId);
-  }, [authState]);
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, []);
+  }, [checkAuthState]);
 
   return (
     <Router>
       <Routes>
-        {authState.isStudentLoggedIn ? (
+        {/* Student Routes */}
+        {authState.isStudentLoggedIn && (
           <Route path="/student" element={<StudentLayout onLogout={() => handleLogout('student')} />}>
             <Route index element={<Navigate to="/student/home/dashboard" replace />} />
             <Route path="home/dashboard" element={<StudentHome />} />
@@ -343,9 +273,10 @@ const App = () => {
             <Route path="timetable/academic" element={<StudentAcademic />} />
             <Route path="editprofile" element={<StudentEditProfile />} />
           </Route>
-        ) : null}
+        )}
 
-        {authState.isFacultyLoggedIn ? (
+        {/* Faculty Routes */}
+        {authState.isFacultyLoggedIn && (
           <Route path="/faculty" element={<FacultyLayout onLogout={() => handleLogout('faculty')} />}>
             <Route index element={<Navigate to="/faculty/home/dashboard" replace />} />
             <Route path="home/dashboard" element={<FacultyHome />} />
@@ -358,9 +289,10 @@ const App = () => {
             <Route path="timetable/academic" element={<FacultyAcademic />} />
             <Route path="editprofile" element={<FacultyEditProfile />} />
           </Route>
-        ) : null}
+        )}
 
-        {authState.isAdminLoggedIn ? (
+        {/* Admin Routes */}
+        {authState.isAdminLoggedIn && (
           <Route path="/admin" element={<AdminLayout onLogout={() => handleLogout('admin')} />}>
             <Route index element={<Navigate to="/admin/home/dashboard" replace />} />
             <Route path="home/dashboard" element={<AdminHome />} />
@@ -377,9 +309,10 @@ const App = () => {
             <Route path="course/mapping" element={<AdminCourseMapping />} />
             <Route path="editprofile" element={<AdminEditProfile />} />
           </Route>
-        ) : null}
+        )}
 
-        {!authState.isAdminLoggedIn && !authState.isFacultyLoggedIn && !authState.isStudentLoggedIn ? (
+        {/* Public Routes */}
+        {!authState.isAdminLoggedIn && !authState.isFacultyLoggedIn && !authState.isStudentLoggedIn && (
           <>
             <Route path="/" element={<Landing setAuthState={setAuthState} />} />
             <Route path="/courses" element={<AllCourses setAuthState={setAuthState} />} />
@@ -388,13 +321,14 @@ const App = () => {
             <Route path="/forgotpassword" element={<ForgotPassword />} />
             <Route path="/contactadmin" element={<ContactAdmin />} />
           </>
-        ) : null}
+        )}
 
+        {/* Fallback Route */}
         <Route path="*" element={
           authState.isAdminLoggedIn ? <Navigate to="/admin/home/dashboard" replace /> :
-            authState.isFacultyLoggedIn ? <Navigate to="/faculty/home/dashboard" replace /> :
-              authState.isStudentLoggedIn ? <Navigate to="/student/home/dashboard" replace /> :
-                <Navigate to="/" replace />
+          authState.isFacultyLoggedIn ? <Navigate to="/faculty/home/dashboard" replace /> :
+          authState.isStudentLoggedIn ? <Navigate to="/student/home/dashboard" replace /> :
+          <Navigate to="/" replace />
         } />
       </Routes>
     </Router>

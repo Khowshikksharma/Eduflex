@@ -5,6 +5,8 @@ import Landing from './pages/Landing';
 import AllCourses from './pages/Allcourses';
 import Faculty from './pages/Faculty';
 import About from './pages/About';
+import ForgotPassword from './pages/ForgotPassword';
+import ContactAdmin from './pages/ContactAdmin';
 
 import StudentLayout from './modules/Student/StudentLayout';
 import StudentHome from './modules/Student/StudentHome';
@@ -44,8 +46,7 @@ import AdminEditStudent from './modules/Admin/AdminEditStudent';
 import AdminAddCourse from './modules/Admin/AdminAddCourse';
 import AdminEditCourse from './modules/Admin/AdminEditCourse';
 import AdminCircular from './modules/Admin/AdminCircular';
-import ForgotPassword from './pages/ForgotPassword';
-import ContactAdmin from './pages/ContactAdmin';
+
 
 const App = () => {
   // Helper function to check localStorage

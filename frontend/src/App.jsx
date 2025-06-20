@@ -64,7 +64,7 @@ const App = () => {
       const newAuthState = { isAdminLoggedIn: false, isFacultyLoggedIn: false, isStudentLoggedIn: false };
 
       roles.forEach(role => {
-        const data = localStorage.getItem(role);
+        const data = sessionStorage.getItem(role);
         if (data) {
           try {
             const parsedData = JSON.parse(data);
@@ -75,13 +75,13 @@ const App = () => {
             }
           } catch (e) {
             console.error(`Error parsing ${role} data:`, e);
-            localStorage.removeItem(role);
+            sessionStorage.removeItem(role);
           }
         }
       });
 
       if (expiredRole) {
-        localStorage.removeItem(expiredRole);
+        sessionStorage.removeItem(expiredRole);
       }
 
       return newAuthState;
@@ -97,11 +97,11 @@ const App = () => {
 
   const updateLastActivity = useCallback((role) => {
     try {
-      const userData = localStorage.getItem(role);
+      const userData = sessionStorage.getItem(role);
       if (userData) {
         const parsedData = JSON.parse(userData);
         parsedData.lastActivity = Date.now();
-        localStorage.setItem(role, JSON.stringify(parsedData));
+        sessionStorage.setItem(role, JSON.stringify(parsedData));
       }
     } catch (e) {
       console.error('Error updating last activity:', e);
@@ -109,9 +109,9 @@ const App = () => {
   }, []);
 
   const getCurrentRole = useCallback(() => {
-    if (localStorage.getItem('admin')) return 'admin';
-    if (localStorage.getItem('faculty')) return 'faculty';
-    if (localStorage.getItem('student')) return 'student';
+    if (sessionStorage.getItem('admin')) return 'admin';
+    if (sessionStorage.getItem('faculty')) return 'faculty';
+    if (sessionStorage.getItem('student')) return 'student';
     return null;
   }, []);
 
@@ -120,7 +120,7 @@ const App = () => {
       const role = getCurrentRole();
       if (!role) return 0;
 
-      const userData = localStorage.getItem(role);
+      const userData = sessionStorage.getItem(role);
       if (!userData) return 0;
 
       const parsedData = JSON.parse(userData);
@@ -139,7 +139,7 @@ const App = () => {
   const autoLogout = useCallback(() => {
     const role = getCurrentRole();
     if (role) {
-      localStorage.removeItem(role);
+      sessionStorage.removeItem(role);
     }
     setAuthState({
       isAdminLoggedIn: false,
@@ -174,7 +174,7 @@ const App = () => {
   }, [autoLogout, getCurrentRole, getTimeRemaining, updateLastActivity]);
 
   const handleLogout = useCallback((role) => {
-    localStorage.removeItem(role);
+    sessionStorage.removeItem(role);
     setAuthState(checkAuthState());
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);

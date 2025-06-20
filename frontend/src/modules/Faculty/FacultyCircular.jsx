@@ -8,7 +8,7 @@ const FacultyCircular = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [facultyData, setFacultyData] = useState(null);
-  const storedData = localStorage.getItem('faculty');
+  const storedData = sessionStorage.getItem('faculty');
   const intervalRef = useRef(null);
 
   useEffect(() => {

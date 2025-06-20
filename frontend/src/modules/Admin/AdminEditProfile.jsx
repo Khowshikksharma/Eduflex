@@ -41,7 +41,7 @@ const AdminEditProfile = () => {
   useEffect(() => {
     setLoading(true);
     try {
-      const storedData = localStorage.getItem('admin');
+      const storedData = sessionStorage.getItem('admin');
       if (storedData) {
         const parsedData = JSON.parse(storedData);
         setAdminData(parsedData);
@@ -85,7 +85,7 @@ const AdminEditProfile = () => {
 
       if (response.status === 200) {
         const updatedData = { ...adminData, ...formattedValues };
-        localStorage.setItem('admin', JSON.stringify(updatedData));
+        sessionStorage.setItem('admin', JSON.stringify(updatedData));
         setAdminData(updatedData);
         message.success('Profile updated successfully!');
         window.location.reload();

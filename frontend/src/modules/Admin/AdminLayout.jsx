@@ -28,7 +28,7 @@ const AdminLayout = ({onLogout}) => {
   const location = useLocation();
   const { showPopup, PopupWrapper } = usePopup();
   const [adminData, setAdminData] = useState(null);
-  const storedData = localStorage.getItem('admin');
+  const storedData = sessionStorage.getItem('admin');
   useEffect(() => {
     if (storedData) {
       const parsedData = JSON.parse(storedData);
@@ -47,7 +47,7 @@ const AdminLayout = ({onLogout}) => {
 
   const handleLogout = () => {
     try {
-      localStorage.clear();
+      sessionStorage.clear();
       if (onLogout) {
         onLogout();
       }

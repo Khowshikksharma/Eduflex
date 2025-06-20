@@ -35,7 +35,7 @@ const LoginPopup = ({ onClose, setAuthState }) => {
       ]);
 
       if (adminRes.status === 'fulfilled' && adminRes.value.data) {
-        localStorage.setItem('admin', JSON.stringify(adminRes.value.data));
+        sessionStorage.setItem('admin', JSON.stringify(adminRes.value.data));
         setAuthState({
           isAdminLoggedIn: true,
           isFacultyLoggedIn: false,
@@ -43,7 +43,7 @@ const LoginPopup = ({ onClose, setAuthState }) => {
         });
         navigate('/admin/home/dashboard');
       } else if (facultyRes.status === 'fulfilled' && facultyRes.value.data) {
-        localStorage.setItem('faculty', JSON.stringify(facultyRes.value.data));
+        sessionStorage.setItem('faculty', JSON.stringify(facultyRes.value.data));
         setAuthState({
           isAdminLoggedIn: false,
           isFacultyLoggedIn: true,
@@ -51,7 +51,7 @@ const LoginPopup = ({ onClose, setAuthState }) => {
         });
         navigate('/faculty/home/dashboard');
       } else if (studentRes.status === 'fulfilled' && studentRes.value.data) {
-        localStorage.setItem('student', JSON.stringify(studentRes.value.data));
+        sessionStorage.setItem('student', JSON.stringify(studentRes.value.data));
         setAuthState({
           isAdminLoggedIn: false,
           isFacultyLoggedIn: false,

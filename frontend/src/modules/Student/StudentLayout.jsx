@@ -41,7 +41,7 @@ const StudentLayout = ({onLogout}) => {
 
   const handleLogout = () => {
     try {
-      localStorage.clear();
+      sessionStorage.clear();
       if (onLogout) {
         onLogout();
       }

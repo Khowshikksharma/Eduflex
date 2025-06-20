@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 
-// Fixed typo in import paths
 import Landing from './pages/Landing';
 import AllCourses from './pages/AllCourses';
 import Faculty from './pages/Faculty';
@@ -49,7 +48,7 @@ import AdminEditCourse from './modules/Admin/AdminEditCourse';
 import AdminCircular from './modules/Admin/AdminCircular';
 
 const App = () => {
-  const TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
+  const TIMEOUT_DURATION = 30 * 60 * 1000;
   const timeoutRef = useRef(null);
   const [authState, setAuthState] = useState({
     isAdminLoggedIn: false,
@@ -83,9 +82,6 @@ const App = () => {
 
       if (expiredRole) {
         localStorage.removeItem(expiredRole);
-        setTimeout(() => {
-          alert('Session expired. You have been logged out due to inactivity.');
-        }, 100);
       }
 
       return newAuthState;
@@ -140,28 +136,24 @@ const App = () => {
     }
   }, [TIMEOUT_DURATION, getCurrentRole]);
 
-  useEffect(() => {
-    setAuthState(checkAuthState());
-  }, [checkAuthState]);
-
   const autoLogout = useCallback(() => {
     const role = getCurrentRole();
     if (role) {
       localStorage.removeItem(role);
     }
-
     setAuthState({
       isAdminLoggedIn: false,
       isFacultyLoggedIn: false,
       isStudentLoggedIn: false
     });
-
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-
-    alert('Session expired. You have been logged out due to inactivity.');
+    if (!sessionStorage.getItem('alreadyReloaded')) {
+      sessionStorage.setItem('alreadyReloaded', 'true');
+      window.location.reload();
+    }
   }, [getCurrentRole]);
 
   const resetTimeout = useCallback(() => {
@@ -169,16 +161,14 @@ const App = () => {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-
     const role = getCurrentRole();
     if (role) {
       updateLastActivity(role);
     }
-
     const timeRemaining = getTimeRemaining();
-    if (timeRemaining <= 0) {
+    if (timeRemaining <= 0 && !sessionStorage.getItem('alreadyReloaded')) {
       autoLogout();
-    } else {
+    } else if (timeRemaining > 0) {
       timeoutRef.current = setTimeout(autoLogout, timeRemaining);
     }
   }, [autoLogout, getCurrentRole, getTimeRemaining, updateLastActivity]);
@@ -193,20 +183,21 @@ const App = () => {
   }, [checkAuthState]);
 
   useEffect(() => {
+    setAuthState(checkAuthState());
+  }, [checkAuthState]);
+
+  useEffect(() => {
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
     const handleActivity = () => {
       if (getCurrentRole()) {
         resetTimeout();
       }
     };
-
     const options = { passive: true, capture: true };
     events.forEach(event => {
       document.addEventListener(event, handleActivity, options);
     });
-
     resetTimeout();
-
     return () => {
       events.forEach(event => {
         document.removeEventListener(event, handleActivity, options);
@@ -221,21 +212,9 @@ const App = () => {
     const handleStorageChange = () => {
       setAuthState(checkAuthState());
     };
-
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [checkAuthState]);
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      ['admin', 'faculty', 'student'].forEach(role => {
-        localStorage.removeItem(role);
-      });
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -251,7 +230,6 @@ const App = () => {
         return prevState;
       });
     }, 30000);
-
     return () => clearInterval(intervalId);
   }, [checkAuthState]);
 

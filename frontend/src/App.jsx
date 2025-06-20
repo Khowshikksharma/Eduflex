@@ -150,9 +150,9 @@ const App = () => {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-    if (!sessionStorage.getItem('alreadyReloaded')) {
-      sessionStorage.setItem('alreadyReloaded', 'true');
-      window.location.reload();
+    const currentPath = window.location.pathname;
+    if (!['/', '/courses', '/facultys', '/about', '/forgotpassword', '/contactadmin'].includes(currentPath)) {
+      window.location.href = '/';
     }
   }, [getCurrentRole]);
 
@@ -166,7 +166,7 @@ const App = () => {
       updateLastActivity(role);
     }
     const timeRemaining = getTimeRemaining();
-    if (timeRemaining <= 0 && !sessionStorage.getItem('alreadyReloaded')) {
+    if (timeRemaining <= 0) {
       autoLogout();
     } else if (timeRemaining > 0) {
       timeoutRef.current = setTimeout(autoLogout, timeRemaining);

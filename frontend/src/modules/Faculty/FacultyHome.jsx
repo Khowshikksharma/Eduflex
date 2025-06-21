@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Row, Col, Table, Progress, Tag, Badge, Avatar } from 'antd';
 import {
   UserOutlined,
@@ -16,13 +16,22 @@ import { Bar, Pie } from 'react-chartjs-2';
 import 'chart.js/auto';
 
 const FacultyHome = () => {
+  const[facultyData,setFacultyData] = useState({});
+    const storedData = sessionStorage.getItem('faculty');
+    useEffect(() =>{
+      if(storedData){
+        const parsedData = JSON.parse(storedData);
+        setFacultyData(parsedData);
+      }
+    },[storedData])
+    
   // Faculty profile data
   const facultyProfile = {
-    name: "Dr. Sarah Johnson",
-    id: "FAC-2023-456",
-    department: "Computer Science",
-    designation: "Associate Professor",
-    email: "sarah.johnson@university.edu",
+    name: facultyData.name || '',
+    id: facultyData.id || '',
+    department: facultyData.department || '',
+    designation: facultyData.designation || '',
+    email: facultyData.email || '',
     avatarColor: "#1890ff"
   };
 

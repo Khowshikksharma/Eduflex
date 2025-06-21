@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Row, Col, Table, Tag, Avatar, Divider, Badge } from 'antd';
 import {
   UserOutlined,
@@ -15,14 +15,22 @@ import { Line } from 'react-chartjs-2';
 import 'chart.js/auto';
 
 const StudentHome = () => {
+  const[studnetData,setSudentData] = useState({});
+    const storedData = sessionStorage.getItem('student');
+    useEffect(() =>{
+      if(storedData){
+        const parsedData = JSON.parse(storedData);
+        setSudentData(parsedData);
+      }
+    },[storedData])
   // Student information
   const studentInfo = {
-    name: 'John Michael Doe',
-    id: 'STU2023001',
-    department: 'Computer Science',
-    semester: '5th Semester',
-    email: 'john.doe@university.edu',
-    contact: '+1 234 567 8901'
+    name: studnetData.name || '',
+    id: studnetData.id || '',
+    department: studnetData.department || '',
+    semester: studnetData.currentSemester || '',
+    email: studnetData.email || '',
+    contact: studnetData.phone || ''
   };
 
   // Courses registered

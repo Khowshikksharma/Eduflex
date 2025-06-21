@@ -119,7 +119,6 @@ const AdminEditProfile = () => {
       <AdminChangePassword
         onSuccess={(success) => {
           if (success) {
-            // Close popup immediately after getting status 200
             closePopup();
           }
         }}

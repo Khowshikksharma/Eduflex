@@ -12,6 +12,43 @@ const checkStudentLogin = async (req, res) => {
     }
 }
 
+const updateProfile = async (req, res) => {
+  try {
+    const input = req.body;
+    const studentId = input.studentid;
+    const updateData = await Student.findOneAndUpdate(
+      { id: studentId },
+      input,
+      { new: true }
+    );
+    if (!updateData) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    res.json(updateData);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating profile', error: error.message });
+  }
+};
+
+const changeStudnetPassword = async (req,res) =>{
+  try{
+    const { studentId, oldPassword, newPassword } = req.body;
+    const student = await Student.findOne({ id: studentId });
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    if (student.password !== oldPassword) {
+      return res.status(400).json({ message: 'Old password is incorrect' });
+    }
+    student.password = newPassword;
+    await student.save();
+    res.status(200).json({ status: 200, message: 'Password updated successfully' });
+  }catch (error) {
+    console.error('Error updating password:', error);
+    res.status(500).json({ status: 500, message: 'Error updating password', error: error.message });
+  }
+};
+
 const getCirculrByRole = async(req,res) => {
   try{
     const circulars = await Circular.find({ recipientGroups: { $in: ['students'] } }).sort({createdAt:-1});
@@ -44,6 +81,8 @@ const markAsRead = async(req,res) => {
 
 module.exports = {
     checkStudentLogin,
+    updateProfile,
+    changeStudnetPassword,
     getCirculrByRole,
     markAsRead,  
 };

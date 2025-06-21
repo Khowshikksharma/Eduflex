@@ -3,6 +3,8 @@ const express = require('express');
 const facultyrouter = express.Router();
 
 facultyrouter.post('/checkfacultylogin', facultycontroller.checkFacultyLogin);
+facultyrouter.put('/updateProfile', facultycontroller.updateProfile);
+facultyrouter.put('/changePassword', facultycontroller.changeFacultyPassword);
 facultyrouter.get('/getCirculars',facultycontroller.getCirculrByRole);
 facultyrouter.put("/markAsRead/:id",facultycontroller.markAsRead);
 

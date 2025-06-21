@@ -41,7 +41,14 @@ const StudentLayout = ({onLogout}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { showPopup, PopupWrapper } = usePopup();
-
+  const[studnetData,setSudentData] = useState({});
+  const storedData = sessionStorage.getItem('student');
+  useEffect(() =>{
+    if(storedData){
+      const parsedData = JSON.parse(storedData);
+      setSudentData(parsedData);
+    }
+  },[storedData])
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -295,7 +302,7 @@ const StudentLayout = ({onLogout}) => {
               justifyContent: 'flex-end',
             }}
           >
-            <span style={{ marginRight: 15 }}>Welcome, User!</span>
+            <span style={{ marginRight: 15 }}>Welcome, {studnetData?.name || 'User'}!</span>
             <Button
               style={buttonStyle}
               onClick={() => navigate('/student/home/dashboard')}

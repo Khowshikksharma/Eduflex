@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
+import axios from 'axios';
+import config from '../../config';
 
-const FacultyChangePassword = ({ onSuccess, onCancel }) => {
+const FacultyChangePassword = ({ onSuccess, onCancel, facultyData}) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -12,19 +14,26 @@ const FacultyChangePassword = ({ onSuccess, onCancel }) => {
       message.error('New password and confirm password do not match!');
       return;
     }
-
-    if (oldPassword !== "faculty123") {
-      message.error('Old password is incorrect!');
-      return;
-    }
-
     setLoading(true);
-    setTimeout(() => {
+    try{
+      const response = await axios.put(`${config.url}/faculty/changePassword`, {
+        facultyId: facultyData.id,
+        oldPassword,
+        newPassword
+      });
+      if(response.data.status === 200) {
+        if (onSuccess) {
+          onSuccess(true); // Pass success flag to parent
+        }
+      }else{
+        message.error(response.data.message || 'Failed to change password.');
+      }
+    }catch (error) {
+      console.error('Error changing password:', error);
+      message.error('An error occurred while changing the password.');  
+    }finally{
       setLoading(false);
-      message.success('Password changed successfully!');
-      onSuccess();
-      form.resetFields();
-    }, 1000);
+    }
   };
 
   return (
@@ -36,7 +45,7 @@ const FacultyChangePassword = ({ onSuccess, onCancel }) => {
           <Input.Password placeholder="Enter old password" />
         </Form.Item>
 
-        <Form.Item name="newPassword" label="New Password" rules={[{ required: true, min: 8 }]}>
+        <Form.Item name="newPassword" label="New Password" rules={[{ required: true}]}>
           <Input.Password placeholder="Enter new password" />
         </Form.Item>
 

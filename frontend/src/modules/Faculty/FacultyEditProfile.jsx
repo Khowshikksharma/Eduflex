@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import usePopup from '../../components/usePopup';
 import FacultyChangePassword from './FacultyChangePassword';
 import dayjs from 'dayjs';
+import config from './../../config';
+import axios from 'axios';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -12,35 +14,24 @@ const { Title } = Typography;
 const FacultyEditProfile = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
-  const { showPopup, PopupWrapper } = usePopup();
+  const { showPopup, PopupWrapper, closePopup } = usePopup();
   const [loading, setLoading] = useState(false);
   const [facultyData, setFacultyData] = useState(null);
 
   useEffect(() => {
     setLoading(true);
-    setTimeout(() => {
-      setFacultyData({
-        id: 'FAC001',
-        name: 'Dr. Smith',
-        department: 'CSE',
-        dob: '1980-05-15',
-        gender: 'Male',
-        email: 'smith@eduflex.com',
-        phone: '9876543210',
-        aadhaarNo: '123456789012',
-        salary: 75000,
-        qualification: 'PhD',
-        fatherName: 'John Smith',
-        startYear: 2015,
-        status: 'Active',
-        resignedDate: null,
-        maritalStatus: 'Married',
-        motherTongue: 'English',
-        nationality: 'Indian',
-        address: '456 Faculty Ave, Bangalore'
-      });
-      setLoading(false);
-    }, 1000);
+    try{
+      const storedData = sessionStorage.getItem('faculty');
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        setFacultyData(parsedData);
+      } else {
+        message.warning('No faculty data found in local storage.');
+      }
+    }catch{
+      message.error('Failed to load faculty data from local storage.');
+    }
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -59,16 +50,30 @@ const FacultyEditProfile = () => {
   };
 
   const handleSave = async () => {
-    try {
+    try{
       const values = await form.validateFields();
       setLoading(true);
-      setTimeout(() => {
-        setFacultyData(values);
+      const formattedValues = {
+        ...values,
+        facultyid: facultyData.id,
+        dob: values.dob ? values.dob.format('YYYY-MM-DD') : facultyData?.dob || null,
+        resignedDate: values.resignedDate ? values.resignedDate.format('YYYY-MM-DD') : null
+      };
+
+      const response = await axios.put(`${config.url}/faculty/updateProfile`, formattedValues);
+      if(response.status === 200){
+        const updataData = { ...facultyData, ...formattedValues };
+        sessionStorage.setItem('faculty', JSON.stringify(updataData));
+        setFacultyData(updataData);
         message.success('Profile updated successfully!');
-        setLoading(false);
-      }, 1000);
-    } catch (error) {
-      console.error('Validation failed:', error);
+        window.location.reload();
+      }else{
+        message.error('Failed to update profile. Please try again.');
+      }
+    }catch (error) {
+      console.error('Error updating profile:', error);
+      message.error('Failed to update profile. Please check your input and try again.');
+    }finally {
       setLoading(false);
     }
   };
@@ -76,8 +81,15 @@ const FacultyEditProfile = () => {
   const handlePasswordChange = () => {
     showPopup(
       <FacultyChangePassword 
-        onSuccess={() => message.success('Password changed successfully!')}
-        onCancel={() => message.info('Password change cancelled')}
+        onSuccess={(success) => {
+          if (success) {
+            closePopup();
+          }
+        }}
+        onCancel={() => {
+          closePopup();
+        }}
+        facultyData={facultyData}
       />
     );
   };

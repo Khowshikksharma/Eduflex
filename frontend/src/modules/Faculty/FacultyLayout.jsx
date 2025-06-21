@@ -40,6 +40,14 @@ const FacultyLayout = ({onLogout}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { showPopup, PopupWrapper } = usePopup();
+  const[facultyData,setFacultyData] = useState({});
+  const storedData = sessionStorage.getItem('faculty');
+  useEffect(() =>{
+    if(storedData){
+      const parsedData = JSON.parse(storedData);
+      setFacultyData(parsedData);
+    }
+  },[storedData])
 
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -296,7 +304,7 @@ const FacultyLayout = ({onLogout}) => {
               justifyContent: 'flex-end',
             }}
           >
-            <span style={{ marginRight: 15 }}>Welcome, Faculty!</span>
+            <span style={{ marginRight: 15 }}>Welcome, {facultyData.name || 'Faculty'}!</span>
             <Button
               style={buttonStyle}
               onClick={() => navigate('/faculty/home/dashboard')}

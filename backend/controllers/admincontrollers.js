@@ -53,8 +53,7 @@ const changeAdminPassword = async (req, res) => {
         message: 'Admin not found'
       });
     }
-    const isMatch = (admin.password === oldPassword);
-    if (!isMatch) {
+    if (admin.password !== oldPassword) {
       return res.status(400).json({
         status: 400,
         message: 'Old password is incorrect'

@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import usePopup from '../../components/usePopup';
 import StudentChangePassword from './StudentChangePassword';
 import dayjs from 'dayjs';
+import axios from 'axios';
+import config from '../../config';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -12,37 +14,24 @@ const { Title } = Typography;
 const StudentEditProfile = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
-  const { showPopup, PopupWrapper } = usePopup();
+  const { showPopup, PopupWrapper,closePopup } = usePopup();
   const [loading, setLoading] = useState(false);
   const [studentData, setStudentData] = useState(null);
 
   useEffect(() => {
     setLoading(true);
-    setTimeout(() => {
-      setStudentData({
-        id: '25CSE00001',
-        name: 'John Doe',
-        department: 'CSE',
-        dob: '2002-05-15',
-        gender: 'Male',
-        email: 'john.doe@example.com',
-        phone: '9876543210',
-        aadhaarNo: '123456789012',
-        semesterFee: 130000,
-        qualification: '12th Grade',
-        fatherName: 'Robert Doe',
-        startYear: 2025,
-        endYear: 2029,
-        status: 'Active',
-        currentYear: '1',
-        currentSem: '1',
-        maritalStatus: 'Single',
-        motherTongue: 'English',
-        nationality: 'Indian',
-        address: '123 Main Street, Bangalore'
-      });
-      setLoading(false);
-    }, 1000);
+    try{
+      const storedData = sessionStorage.getItem('student');
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        setStudentData(parsedData);
+      } else {
+        message.warning('No student data found in local storage.');
+      }
+    }catch {
+      message.error('Failed to load student data from local storage.');
+    }
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -60,16 +49,30 @@ const StudentEditProfile = () => {
   };
 
   const handleSave = async () => {
-    try {
+    try{
       const values = await form.validateFields();
       setLoading(true);
-      setTimeout(() => {
-        setStudentData(values);
+      const formattedValues = {
+        ...values,
+        studentid: studentData.id,
+        dob: values.dob ? values.dob.format('YYYY-MM-DD') : studentData?.dob || null
+      };
+
+      const response = await axios.put(`${config.url}/student/updateProfile`, formattedValues);
+      if(response.status === 200) {
+        const updatedData = { ...studentData, ...formattedValues };
+        sessionStorage.setItem('student', JSON.stringify(updatedData));
+        setStudentData(updatedData);
         message.success('Profile updated successfully!');
-        setLoading(false);
-      }, 1000);
-    } catch (error) {
-      console.error('Validation failed:', error);
+        setStudentData(response.data);
+        window.location.reload();
+      }else{
+        message.error('Failed to update profile. Please try again.');
+      }
+    }catch (error) {
+      console.error('Error updating profile:', error);
+      message.error('Failed to update profile. Please check your input and try again.');
+    } finally {
       setLoading(false);
     }
   };
@@ -77,8 +80,15 @@ const StudentEditProfile = () => {
   const handlePasswordChange = () => {
     showPopup(
       <StudentChangePassword 
-        onSuccess={() => message.success('Password changed successfully!')}
-        onCancel={() => message.info('Password change cancelled')}
+        onSuccess={(success) => {
+          if (success) {
+            closePopup();
+          }
+        }}
+        onCancel={() => {
+          closePopup();
+        }}
+        studentData={studentData}
       />
     );
   };
@@ -100,7 +110,7 @@ const StudentEditProfile = () => {
     { key: 'endYear', label: 'End Year', value: studentData?.endYear || '', editable: false },
     { key: 'status', label: 'Status', value: studentData?.status || '', editable: false },
     { key: 'currentYear', label: 'Current Year', value: studentData?.currentYear || '', editable: false },
-    { key: 'currentSem', label: 'Current Sem', value: studentData?.currentSem || '', editable: false },
+    { key: 'currentSem', label: 'Current Sem', value: studentData?.currentSemester || '', editable: false },
     { 
       key: 'maritalStatus', 
       label: 'Marital Status', 

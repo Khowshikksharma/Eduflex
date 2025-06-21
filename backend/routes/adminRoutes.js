@@ -49,6 +49,7 @@ const upload = multer({
 
 adminrouter.post("/checkadminlogin", admincontroller.checkAdminLogin);
 adminrouter.put("/updateprofile", admincontroller.updateProfile);
+adminrouter.put("/changepassword", admincontroller.changeAdminPassword);
 
 adminrouter.post("/insertstudent", admincontroller.insertstudent);
 adminrouter.get("/viewstudents", admincontroller.viewstudents);

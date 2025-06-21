@@ -34,7 +34,7 @@ const genders = ['Male', 'Female', 'Other'];
 const AdminEditProfile = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
-  const { showPopup, PopupWrapper } = usePopup();
+  const { showPopup, closePopup, PopupWrapper } = usePopup();
   const [loading, setLoading] = useState(false);
   const [adminData, setAdminData] = useState(null);
 
@@ -119,6 +119,8 @@ const AdminEditProfile = () => {
       <AdminChangePassword
         onSuccess={() => message.success('Password changed successfully!')}
         onCancel={() => message.info('Password change cancelled')}
+        adminData={adminData}
+        closePopup={closePopup}
       />
     );
   };

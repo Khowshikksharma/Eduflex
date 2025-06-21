@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -18,20 +18,6 @@ import Help from '../../pages/Help';
 import Privacy from '../../pages/Privacy';
 import About from '../../pages/About';
 import Contact from '../../pages/Contact';
-
-import AdminHome from './AdminHome';
-import AdminStudentList from './AdminStudentList';
-import AdminFacultyList from './AdminFacultyList';
-import AdminFacultyCircular from './AdminFacultyCircular';
-import AdminCourseList from './AdminCourseList';
-import AdminCourseMapping from './AdminCourseMapping';
-import AdminEditProfile from './AdminEditProfile';
-import AdminAddStudent from './AdminAddStudent';
-import AdminAddStudentUpload from './AdminAddStudentUpload';
-import AdminEditStudent from './AdminEditStudent';
-import AdminAddCourse from './AdminAddCourse';
-import AdminEditCourse from './AdminEditCourse';
-import AdminCircular from './AdminCircular';
 
 const { Header, Sider, Content, Footer } = Layout;
 
@@ -371,26 +357,8 @@ const AdminLayout = ({onLogout}) => {
             overflow: 'auto',
           }}
         >
-          <Routes>
-            <Route index element={<Navigate to="home/dashboard" replace />} />
-            <Route path="home/dashboard" element={<AdminHome />} />
-            <Route path="home/circular" element={<AdminCircular />} />
-            <Route path="student/list" element={<AdminStudentList />} />
-            <Route path="student/add" element={<AdminAddStudent />} />
-            <Route path="student/upload" element={<AdminAddStudentUpload />} />
-            <Route path="student/edit/:id" element={<AdminEditStudent />} />
-            <Route path="faculty/list" element={<AdminFacultyList />} />
-            <Route path="faculty/circular" element={<AdminFacultyCircular />} />
-            <Route path="course/list" element={<AdminCourseList />} />
-            <Route path="course/add" element={<AdminAddCourse />} />
-            <Route path="course/edit/:courseCode" element={<AdminEditCourse />} />
-            <Route path="course/mapping" element={<AdminCourseMapping />} />
-            <Route path="editprofile" element={<AdminEditProfile />} />
-            <Route path="*" element={<Navigate to="home/dashboard" replace />} />
-          </Routes>
           <Outlet />
         </Content>
-
 
         <Footer
           style={{

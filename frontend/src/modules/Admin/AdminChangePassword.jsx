@@ -1,34 +1,34 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
+import config from './../../config';
+import axios from 'axios';
 
-const AdminChangePassword = ({ onSuccess, onCancel }) => {
+const AdminChangePassword = ({ onSuccess, onCancel, adminData, closePopup }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
   const onFinish = async (values) => {
     const { oldPassword, newPassword, confirmPassword } = values;
-    
-    // Validation checks
-    if (newPassword !== confirmPassword) {
-      message.error('New password and confirm password do not match!');
+    if( newPassword !== confirmPassword) {
+      message.error('New password and confirm password do not match.');
       return;
     }
-
-    // Here you would typically check oldPassword against database
-    // For demo, we'll assume correct old password is "admin123"
-    if (oldPassword !== "admin123") {
-      message.error('Old password is incorrect!');
-      return;
-    }
-
     setLoading(true);
-    // Simulate API call to change password
-    setTimeout(() => {
+    try{
+      const response = await axios.put(`${config.url}/admin/changepassword`,{adminId: adminData.id,oldPassword, newPassword});
+      if (response.data.status == 200) {
+        onSuccess();
+        message.success('Password changed successfully.');
+        closePopup();
+      } else {
+        message.error(response.data.message || 'Failed to change password.');
+      }
+    }catch (error) {
+      console.error('Error changing password:', error);
+      message.error('An error occurred while changing the password.');
+    }finally {
       setLoading(false);
-      message.success('Password changed successfully!');
-      onSuccess();
-      form.resetFields();
-    }, 1000);
+    }
   };
 
   return (

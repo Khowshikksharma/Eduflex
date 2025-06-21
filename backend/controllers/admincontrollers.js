@@ -46,20 +46,33 @@ const updateProfile = async (req, res) => {
 const changeAdminPassword = async (req, res) => {
   try {
     const { adminId, oldPassword, newPassword } = req.body;
-    const admin = await Admin.findOne
-      ({ id: adminId });
+    const admin = await Admin.findOne({ id: adminId });
     if (!admin) {
-      return res.status(404).send('Admin not found');
+      return res.status(404).json({
+        status: 404,
+        message: 'Admin not found'
+      });
     }
     const isMatch = (admin.password === oldPassword);
     if (!isMatch) {
-      return res.status(400).send('Old password is incorrect');
+      return res.status(400).json({
+        status: 400,
+        message: 'Old password is incorrect'
+      });
     }
     admin.password = newPassword;
     await admin.save();
-    res.status(200).send('Password updated successfully');
+    res.status(200).json({
+      status: 200,
+      message: 'Password updated successfully'
+    });
+    
   } catch (error) {
-    res.status(500).send(error.message);
+    console.error('Error changing password:', error);
+    res.status(500).json({
+      status: 500,
+      message: 'Internal server error: ' + error.message
+    });
   }
 };
 

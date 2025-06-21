@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -21,6 +21,17 @@ import Help from '../../pages/Help';
 import Privacy from '../../pages/Privacy';
 import About from '../../pages/About';
 import Contact from '../../pages/Contact';
+
+import StudentHome from './StudentHome';
+import StudentGrade from './StudentGrade';
+import StudentCourseRegistration from './StudentCourseRegisteration';
+import StudentAttendance from './StudentAttendance';
+import StudentCircular from './StudentCircular';
+import StudentFacultyCircular from './StudentFacultyCircular';
+import StudentClass from './StudentClass';
+import StudentAcademic from './StudentAcademic';
+import StudentEditProfile from './StudentEditProfle';
+import StudentMaterials from './StudentMaterials';
 
 const { Header, Sider, Content, Footer } = Layout;
 
@@ -339,6 +350,19 @@ const StudentLayout = ({onLogout}) => {
             overflow: 'auto',
           }}
         >
+          <Routes>
+            <Route index element={<Navigate to="/student/home/dashboard" replace />} />
+            <Route path="home/dashboard" element={<StudentHome />} />
+            <Route path="home/circular" element={<StudentCircular />} />
+            <Route path="mycourse/grades" element={<StudentGrade />} />
+            <Route path="mycourse/course-registration" element={<StudentCourseRegistration />} />
+            <Route path="mycourse/attendance" element={<StudentAttendance />} />
+            <Route path="mycourse/materials" element={<StudentMaterials />} />
+            <Route path="mycourse/facultycirculars" element={<StudentFacultyCircular />} />
+            <Route path="timetable/class" element={<StudentClass />} />
+            <Route path="timetable/academic" element={<StudentAcademic />} />
+            <Route path="editprofile" element={<StudentEditProfile />} />
+          </Routes>
           <Outlet />
         </Content>
 

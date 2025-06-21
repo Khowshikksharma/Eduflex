@@ -117,10 +117,16 @@ const AdminEditProfile = () => {
   const handlePasswordChange = () => {
     showPopup(
       <AdminChangePassword
-        onSuccess={() => message.success('Password changed successfully!')}
-        onCancel={() => message.info('Password change cancelled')}
+        onSuccess={(success) => {
+          if (success) {
+            // Close popup immediately after getting status 200
+            closePopup();
+          }
+        }}
+        onCancel={() => {
+          closePopup();
+        }}
         adminData={adminData}
-        closePopup={closePopup}
       />
     );
   };

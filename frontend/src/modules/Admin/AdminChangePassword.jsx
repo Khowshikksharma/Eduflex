@@ -3,37 +3,52 @@ import { Form, Input, Button, message } from 'antd';
 import config from './../../config';
 import axios from 'axios';
 
-const AdminChangePassword = ({ onSuccess, onCancel, adminData, closePopup }) => {
+const AdminChangePassword = ({ onSuccess, onCancel, adminData }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
   const onFinish = async (values) => {
     const { oldPassword, newPassword, confirmPassword } = values;
-    if( newPassword !== confirmPassword) {
+    
+    if (newPassword !== confirmPassword) {
       message.error('New password and confirm password do not match.');
       return;
     }
+    
     setLoading(true);
-    try{
-      const response = await axios.put(`${config.url}/admin/changepassword`,{adminId: adminData.id,oldPassword, newPassword});
-      if (response.data.status == 200) {
-        onSuccess();
-        message.success('Password changed successfully.');
-        closePopup();
+    
+    try {
+      const response = await axios.put(`${config.url}/admin/changepassword`, {
+        adminId: adminData.id,
+        oldPassword,
+        newPassword
+      });
+      
+      if (response.data.status === 200) {
+        // Let parent handle popup closing
+        if (onSuccess) {
+          onSuccess(true); // Pass success flag
+        }
       } else {
         message.error(response.data.message || 'Failed to change password.');
       }
-    }catch (error) {
+    } catch (error) {
       console.error('Error changing password:', error);
       message.error('An error occurred while changing the password.');
-    }finally {
+    } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
     }
   };
 
   return (
     <div style={{ padding: '20px' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Changing Password</h2>
+      <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Change Password</h2>
       
       <Form
         form={form}
@@ -85,9 +100,9 @@ const AdminChangePassword = ({ onSuccess, onCancel, adminData, closePopup }) => 
             loading={loading}
             style={{ marginRight: '8px' }}
           >
-            Save
+            Change Password
           </Button>
-          <Button onClick={onCancel}>Cancel</Button>
+          <Button onClick={handleCancel}>Cancel</Button>
         </Form.Item>
       </Form>
     </div>

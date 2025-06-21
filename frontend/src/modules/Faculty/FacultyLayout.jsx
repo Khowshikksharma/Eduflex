@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -21,6 +21,16 @@ import Help from '../../pages/Help';
 import Privacy from '../../pages/Privacy';
 import About from '../../pages/About';
 import Contact from '../../pages/Contact';
+
+import FacultyHome from './FacultyHome';
+import FacultyMyCourseDetails from './FacultyMyCourseDetails';
+import FacultyGiveGrades from './FacultyGiveGrades';
+import FacultyUploadMaterials from './FacultyUploadMaterials';
+import FacultyTakeAttendance from './FacultyTakeAttendance';
+import FacultyCircular from './FacultyCircular';
+import FacultyClass from './FacultyClass';
+import FacultyAcademic from './FacultyAcademic';
+import FacultyEditProfile from './FacultyEditProfile';
 
 const { Header, Sider, Content, Footer } = Layout;
 
@@ -342,6 +352,18 @@ const FacultyLayout = ({onLogout}) => {
             overflow: 'auto',
           }}
         >
+          <Routes>
+            <Route index element={<Navigate to="/faculty/home/dashboard" replace />} />
+            <Route path="home/dashboard" element={<FacultyHome />} />
+            <Route path="mydept/course-details" element={<FacultyMyCourseDetails />} />
+            <Route path="mydept/give-grades" element={<FacultyGiveGrades />} />
+            <Route path="mydept/upload-materials" element={<FacultyUploadMaterials />} />
+            <Route path="mydept/take-attendance" element={<FacultyTakeAttendance />} />
+            <Route path="mydept/circular" element={<FacultyCircular />} />
+            <Route path="timetable/class" element={<FacultyClass />} />
+            <Route path="timetable/academic" element={<FacultyAcademic />} />
+            <Route path="editprofile" element={<FacultyEditProfile />} />
+          </Routes>
           <Outlet />
         </Content>
 

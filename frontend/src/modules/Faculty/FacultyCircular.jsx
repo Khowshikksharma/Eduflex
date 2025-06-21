@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import config from '../../config';
+import toast from 'react-hot-toast';
 
 const FacultyCircular = () => {
   const [emails, setEmails] = useState([]);
@@ -36,6 +37,7 @@ const FacultyCircular = () => {
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch circulars:', error);
+      toast.error('Unable to load circulars. Please try again later.');
       setLoading(false);
     }
   };

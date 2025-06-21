@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, DatePicker, Select, Radio, Space, InputNumber, message } from 'antd';
+import { Form, Input, Button, DatePicker, Select, Radio, Space } from 'antd';
 import { UserOutlined, MailOutlined, PhoneOutlined, IdcardOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import axios from 'axios';
 import config from '../../config';
+import toast from 'react-hot-toast';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -45,14 +46,14 @@ const AdminAddStudent = ({
 
   try {
     await axios.post(`${config.url}/admin/insertstudent`, newStudent);
-    message.success('Student added successfully!');
+    toast.success('Student added successfully!');
     onSuccess(newStudent);
     form.resetFields();
     closePopup();
     window.location.reload(); 
   } catch (error) {
     console.error(error);
-    message.error('Failed to add student. Please try again.');
+    toast.error('Failed to add student. Please try again.');
   } finally {
     setLoading(false);
   }

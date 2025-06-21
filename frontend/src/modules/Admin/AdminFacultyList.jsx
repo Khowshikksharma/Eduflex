@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Space, Table, Tag, message } from 'antd';
+import { Button, Input, Space, Table, Tag } from 'antd';
 import { SearchOutlined, PlusOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddFaculty from './AdminAddFaculty';
@@ -9,6 +9,7 @@ import AdminFacultyViewPopup from './AdminFacultyViewPopup';
 import axios from 'axios';
 import config from '../../config';
 import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
 
 const departments = [
   'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
@@ -57,7 +58,7 @@ const AdminFacultyList = () => {
         setFaculty([]);
       }
     } catch (error) {
-      message.error('Failed to fetch faculty data');
+      toast.error('Failed to fetch faculty data');
       console.error('Error fetching faculty:', error);
       setFaculty([]);
     } finally {
@@ -105,7 +106,7 @@ const fetchCourseMappings = async () => {
     setCourseMappings(updatedMappings);
   } catch (error) {
     console.error('Failed to fetch FC Mappings:', error);
-    message.error('Failed to load course mappings');
+    toast.error('Failed to load course mappings');
   }
 };
 
@@ -119,7 +120,7 @@ const handleAddFaculty = () => {
       designations={designations}
       onSuccess={(newFaculty) => {
         setFaculty(prev => [...prev, newFaculty]);
-        message.success('Faculty added successfully!');
+        // toast.success('Faculty added successfully!');
         closePopup();
       }}
       closePopup={closePopup}
@@ -132,7 +133,7 @@ const handleImportFaculty = () => {
     <AdminAddFacultyUpload
       onSuccess={(newFaculty) => {
         setFaculty(prev => [...prev, ...newFaculty]);
-        message.success('Faculty imported successfully!');
+        toast.success('Faculty imported successfully!');
         closePopup();
       }}
       closePopup={closePopup}
@@ -169,7 +170,7 @@ const handleExportFaculty = () => {
   const ws = XLSX.utils.json_to_sheet(exportData);
   XLSX.utils.book_append_sheet(wb, ws, 'Faculty');
   XLSX.writeFile(wb, 'Faculty_Export.xlsx');
-  message.success('Faculty exported successfully!');
+  toast.success('Faculty exported successfully!');
 };
 
 const handleViewFaculty = (record) => {
@@ -197,7 +198,7 @@ const handleEditFaculty = (record) => {
         setFaculty(prev => prev.map(f => 
           f.id === updatedFaculty.id ? updatedFaculty : f
         ));
-        message.success('Faculty updated successfully!');
+        // toast.success('Faculty updated successfully!');
         closePopup();
       }}
       onClose={closePopup}
@@ -215,10 +216,10 @@ const handleDeleteFaculty = async (record) => {
       setFaculty(prev => prev.map(f => 
         f.id === record.id ? { ...f, status: !f.status } : f
       ));
-      message.success(`Faculty ${record.status ? 'deactivated' : 'activated'} successfully!`);
+      toast.success(`Faculty ${record.status ? 'deactivated' : 'activated'} successfully!`);
     }
   } catch (error) {
-    message.error('Failed to change faculty status');
+    toast.error('Failed to change faculty status');
     console.error('Error changing faculty status:', error);
   }
 };

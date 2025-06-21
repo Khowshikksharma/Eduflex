@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Select, InputNumber, message, Space } from 'antd';
+import { Form, Input, Button, Select, InputNumber, Space } from 'antd';
 import { BookOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import config from '../../config'; 
+import { toast } from 'react-hot-toast';
+
 const { Option } = Select;
 
 const AdminAddCourse = ({ onSuccess, departments,closePopup }) => {
@@ -25,13 +27,13 @@ const onFinish = async (values) => {
 
   try {
     await axios.post(`${config.url}/admin/insertCourse`, newCourse);
-    message.success('Course added successfully!');
+    toast.success('Course added successfully!');
     onSuccess(newCourse);
     form.resetFields();
     closePopup();
   } catch (error) {
     console.error(error);
-    message.error('Failed to add course. Please try again.');
+    toast.error('Failed to add course. Please try again.');
   } finally {
     setLoading(false);
   }

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, DatePicker, Select, Radio, Space, InputNumber, message } from 'antd';
+import { Form, Input, Button, DatePicker, Select, Radio, Space, InputNumber } from 'antd';
 import { UserOutlined, MailOutlined, PhoneOutlined, IdcardOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import axios from 'axios';
 import config from '../../config';
+import { toast } from 'react-hot-toast';
+
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -42,14 +44,14 @@ const AdminAddFaculty = ({
 
     try{
       await axios.post(`${config.url}/admin/insertfaculty`, newFaculty);
-      message.success('Faculty added successfully!');
+      toast.success('Faculty added successfully!');
       onSuccess(newFaculty);
       form.resetFields();
       closePopup();
       window.location.reload(); 
     }catch (error) {
       console.error(error);
-      message.error('Failed to add faculty. Please try again.');
+      toast.error('Failed to add faculty. Please try again.');
     }finally {
       setLoading(false);
     }

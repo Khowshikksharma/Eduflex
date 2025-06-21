@@ -9,6 +9,7 @@ import { Table, Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import config from "../config";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 const AllCourses = ({setAuthState}) => {
   const [click, setClick] = useState(false);
@@ -35,6 +36,7 @@ const AllCourses = ({setAuthState}) => {
       })
       .catch((error) => {
         console.error('Error fetching courses:', error);
+        toast.error("Failed to fetch courses. Please try again later.");
         setAllCourses([]);
       })
   }, []);

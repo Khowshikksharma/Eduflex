@@ -5,7 +5,6 @@ import {
   Input,
   Select,
   Table,
-  message,
   Space,
   Typography
 } from 'antd';
@@ -15,6 +14,7 @@ import AdminChangePassword from './AdminChangePassword';
 import dayjs from 'dayjs';
 import axios from 'axios';
 import config from '../../config';
+import toast from 'react-hot-toast';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -46,10 +46,10 @@ const AdminEditProfile = () => {
         const parsedData = JSON.parse(storedData);
         setAdminData(parsedData);
       } else {
-        message.warning('No admin data found in local storage.');
+      toast.warning('No admin data found in local storage.');
       }
     } catch {
-      message.error('Failed to load admin data from local storage.');
+      toast.error('Failed to load admin data from local storage.');
     }
     setLoading(false);
   }, []);
@@ -87,14 +87,14 @@ const AdminEditProfile = () => {
         const updatedData = { ...adminData, ...formattedValues };
         sessionStorage.setItem('admin', JSON.stringify(updatedData));
         setAdminData(updatedData);
-        message.success('Profile updated successfully!');
+        toast.success('Profile updated successfully!');
         window.location.reload();
       } else {
-        message.error('Failed to update profile');
+        toast.error('Failed to update profile');
       }
     } catch (error) {
       console.error('Update error:', error);
-      message.error('An error occurred while updating the profile.');
+      toast.error('An error occurred while updating the profile.');
     } finally {
       setLoading(false);
     }
@@ -119,6 +119,7 @@ const AdminEditProfile = () => {
       <AdminChangePassword
         onSuccess={(success) => {
           if (success) {
+            toast.success('Password changed successfully!');
             closePopup();
           }
         }}

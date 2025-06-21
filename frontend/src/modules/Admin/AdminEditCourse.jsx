@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, Select, Space, message, Typography, InputNumber, Radio } from 'antd';
+import { Form, Input, Button, Select, Space, Typography, InputNumber, Radio } from 'antd';
 import config from './../../config';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -35,17 +36,17 @@ const AdminEditCourse = ({ courseData, onUpdate, onClose, departments }) => {
     try{
       const response = await axios.put(`${config.url}/admin/updateCourse`, updatedCourse);
       if(response.status === 200) {
-        message.success('Course updated successfully');
+        toast.success('Course updated successfully');
         onUpdate(updatedCourse);
         onClose();
         window.location.reload();
       }
       else {
-        message.error('Failed to update course');
+        toast.error('Failed to update course');
       }
     }catch(error) {
       console.error('Error updating course:', error);
-      message.error('An error occurred while updating the course');
+      toast.error('An error occurred while updating the course');
     }finally {
       setLoading(false);
     }

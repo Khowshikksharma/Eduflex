@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Upload, Button, message, Form, Space } from 'antd';
+import { Upload, Button, Form, Space } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import config from '../../config';
+import toast from 'react-hot-toast';
 
 const AdminAddFacultyUpload = ({ closePopup }) => {
   const [form] = Form.useForm();
@@ -15,11 +16,11 @@ const AdminAddFacultyUpload = ({ closePopup }) => {
     const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
                    file.type === 'application/vnd.ms-excel';
     if (!isExcel) {
-      message.error('You can only upload Excel files!');
+      toast.error('You can only upload Excel files!');
     }
     const isLt5M = file.size / 1024 / 1024 < 5;
     if (!isLt5M) {
-      message.error('File must smaller than 5MB!');
+      toast.error('File must smaller than 5MB!');
     }
     return isExcel && isLt5M;
   };
@@ -36,21 +37,21 @@ const AdminAddFacultyUpload = ({ closePopup }) => {
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
           if (jsonData.length === 0) {
-            message.error('Excel file is empty or incorrectly formatted.');
+            toast.error('Excel file is empty or incorrectly formatted.');
             setExcelData(null);
           } else {
             setExcelData(jsonData);
           }
         } catch (error) {
           console.error(error);
-          message.error('Error parsing Excel file.');
+          toast.error('Error parsing Excel file.');
         }
       }
   };
 
   const onFinish = async () => {
     if (fileList.length === 0) {
-      message.error('Please upload an Excel file first!');
+      toast.error('Please upload an Excel file first!');
       return;
     }
 
@@ -59,18 +60,18 @@ const AdminAddFacultyUpload = ({ closePopup }) => {
         const response = await axios.post(`${config.url}/admin/uploadfaculties`, excelData);
 
         if (response.data.success) {
-          message.success(`Successfully uploaded ${response.data.count} facluties!`);
+          toast.success(`Successfully uploaded ${response.data.count} facluties!`);
           setFileList([]);
           setExcelData(null);
           form.resetFields();
           closePopup();
           window.location.reload(); 
         } else {
-          message.error(response.data.message || 'Upload failed. Please check the file format.');
+          toast.error(response.data.message || 'Upload failed. Please check the file format.');
         }
       } catch (error) {
         console.error(error);
-        message.error('Failed to upload faculties. Please try again.');
+        toast.error('Failed to upload faculties. Please try again.');
       } finally {
         setLoading(false);
       }

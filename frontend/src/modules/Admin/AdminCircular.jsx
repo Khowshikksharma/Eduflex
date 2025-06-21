@@ -6,7 +6,6 @@ import {
   Form,
   Input,
   Upload,
-  message,
   Card,
   Divider,
   List,
@@ -35,15 +34,15 @@ import {
 import axios from 'axios';
 import config from '../../config';
 import dayjs from 'dayjs';
+import toast from 'react-hot-toast';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { Dragger } = Upload;
 
-// Default departments list
 const departments = [
-  'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
+  'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE',
   'ASE', 'AUT', 'AGE', 'BIO', 'BME', 'CEE', 'CER'
 ];
 
@@ -73,7 +72,7 @@ const AdminCircular = () => {
       jpeg: 'JPEG Image',
       png: 'PNG Image',
       gif: 'GIF Image',
-      csv: 'Common-Separaed Values'
+      csv: 'Common-Separated Values'
     };
     return types[extension.toLowerCase()] || 'File';
   };
@@ -87,53 +86,48 @@ const AdminCircular = () => {
       const response = await axios.get(`${config.url}/admin/all-circulars`);
       setCirculars(response.data);
     } catch (error) {
-      message.error('Failed to fetch circulars');
+      toast.error('Failed to fetch circulars');
       console.error('Error fetching circulars:', error);
     }
   };
 
   const handleSendCircular = async (values) => {
-  setLoading(true);
-  
-  const formData = new FormData();
-  formData.append('subject', values.subject);
-  formData.append('description', values.description);
-  formData.append('recipientGroups', JSON.stringify(recipientGroups));
-  formData.append('selectedDepartments', JSON.stringify(selectedDepartments));
-  
-  fileList.forEach((file) => {
-    formData.append('attachments', file.originFileObj);
-  });
+    setLoading(true);
 
-  try {
-    await axios.post(`${config.url}/admin/send-all-circular`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+    const formData = new FormData();
+    formData.append('subject', values.subject);
+    formData.append('description', values.description);
+    formData.append('recipientGroups', JSON.stringify(recipientGroups));
+    formData.append('selectedDepartments', JSON.stringify(selectedDepartments));
+
+    fileList.forEach((file) => {
+      formData.append('attachments', file.originFileObj);
     });
-    message.success('Circular sent successfully to all recipients!');
-    form.resetFields();
-    setFileList([]);
-    setIsModalVisible(false);
-    fetchCirculars();
-  } catch (error) {
-    console.error('Detailed error:', error);
-    if (error.response) {
-      console.error('Response data:', error.response.data);
-      console.error('Response status:', error.response.status);
-      console.error('Response headers:', error.response.headers);
-      message.error(`Error: ${error.response.data.message || error.response.statusText}`);
-    } else if (error.request) {
-      console.error('No response received:', error.request);
-      message.error('No response from server. Please check your connection.');
-    } else {
-      console.error('Request setup error:', error.message);
-      message.error('Request error: ' + error.message);
+
+    try {
+      await axios.post(`${config.url}/admin/send-all-circular`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      toast.success('Circular sent successfully to all recipients!');
+      form.resetFields();
+      setFileList([]);
+      setIsModalVisible(false);
+      fetchCirculars();
+    } catch (error) {
+      console.error('Detailed error:', error);
+      if (error.response) {
+        toast.error(error.response.data.message || 'Server Error');
+      } else if (error.request) {
+        toast.error('No response from server. Check your network.');
+      } else {
+        toast.error('Error: ' + error.message);
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleFileChange = ({ fileList }) => {
     setFileList(fileList);
@@ -161,7 +155,6 @@ const AdminCircular = () => {
   const columns = [
     {
       title: 'S.No',
-      key: 'sno',
       render: (text, record, index) => index + 1,
       width: 70,
       align: 'center',
@@ -169,17 +162,8 @@ const AdminCircular = () => {
     {
       title: 'Subject',
       dataIndex: 'subject',
-      key: 'subject',
       render: (text, record) => (
-        <div 
-          style={{
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            maxWidth: '250px',
-          }}
-          title={text}
-        >
+        <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '250px' }} title={text}>
           <a onClick={() => setSelectedCircular(record)}>{text}</a>
         </div>
       ),
@@ -188,7 +172,6 @@ const AdminCircular = () => {
     {
       title: 'Recipients',
       dataIndex: 'recipientGroups',
-      key: 'recipients',
       render: (groups) => (
         <Space>
           {groups.includes('students') && <Tag icon={<UserOutlined />}>Students</Tag>}
@@ -199,26 +182,19 @@ const AdminCircular = () => {
     {
       title: 'Date',
       dataIndex: 'createdAt',
-      key: 'date',
       render: (date) => dayjs(date).format('DD MMM YYYY, hh:mm A'),
     },
     {
       title: 'Attachments',
       dataIndex: 'attachments',
-      key: 'attachments',
-      render: (attachments) => (
-        attachments?.length > 0 ? (
-          <Tag icon={<PaperClipOutlined />}>{attachments.length}</Tag>
-        ) : null
-      ),
+      render: (attachments) => attachments?.length > 0 ? (
+        <Tag icon={<PaperClipOutlined />}>{attachments.length}</Tag>
+      ) : null,
     },
     {
       title: 'View',
-      key: 'view',
       render: (text, record) => (
-        <Button type="link" onClick={() => setSelectedCircular(record)}>
-          View
-        </Button>
+        <Button type="link" onClick={() => setSelectedCircular(record)}>View</Button>
       ),
       align: 'center',
     },
@@ -235,27 +211,20 @@ const AdminCircular = () => {
 
   const fileTypeIcon = (fileName) => {
     const extension = fileName.split('.').pop().toLowerCase();
-    switch(extension) {
-      case 'pdf':
-        return <FilePdfOutlined style={{ color: '#ff4d4f' }} />;
+    switch (extension) {
+      case 'pdf': return <FilePdfOutlined style={{ color: '#ff4d4f' }} />;
       case 'doc':
-      case 'docx':
-        return <FileWordOutlined style={{ color: '#1890ff' }} />;
+      case 'docx': return <FileWordOutlined style={{ color: '#1890ff' }} />;
       case 'xls':
-      case 'xlsx':
-        return <FileExcelOutlined style={{ color: '#52c41a' }} />;
+      case 'xlsx': return <FileExcelOutlined style={{ color: '#52c41a' }} />;
       case 'ppt':
-      case 'pptx':
-        return <FilePptOutlined style={{ color: '#faad14' }} />;
+      case 'pptx': return <FilePptOutlined style={{ color: '#faad14' }} />;
       case 'jpg':
       case 'jpeg':
       case 'png':
-      case 'gif':
-        return <FileImageOutlined style={{ color: '#722ed1' }} />;
-      case 'csv':
-        return <FileImageOutlined style={{color : '#faad14'}} />
-      default:
-        return <FileOutlined />;
+      case 'gif': return <FileImageOutlined style={{ color: '#722ed1' }} />;
+      case 'csv': return <FileImageOutlined style={{ color: '#faad14' }} />;
+      default: return <FileOutlined />;
     }
   };
 
@@ -263,20 +232,16 @@ const AdminCircular = () => {
     <div style={{ padding: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
         <Title level={3}>All Circulars</Title>
-        <Button 
-          type="primary" 
-          icon={<SendOutlined />} 
-          onClick={() => setIsModalVisible(true)}
-        >
+        <Button type="primary" icon={<SendOutlined />} onClick={() => setIsModalVisible(true)}>
           Send New Circular
         </Button>
       </div>
 
       <Card>
-        <Table 
-          columns={columns} 
-          dataSource={circulars} 
-          rowKey="_id" 
+        <Table
+          columns={columns}
+          dataSource={circulars}
+          rowKey="_id"
           pagination={{ pageSize: 10 }}
           scroll={{ x: true }}
         />

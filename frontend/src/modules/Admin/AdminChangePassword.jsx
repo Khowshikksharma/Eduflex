@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import { Form, Input, Button } from 'antd';
 import config from './../../config';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const AdminChangePassword = ({ onSuccess, onCancel, adminData }) => {
   const [form] = Form.useForm();
@@ -11,7 +12,7 @@ const AdminChangePassword = ({ onSuccess, onCancel, adminData }) => {
     const { oldPassword, newPassword, confirmPassword } = values;
     
     if (newPassword !== confirmPassword) {
-      message.error('New password and confirm password do not match.');
+      toast.error('New password and confirm password do not match.');
       return;
     }
     
@@ -25,16 +26,15 @@ const AdminChangePassword = ({ onSuccess, onCancel, adminData }) => {
       });
       
       if (response.data.status === 200) {
-        // Let parent handle popup closing
         if (onSuccess) {
-          onSuccess(true); // Pass success flag
+          onSuccess(true); 
         }
       } else {
-        message.error(response.data.message || 'Failed to change password.');
+        toast.error(response.data.message || 'Failed to change password.');
       }
     } catch (error) {
       console.error('Error changing password:', error);
-      message.error('An error occurred while changing the password.');
+      toast.error('An error occurred while changing the password.');
     } finally {
       setLoading(false);
     }

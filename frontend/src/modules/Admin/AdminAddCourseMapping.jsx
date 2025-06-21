@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Form, Input, Button, Select, message, Space } from 'antd';
+import { Form, Input, Button, Select, Space } from 'antd';
 import { LinkOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import config from '../../config';
+import { toast } from 'react-hot-toast';
+
 
 const { Option } = Select;
 
@@ -33,7 +35,7 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
         setFaculties(facultiesRes.data);
         // console.log(coursesRes.data, facultiesRes.data);
       } catch (err) {
-        message.error('Failed to load data');
+        toast.error('Failed to load data');
         console.error('Error fetching data:', err);
       }
     };
@@ -53,17 +55,19 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
 
       if (res) {
         setErrorMsg('');
-        message.success('Mapping created successfully!');
+        toast.success('Mapping created successfully!');
         onSuccess(newMapping);
         form.resetFields();
         closePopup(); 
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       }
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to create mapping';
+      const msg = err.response?.data?.toast || 'Failed to create mapping';
       console.error('Error creating mapping:', err);
       setErrorMsg(msg);
-      message.error(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

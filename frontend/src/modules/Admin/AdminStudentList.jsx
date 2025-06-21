@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Space, Table, Tag, message } from 'antd';
+import { Button, Input, Space, Table, Tag } from 'antd';
 import { SearchOutlined, PlusOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddStudent from './AdminAddStudent';
@@ -9,6 +9,7 @@ import axios from 'axios';
 import config from '../../config';
 import AdminAddStudentUpload from './AdminAddStudentUpload';
 import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
 
 const departments = [
   'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
@@ -54,7 +55,7 @@ const AdminStudentList = () => {
         setStudents([]);
       }
     } catch (error) {
-      message.error('Failed to fetch students');
+      toast.error('Failed to fetch students');
       console.error('Error fetching students:', error);
       setStudents([]);
     } finally {
@@ -71,7 +72,7 @@ const AdminStudentList = () => {
         maritalStatuses={maritalStatuses}
         onSuccess={(newStudent) => {
           setStudents(prev => [...prev, newStudent]);
-          message.success('Student added successfully!');
+          // toast.success('Student added successfully!');
           closePopup();
         }}
         closePopup={closePopup}
@@ -84,7 +85,7 @@ const AdminStudentList = () => {
       <AdminAddStudentUpload
         onSuccess={(newStudents) => {
           setStudents(prev => [...prev, ...newStudents]);
-          message.success('Students imported successfully!');
+          toast.success('Students imported successfully!');
           closePopup();
         }}
         closePopup={closePopup}
@@ -121,7 +122,7 @@ const AdminStudentList = () => {
     const ws = XLSX.utils.json_to_sheet(exportData);
     XLSX.utils.book_append_sheet(wb, ws, 'Students');
     XLSX.writeFile(wb, 'Students_Export.xlsx');
-    message.success('Students exported successfully!');
+    toast.success('Students exported successfully!');
   };
 
   const handleViewStudent = (record) => {
@@ -149,7 +150,7 @@ const AdminStudentList = () => {
           setStudents(prev => prev.map(s => 
             s.id === updatedStudent.id ? updatedStudent : s
           ));
-          message.success('Student updated successfully!');
+          // toast.success('Student updated successfully!');
           closePopup();
         }}
         onClose={closePopup}
@@ -167,10 +168,10 @@ const AdminStudentList = () => {
         setStudents(prev => prev.map(s => 
           s.id === record.id ? { ...s, status: !s.status } : s
         ));
-        message.success(`Student ${record.status ? 'deactivated' : 'activated'} successfully!`);
+        toast.success(`Student ${record.status ? 'deactivated' : 'activated'} successfully!`);
       }
     } catch (error) {
-      message.error('Failed to change student status');
+      toast.error('Failed to change student status');
       console.error('Error changing student status:', error);
     }
   };

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import { Form, Input, Button } from 'antd';
 import { MailOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const ForgotPassword = () => {
   const [form] = Form.useForm();
@@ -15,14 +16,14 @@ const ForgotPassword = () => {
     if (!showOTP) {
       // In a real app, you would send the email to your backend
       setTimeout(() => {
-        message.success(`OTP sent to ${values.email}`);
+        toast.success(`OTP sent to ${values.email}`);
         setShowOTP(true);
         setLoading(false);
       }, 1000);
     } else {
       // Verify OTP - in real app, this would be checked against backend
       setTimeout(() => {
-        message.success('OTP verified successfully!');
+        toast.success('OTP verified successfully!');
         navigate('/new-password', { state: { email: values.email } });
         setLoading(false);
       }, 1000);

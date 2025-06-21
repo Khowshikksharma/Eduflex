@@ -2,16 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, Select, Space, Typography, Radio } from 'antd';
 import axios from 'axios';
 import config from '../../config';
+import toast from 'react-hot-toast';
 
 const { Option } = Select;
 const { Text } = Typography;
 
-const AdminEditCourseMapping = ({ mappingData, onUpdate, onClose,closePopup }) => {
+const AdminEditCourseMapping = ({ mappingData, onUpdate, onClose, closePopup }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [faculties, setFaculties] = useState([]);
-  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     const fetchFaculties = async () => {
@@ -20,7 +20,7 @@ const AdminEditCourseMapping = ({ mappingData, onUpdate, onClose,closePopup }) =
         setFaculties(response.data || []);
       } catch (error) {
         console.error('Failed to fetch faculty list:', error);
-        setErrorMsg('Failed to load faculty list');
+        toast.error('Failed to load faculty list');
       }
     };
 
@@ -40,7 +40,6 @@ const AdminEditCourseMapping = ({ mappingData, onUpdate, onClose,closePopup }) =
 
   const onFinish = async (values) => {
     setLoading(true);
-    setErrorMsg('');
     try {
       const updatedMapping = {
         ...mappingData,
@@ -52,17 +51,17 @@ const AdminEditCourseMapping = ({ mappingData, onUpdate, onClose,closePopup }) =
       const response = await axios.put(`${config.url}/admin/updateFCMapping`, updatedMapping);
 
       if (response.status === 200) {
-        setErrorMsg('');
+        toast.success('Mapping updated successfully!');
         onUpdate(updatedMapping);
         window.location.reload();
         onClose();
         closePopup();
       } else {
-        setErrorMsg('Failed to update mapping');
+        toast.error('Failed to update mapping');
       }
     } catch (error) {
       const errorText = error.response?.data?.message || 'Update failed due to server error';
-      setErrorMsg(errorText);
+      toast.error(errorText);
     } finally {
       setLoading(false);
     }
@@ -99,12 +98,6 @@ const AdminEditCourseMapping = ({ mappingData, onUpdate, onClose,closePopup }) =
             <Radio value={false}>Inactive</Radio>
           </Radio.Group>
         </Form.Item>
-
-        {errorMsg && (
-          <div style={{ marginBottom: 16 }}>
-            <Text type="danger">{errorMsg}</Text>
-          </div>
-        )}
 
         <Form.Item>
           <Space>

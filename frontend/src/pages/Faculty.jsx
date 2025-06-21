@@ -9,6 +9,7 @@ import { Table, Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import axios from "axios";
 import config from "../config";
+import toast from "react-hot-toast";
 
 const Faculty = ({setAuthState}) => {
   const [click, setClick] = useState(false);
@@ -27,6 +28,7 @@ const Faculty = ({setAuthState}) => {
         setAllFaculty(facultyData);
       } catch (error) {
         console.error("Failed to fetch faculty list", error);
+        toast.error("Failed to fetch faculty. Please try again later.");
       }
     };
 

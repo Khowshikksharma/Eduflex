@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Space, Table, Tag, message, Modal } from 'antd';
+import { Button, Input, Space, Table, Tag } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddCourseMapping from './AdminAddCourseMapping';
 import AdminEditCourseMapping from './AdminEditCourseMappping';
 import config from '../../config';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const departments = ['CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE'];
 
@@ -96,10 +97,10 @@ const AdminCourseMapping = () => {
         setMappings(enrichedMappings);
         
         if (errorCount > 0) {
-          message.warning(`Loaded with ${errorCount} mapping(s) having incomplete data`);
+          toast.warning(`Loaded with ${errorCount} mapping(s) having incomplete data`);
         }
       } catch (error) {
-        message.error('Failed to load mappings');
+        toast.error('Failed to load mappings');
         console.error('Error fetching mappings:', error);
       } finally {
         setLoading(false);
@@ -115,7 +116,7 @@ const AdminCourseMapping = () => {
         departments={departments}
         onSuccess={(newMapping) => {
           setMappings([...mappings, newMapping]);
-          message.success('Mapping added successfully!');
+          // toast.success('Mapping added successfully!');
         }}
         closePopup={closePopup}
       />
@@ -131,7 +132,7 @@ const AdminCourseMapping = () => {
           setMappings(mappings.map(m => 
             m.fmapid === updatedMapping.fmapid ? updatedMapping : m
           ));
-          message.success('Mapping updated successfully!');
+          // toast.success('Mapping updated successfully!');
         }}
         onClose={closePopup}
       />
@@ -147,9 +148,9 @@ const AdminCourseMapping = () => {
       setMappings(mappings.map(m => 
         m.fmapid === record.fmapid ? { ...m, status: !m.status } : m
       ));
-      message.success(`Mapping ${record.status ? 'deactivated' : 'activated'} successfully!`);
+      toast.success(`Mapping ${record.status ? 'deactivated' : 'activated'} successfully!`);
     }else{
-      message.error('Failed to change mapping status');
+      toast.error('Failed to change mapping status');
     }
   };
 
@@ -259,6 +260,7 @@ const AdminCourseMapping = () => {
           <Button 
             type="link" 
             onClick={() => handleEditMapping(record)}
+            disabled={!record.status}
           >
             Edit
           </Button>
@@ -268,7 +270,7 @@ const AdminCourseMapping = () => {
             onClick={() => handleDeleteMapping(record)}
             disabled={!record.status}
           >
-            {record.status ? 'Make Inactive' : 'Inactive'}
+            {record.status ? 'Deactivate' : 'Inactive'}
           </Button>
         </Space>
       ),

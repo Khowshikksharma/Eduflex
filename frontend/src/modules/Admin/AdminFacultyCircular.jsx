@@ -6,7 +6,6 @@ import {
   Form, 
   Input, 
   Upload, 
-  message, 
   Card, 
   Divider, 
   List, 
@@ -23,6 +22,7 @@ import {
 import axios from 'axios';
 import config from '../../config';
 import dayjs from 'dayjs';
+import toast from 'react-hot-toast';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -48,7 +48,7 @@ const AdminFacultyCircular = () => {
       const response = await axios.get(`${config.url}/admin/circulars`);
       setCirculars(response.data);
     } catch (error) {
-      message.error('Failed to fetch circulars');
+      toast.error('Failed to fetch circulars');
       console.error('Error fetching circulars:', error);
     }
   };
@@ -70,13 +70,13 @@ const AdminFacultyCircular = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
-      message.success('Circular sent successfully!');
+      toast.success('Circular sent successfully!');
       form.resetFields();
       setFileList([]);
       setIsModalVisible(false);
       fetchCirculars();
     } catch (error) {
-      message.error('Failed to send circular');
+      toast.error('Failed to send circular');
       console.error('Error sending circular:', error);
     } finally {
       setLoading(false);

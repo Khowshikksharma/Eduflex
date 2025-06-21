@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Input, Select, Table, message, Space, Typography } from 'antd';
+import { Button, Form, Input, Select, Table, Space, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import usePopup from '../../components/usePopup';
 import StudentChangePassword from './StudentChangePassword';
 import dayjs from 'dayjs';
 import axios from 'axios';
 import config from '../../config';
+import toast from 'react-hot-toast';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -26,10 +27,10 @@ const StudentEditProfile = () => {
         const parsedData = JSON.parse(storedData);
         setStudentData(parsedData);
       } else {
-        message.warning('No student data found in local storage.');
+        toast.warning('No student data found in local storage.');
       }
     }catch {
-      message.error('Failed to load student data from local storage.');
+      toast.error('Failed to load student data from local storage.');
     }
     setLoading(false);
   }, []);
@@ -63,15 +64,15 @@ const StudentEditProfile = () => {
         const updatedData = { ...studentData, ...formattedValues };
         sessionStorage.setItem('student', JSON.stringify(updatedData));
         setStudentData(updatedData);
-        message.success('Profile updated successfully!');
+        toast.success('Profile updated successfully!');
         setStudentData(response.data);
         window.location.reload();
       }else{
-        message.error('Failed to update profile. Please try again.');
+        toast.error('Failed to update profile. Please try again.');
       }
     }catch (error) {
       console.error('Error updating profile:', error);
-      message.error('Failed to update profile. Please check your input and try again.');
+      toast.error('Failed to update profile. Please check your input and try again.');
     } finally {
       setLoading(false);
     }
@@ -82,6 +83,7 @@ const StudentEditProfile = () => {
       <StudentChangePassword 
         onSuccess={(success) => {
           if (success) {
+            toast.success('Password changed successfully!');
             closePopup();
           }
         }}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Space, Table, Tag, message, Modal } from 'antd';
+import { Button, Input, Space, Table, Tag } from 'antd';
 import { SearchOutlined, PlusOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddCourse from './AdminAddCourse';
@@ -8,6 +8,7 @@ import AdminAddCourseUpload from './AdminAddCourseUpload';
 import axios from 'axios';
 import config from '../../config';
 import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
 
 const departments = [
   'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
@@ -71,7 +72,7 @@ const AdminCourseList = () => {
         }
       })
       .catch((error) => {
-        message.error('Failed to fetch courses');
+        toast.error('Failed to fetch courses');
         console.error('Error fetching courses:', error);
         setCourses([]);
       })
@@ -96,7 +97,7 @@ const AdminCourseList = () => {
             status: newCourse.status
           };
           setCourses([...courses, mapped]);
-          message.success('Course added successfully!');
+          // toast.success('Course added successfully!');
         }}
         closePopup={closePopup}
       />
@@ -108,7 +109,7 @@ const AdminCourseList = () => {
       <AdminAddCourseUpload
         onSuccess={() => {
           fetchCourses(); // Refresh the course list
-          message.success('Courses imported successfully!');
+          toast.success('Courses imported successfully!');
         }}
         closePopup={closePopup}
       />
@@ -136,7 +137,7 @@ const AdminCourseList = () => {
     
     XLSX.writeFile(wb, 'Courses_Export.xlsx');
     
-    message.success('Courses exported successfully!');
+    toast.success('Courses exported successfully!');
   };
 
   const handleEditCourse = (record) => {
@@ -167,7 +168,7 @@ const AdminCourseList = () => {
           setCourses(courses.map(c =>
             c.courseCode === mapped.courseCode ? mapped : c
           ));
-          message.success('Course updated successfully!');
+          // toast.success('Course updated successfully!');
         }}
         onClose={closePopup}
       />
@@ -184,12 +185,12 @@ const AdminCourseList = () => {
         setCourses(courses.map(c =>
           c.courseCode === record.courseCode ? { ...c, status: !c.status } : c
         ));
-        message.success('Course status updated successfully!');
+        toast.success('Course status updated successfully!');
       } else {
-        message.error('Failed to update course status');
+        toast.error('Failed to update course status');
       }
     } catch (error) {
-      message.error('Failed to update course status');
+      toast.error('Failed to update course status');
       console.error('Error updating course status:', error);
     }
   };

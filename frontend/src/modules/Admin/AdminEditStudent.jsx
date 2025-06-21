@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, DatePicker, Select, Radio, Space, message, Typography, InputNumber } from 'antd';
+import { Form, Input, Button, DatePicker, Select, Radio, Space, Typography, InputNumber } from 'antd';
 import { MailOutlined, PhoneOutlined, IdcardOutlined, UserOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 import axios from 'axios';
 import config from '../../config';
+import toast from 'react-hot-toast';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -49,16 +50,16 @@ const AdminEditStudent = ({ studentData, onUpdate, onClose, qualifications, mari
 
       const response = await axios.put(`${config.url}/admin/updatestudent`, updatedStudent);
       if (response.status === 200) {
-        message.success('Student updated successfully!');
+        toast.success('Student updated successfully!');
         onUpdate(updatedStudent); // Pass the updated student data back
         onClose();
         window.location.reload();
       } else {
-        message.error('Failed to update student. Please try again.');
+        toast.error('Failed to update student. Please try again.');
       }
     } catch (error) {
       console.error('Error updating student:', error);
-      message.error('Failed to update student. Please try again.');
+      toast.error('Failed to update student. Please try again.');
     } finally {
       setLoading(false);
     }

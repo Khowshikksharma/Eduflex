@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import { Form, Input, Button } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const NewPassword = () => {
   const [form] = Form.useForm();
@@ -21,7 +22,7 @@ const NewPassword = () => {
 
   const onFinish = (values) => {
     if (values.newPassword !== values.confirmPassword) {
-      message.error('Passwords do not match!');
+      toast.error('Passwords do not match!');
       return;
     }
 
@@ -29,7 +30,7 @@ const NewPassword = () => {
     
     // In a real app, you would send this to your backend
     setTimeout(() => {
-      message.success('Password changed successfully!');
+      toast.success('Password changed successfully!');
       setLoading(false);
       navigate('/login');
     }, 1000);

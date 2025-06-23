@@ -14,14 +14,14 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
   const [selectedDept, setSelectedDept] = useState(null);
   const [courses, setCourses] = useState([]);
   const [faculties, setFaculties] = useState([]);
-  const [errorMsg, setErrorMsg] = useState('');
+  // const [errorMsg, setErrorMsg] = useState('');
 
   // Reset everything when component mounts (popup opens)
   useEffect(() => {
     form.resetFields();
     setSelectedDept(null);
-    setErrorMsg('');
-  }, []);
+    // setErrorMsg('');
+  }, [form]);
 
   // Fetch courses and faculties
   useEffect(() => {
@@ -54,7 +54,7 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
       const res = await axios.post(`${config.url}/admin/addCourseMapping`, newMapping);
 
       if (res) {
-        setErrorMsg('');
+        // setErrorMsg('');
         toast.success('Mapping created successfully!');
         onSuccess(newMapping);
         form.resetFields();
@@ -64,9 +64,9 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
         }, 1000);
       }
     } catch (err) {
-      const msg = err.response?.data?.toast || 'Failed to create mapping';
+      const msg = err.response?.data?.message;
       console.error('Error creating mapping:', err);
-      setErrorMsg(msg);
+      // setErrorMsg(msg);
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -94,11 +94,11 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
       <h2 style={{ marginBottom: 24, color: '#333', fontSize: '20px', fontWeight: '600' }}>
         Adding New Course-Faculty Mapping
       </h2>
-      {errorMsg && (
+      {/* {errorMsg && (
         <div style={{ color: 'red', marginBottom: '16px' }}>
           ⚠️ {errorMsg}
         </div>
-      )}
+      )} */}
       <Form
         form={form}
         layout="vertical"
@@ -174,7 +174,7 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
               onClick={() => {
                 form.resetFields();
                 setSelectedDept(null);
-                setErrorMsg('');
+                // setErrorMsg('');
               }}
               size="large"
             >

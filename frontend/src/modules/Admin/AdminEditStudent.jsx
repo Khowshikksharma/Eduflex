@@ -53,7 +53,9 @@ const AdminEditStudent = ({ studentData, onUpdate, onClose, qualifications, mari
         toast.success('Student updated successfully!');
         onUpdate(updatedStudent); // Pass the updated student data back
         onClose();
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       } else {
         toast.error('Failed to update student. Please try again.');
       }

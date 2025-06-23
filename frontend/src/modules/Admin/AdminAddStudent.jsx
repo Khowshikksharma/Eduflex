@@ -50,7 +50,9 @@ const AdminAddStudent = ({
     onSuccess(newStudent);
     form.resetFields();
     closePopup();
-    window.location.reload(); 
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000); 
   } catch (error) {
     console.error(error);
     toast.error('Failed to add student. Please try again.');

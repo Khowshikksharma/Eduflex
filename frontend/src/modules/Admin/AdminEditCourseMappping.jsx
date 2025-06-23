@@ -53,7 +53,9 @@ const AdminEditCourseMapping = ({ mappingData, onUpdate, onClose, closePopup }) 
       if (response.status === 200) {
         toast.success('Mapping updated successfully!');
         onUpdate(updatedMapping);
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
         onClose();
         closePopup();
       } else {

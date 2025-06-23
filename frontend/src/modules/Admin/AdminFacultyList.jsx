@@ -210,7 +210,7 @@ const handleDeleteFaculty = async (record) => {
   try {
     const response = await axios.put(`${config.url}/admin/changeFacultyStatus`, {
       id: record.id,
-      status: !record.status
+      status: false
     });
     if (response.status === 200) {
       setFaculty(prev => prev.map(f => 
@@ -259,28 +259,28 @@ const columns = [
     filters: departments.map(dept => ({ text: dept, value: dept })),
     onFilter: (value, record) => record.department === value,
   },
-  {
-    title: 'Age',
-    dataIndex: 'age',
-    key: 'age',
-    sorter: (a, b) => (a.age || 0) - (b.age || 0),
-  },
+  // {
+  //   title: 'Age',
+  //   dataIndex: 'age',
+  //   key: 'age',
+  //   sorter: (a, b) => (a.age || 0) - (b.age || 0),
+  // },
   {
     title: 'Date of Birth',
     dataIndex: 'dob',
     key: 'dob',
   },
-  {
-    title: 'Gender',
-    dataIndex: 'gender',
-    key: 'gender',
-    filters: [
-      { text: 'Male', value: 'Male' },
-      { text: 'Female', value: 'Female' },
-      { text: 'Other', value: 'Other' },
-    ],
-    onFilter: (value, record) => record.gender === value,
-  },
+  // {
+  //   title: 'Gender',
+  //   dataIndex: 'gender',
+  //   key: 'gender',
+  //   filters: [
+  //     { text: 'Male', value: 'Male' },
+  //     { text: 'Female', value: 'Female' },
+  //     { text: 'Other', value: 'Other' },
+  //   ],
+  //   onFilter: (value, record) => record.gender === value,
+  // },
   {
     title: 'Email',
     dataIndex: 'email',
@@ -291,25 +291,25 @@ const columns = [
     dataIndex: 'phone',
     key: 'phone',
   },
-  {
-    title: 'Aadhaar No.',
-    dataIndex: 'aadhaarNo',
-    key: 'aadhaarNo',
-  },
-  {
-    title: 'Salary',
-    dataIndex: 'salary',
-    key: 'salary',
-    render: salary => `₹${(salary || 0).toLocaleString('en-IN')}`,
-    sorter: (a, b) => (a.salary || 0) - (b.salary || 0),
-  },
-  {
-    title: 'Qualification',
-    dataIndex: 'qualification',
-    key: 'qualification',
-    filters: qualifications.map(qual => ({ text: qual, value: qual })),
-    onFilter: (value, record) => record.qualification === value,
-  },
+  // {
+  //   title: 'Aadhaar No.',
+  //   dataIndex: 'aadhaarNo',
+  //   key: 'aadhaarNo',
+  // },
+  // {
+  //   title: 'Salary',
+  //   dataIndex: 'salary',
+  //   key: 'salary',
+  //   render: salary => `₹${(salary || 0).toLocaleString('en-IN')}`,
+  //   sorter: (a, b) => (a.salary || 0) - (b.salary || 0),
+  // },
+  // {
+  //   title: 'Qualification',
+  //   dataIndex: 'qualification',
+  //   key: 'qualification',
+  //   filters: qualifications.map(qual => ({ text: qual, value: qual })),
+  //   onFilter: (value, record) => record.qualification === value,
+  // },
   {
     title: 'Designation',
     dataIndex: 'designation',
@@ -317,21 +317,21 @@ const columns = [
     filters: designations.map(desig => ({ text: desig, value: desig })),
     onFilter: (value, record) => record.designation === value,
   },
-  {
-    title: 'Father Name',
-    dataIndex: 'fatherName',
-    key: 'fatherName',
-  },
-  {
-    title: 'Joining Date',
-    dataIndex: 'startYear',
-    key: 'startYear',
-  },
-  {
-    title: 'Experience',
-    dataIndex: 'experience',
-    key: 'experience',
-  },
+  // {
+  //   title: 'Father Name',
+  //   dataIndex: 'fatherName',
+  //   key: 'fatherName',
+  // },
+  // {
+  //   title: 'Joining Date',
+  //   dataIndex: 'startYear',
+  //   key: 'startYear',
+  // },
+  // {
+  //   title: 'Experience',
+  //   dataIndex: 'experience',
+  //   key: 'experience',
+  // },
   {
     title: 'Status',
     dataIndex: 'status',
@@ -347,13 +347,13 @@ const columns = [
     ],
     onFilter: (value, record) => record.status === value,
   },
-  {
-    title: 'Marital Status',
-    dataIndex: 'maritalStatus',
-    key: 'maritalStatus',
-    filters: maritalStatuses.map(status => ({ text: status, value: status })),
-    onFilter: (value, record) => record.maritalStatus === value,
-  },
+  // {
+  //   title: 'Marital Status',
+  //   dataIndex: 'maritalStatus',
+  //   key: 'maritalStatus',
+  //   filters: maritalStatuses.map(status => ({ text: status, value: status })),
+  //   onFilter: (value, record) => record.maritalStatus === value,
+  // },
   {
     title: 'Mother Tongue',
     dataIndex: 'motherTongue',
@@ -373,12 +373,12 @@ const columns = [
       return courses.length > 0 ? courses.join(', ') : '—'; 
     },
   },
-  {
-    title: 'Address',
-    dataIndex: 'address',
-    key: 'address',
-    ellipsis: true,
-  },
+  // {
+  //   title: 'Address',
+  //   dataIndex: 'address',
+  //   key: 'address',
+  //   ellipsis: true,
+  // },
   {
     title: 'Action → View/Edit/Delete',
     key: 'action',
@@ -400,6 +400,7 @@ const columns = [
         <Button 
           type="link" 
           danger 
+          disabled={!record.status}
           onClick={() => handleDeleteFaculty(record)}
         >
           {record.status ? 'Make Inactive' : 'Inactive'}

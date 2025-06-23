@@ -62,7 +62,9 @@ const AdminEditFaculty = ({
         toast.success('Faculty updated successfully!');
         onUpdate(updatedFaculty);
         onClose();
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       }else {
         toast.error('Failed to update faculty. Please try again.');
       }

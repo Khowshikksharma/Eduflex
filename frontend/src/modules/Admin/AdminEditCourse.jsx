@@ -39,7 +39,9 @@ const AdminEditCourse = ({ courseData, onUpdate, onClose, departments }) => {
         toast.success('Course updated successfully');
         onUpdate(updatedCourse);
         onClose();
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       }
       else {
         toast.error('Failed to update course');

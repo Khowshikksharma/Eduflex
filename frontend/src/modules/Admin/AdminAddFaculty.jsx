@@ -48,7 +48,9 @@ const AdminAddFaculty = ({
       onSuccess(newFaculty);
       form.resetFields();
       closePopup();
-      window.location.reload(); 
+      setTimeout(() => {
+          window.location.reload();
+      }, 1000);
     }catch (error) {
       console.error(error);
       toast.error('Failed to add faculty. Please try again.');

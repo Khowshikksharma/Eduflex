@@ -162,7 +162,7 @@ const AdminStudentList = () => {
     try {
       const response = await axios.put(`${config.url}/admin/changeStudentStatus`, {
         id: record.id,
-        status: !record.status 
+        status: false 
       });
       if (response.status === 200) {
         setStudents(prev => prev.map(s => 
@@ -211,12 +211,12 @@ const AdminStudentList = () => {
       filters: departments.map(dept => ({ text: dept, value: dept })),
       onFilter: (value, record) => record.department === value,
     },
-    {
-      title: 'Age',
-      dataIndex: 'age',
-      key: 'age',
-      sorter: (a, b) => (a.age || 0) - (b.age || 0),
-    },
+    // {
+    //   title: 'Age',
+    //   dataIndex: 'age',
+    //   key: 'age',
+    //   sorter: (a, b) => (a.age || 0) - (b.age || 0),
+    // },
     {
       title: 'Date of Birth',
       dataIndex: 'dob',
@@ -243,42 +243,42 @@ const AdminStudentList = () => {
       dataIndex: 'phone',
       key: 'phone',
     },
-    {
-      title: 'Aadhaar No.',
-      dataIndex: 'aadhaarNo',
-      key: 'aadhaarNo',
-    },
-    {
-      title: 'Semester Fee',
-      dataIndex: 'semesterFee',
-      key: 'semesterFee',
-      render: fee => `₹${(fee || 0).toLocaleString('en-IN')}`,
-      sorter: (a, b) => (a.semesterFee || 0) - (b.semesterFee || 0),
-    },
-    {
-      title: 'Qualification',
-      dataIndex: 'qualification',
-      key: 'qualification',
-      filters: qualifications.map(qual => ({ text: qual, value: qual })),
-      onFilter: (value, record) => record.qualification === value,
-    },
-    {
-      title: 'Father Name',
-      dataIndex: 'fatherName',
-      key: 'fatherName',
-    },
+    // {
+    //   title: 'Aadhaar No.',
+    //   dataIndex: 'aadhaarNo',
+    //   key: 'aadhaarNo',
+    // },
+    // {
+    //   title: 'Semester Fee',
+    //   dataIndex: 'semesterFee',
+    //   key: 'semesterFee',
+    //   render: fee => `₹${(fee || 0).toLocaleString('en-IN')}`,
+    //   sorter: (a, b) => (a.semesterFee || 0) - (b.semesterFee || 0),
+    // },
+    // {
+    //   title: 'Qualification',
+    //   dataIndex: 'qualification',
+    //   key: 'qualification',
+    //   filters: qualifications.map(qual => ({ text: qual, value: qual })),
+    //   onFilter: (value, record) => record.qualification === value,
+    // },
+    // {
+    //   title: 'Father Name',
+    //   dataIndex: 'fatherName',
+    //   key: 'fatherName',
+    // },
     {
       title: 'Start Year',
       dataIndex: 'startYear',
       key: 'startYear',
       sorter: (a, b) => (a.startYear || 0) - (b.startYear || 0),
     },
-    {
-      title: 'End Year',
-      dataIndex: 'endYear',
-      key: 'endYear',
-      sorter: (a, b) => (a.endYear || 0) - (b.endYear || 0),
-    },
+    // {
+    //   title: 'End Year',
+    //   dataIndex: 'endYear',
+    //   key: 'endYear',
+    //   sorter: (a, b) => (a.endYear || 0) - (b.endYear || 0),
+    // },
     {
       title: 'Status',
       dataIndex: 'status',
@@ -308,29 +308,29 @@ const AdminStudentList = () => {
       render: semester => `Semester ${semester}`,
       sorter: (a, b) => (a.currentSemester || 0) - (b.currentSemester || 0),
     },
-    {
-      title: 'Marital Status',
-      dataIndex: 'maritalStatus',
-      key: 'maritalStatus',
-      filters: maritalStatuses.map(status => ({ text: status, value: status })),
-      onFilter: (value, record) => record.maritalStatus === value,
-    },
-    {
-      title: 'Mother Tongue',
-      dataIndex: 'motherTongue',
-      key: 'motherTongue',
-    },
-    {
-      title: 'Nationality',
-      dataIndex: 'nationality',
-      key: 'nationality',
-    },
-    {
-      title: 'Address',
-      dataIndex: 'address',
-      key: 'address',
-      ellipsis: true,
-    },
+    // {
+    //   title: 'Marital Status',
+    //   dataIndex: 'maritalStatus',
+    //   key: 'maritalStatus',
+    //   filters: maritalStatuses.map(status => ({ text: status, value: status })),
+    //   onFilter: (value, record) => record.maritalStatus === value,
+    // },
+    // {
+    //   title: 'Mother Tongue',
+    //   dataIndex: 'motherTongue',
+    //   key: 'motherTongue',
+    // },
+    // {
+    //   title: 'Nationality',
+    //   dataIndex: 'nationality',
+    //   key: 'nationality',
+    // },
+    // {
+    //   title: 'Address',
+    //   dataIndex: 'address',
+    //   key: 'address',
+    //   ellipsis: true,
+    // },
     {
       title: 'Action → View/Edit/Delete',
       key: 'action',

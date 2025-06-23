@@ -65,7 +65,9 @@ const AdminAddFacultyUpload = ({ closePopup }) => {
           setExcelData(null);
           form.resetFields();
           closePopup();
-          window.location.reload(); 
+          setTimeout(() => {
+          window.location.reload();
+        }, 1000); 
         } else {
           toast.error(response.data.message || 'Upload failed. Please check the file format.');
         }

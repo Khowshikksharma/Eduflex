@@ -88,7 +88,9 @@ const AdminEditProfile = () => {
         sessionStorage.setItem('admin', JSON.stringify(updatedData));
         setAdminData(updatedData);
         toast.success('Profile updated successfully!');
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       } else {
         toast.error('Failed to update profile');
       }

@@ -1,5 +1,7 @@
 const Faculty = require('../models/Faculty');
 const Circular = require('../models/Circular');
+const fs = require('fs');
+const path = require('path');
 
 const checkFacultyLogin = async (req, res) => {
     try {
@@ -79,10 +81,70 @@ const markAsRead = async(req,res) => {
   }
 }
 
+const downloadAttachment = async (req, res) => {
+  try {
+    const { circularId, attachmentId } = req.params;
+    const circular = await Circular.findById(circularId);
+    // console.log('recipientGroups:', circular.recipientGroups);
+    // console.log('includes faculty:', circular.recipientGroups.includes('faculty'));
+    // console.log('circularId:', circularId, 'attachmentId:', attachmentId);
+    if (!circular) {
+      return res.status(404).json({ error: 'Circular not found' });
+    }
+    if (!circular.recipientGroups.includes('faculty')) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const attachment = circular.attachments.find(att => att._id.toString() === attachmentId);
+    if (!attachment) {
+      return res.status(404).json({ error: 'Attachment not found' });
+    }
+    const filePath = path.join(__dirname, '..', 'uploads', attachment.path);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'File not found on server' });
+    }
+    const stats = fs.statSync(filePath);
+    res.setHeader('Content-Disposition', `attachment; filename="${attachment.name}"`);
+    res.setHeader('Content-Length', stats.size);
+    const ext = path.extname(attachment.name).toLowerCase();
+    const contentTypes = {
+      '.pdf': 'application/pdf',
+      '.doc': 'application/msword',
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.xls': 'application/vnd.ms-excel',
+      '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      '.ppt': 'application/vnd.ms-powerpoint',
+      '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      '.txt': 'text/plain',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.zip': 'application/zip',
+      '.rar': 'application/x-rar-compressed',
+      '.csv': 'text/csv'
+    };
+    res.setHeader('Content-Type', contentTypes[ext] || 'application/octet-stream');
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.on('error', (error) => {
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Error reading file' });
+      }
+    });
+    fileStream.pipe(res);
+  } catch (error) {
+    // console.error('Download Error:', error); 
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+};
+
+
 module.exports = {
     checkFacultyLogin,
     updateProfile,
     changeFacultyPassword,
     getCirculrByRole,
     markAsRead,
+    downloadAttachment,
 };

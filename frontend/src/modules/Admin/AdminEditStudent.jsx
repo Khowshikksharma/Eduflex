@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, DatePicker, Select, Radio, Space, Typography, InputNumber } from 'antd';
-import { MailOutlined, PhoneOutlined, IdcardOutlined, UserOutlined } from '@ant-design/icons';
+import { useEffect, useState } from 'react';
+import { Form, Input, Button, Select, Radio, Space, Typography} from 'antd';
+import { MailOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 import axios from 'axios';

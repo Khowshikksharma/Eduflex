@@ -8,6 +8,7 @@ const FacultyCircular = () => {
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [downloadingFiles, setDownloadingFiles] = useState(new Set());
   const [facultyData, setFacultyData] = useState(null);
   const storedData = sessionStorage.getItem('faculty');
   const intervalRef = useRef(null);
@@ -31,7 +32,12 @@ const FacultyCircular = () => {
         date: circular.createdAt,
         body: circular.description,
         read: circular.readBy.includes(facultyData.id),
-        attachments: circular.attachments?.map(file => file.name) || [],
+        attachments: circular.attachments?.map(file => ({
+          name: file.name,
+          id: file._id,
+          path: file.path,
+          size: file.size
+        })) || [],
       }));
       setEmails(data);
       setLoading(false);
@@ -50,7 +56,7 @@ const FacultyCircular = () => {
         clearInterval(intervalRef.current);
       }
     };
-  });
+  }, [facultyData]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -70,6 +76,42 @@ const FacultyCircular = () => {
     }
   };
 
+  const handleDownload = async (attachment, circularId) => {
+    const fileKey = `${circularId}-${attachment.id}`;
+    if (downloadingFiles.has(fileKey)) return;
+
+    setDownloadingFiles(prev => new Set(prev).add(fileKey));
+
+    try {
+      const response = await axios.get(
+        `${config.url}/faculty/downloadAttachment/${circularId}/${attachment.id}`,
+        {
+          responseType: 'blob'
+        }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', attachment.name);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success(`Downloaded ${attachment.name}`);
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error(`Failed to download ${attachment.name}. ${error.response?.data?.error || 'Server error'}`);
+    } finally {
+      setDownloadingFiles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fileKey);
+        return newSet;
+      });
+    }
+  };
+
   const filteredEmails = emails.filter(email =>
     email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
     email.sender.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -82,15 +124,8 @@ const FacultyCircular = () => {
 
   return (
     <div className="email-container" style={{ display: 'flex', height: '100vh', fontFamily: 'Arial, sans-serif' }}>
-      {/* Left side - Email List */}
-      <div className="email-list" style={{ 
-        width: '35%', 
-        borderRight: '1px solid #ddd',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        overflow: 'hidden'
-      }}>
+      {/* Left - Email List */}
+      <div className="email-list" style={{ width: '35%', borderRight: '1px solid #ddd', display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
         <div style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
           <h1>Faculty Circulars</h1>
           <small style={{ color: 'green' }}>Auto-refreshing every second</small>
@@ -104,7 +139,6 @@ const FacultyCircular = () => {
             style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
           />
         </div>
-
         <div style={{ overflowY: 'auto', flex: 1 }}>
           {filteredEmails.map((email) => (
             <div
@@ -124,22 +158,10 @@ const FacultyCircular = () => {
                 <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{email.sender}</span>
                 <span style={{ fontSize: '12px', color: '#666' }}>{formatDate(email.date)}</span>
               </div>
-              <div style={{ 
-                fontSize: '14px', 
-                marginBottom: '5px',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}>
+              <div style={{ fontSize: '14px', marginBottom: '5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {email.subject}
               </div>
-              <div style={{ 
-                fontSize: '12px', 
-                color: '#666',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}>
+              <div style={{ fontSize: '12px', color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {email.body.split('\n')[0]}
               </div>
               {email.attachments.length > 0 && (
@@ -153,21 +175,10 @@ const FacultyCircular = () => {
         </div>
       </div>
 
-      {/* Right side - Email Content */}
-      <div className="email-content" style={{ 
-        width: '65%',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        overflow: 'hidden'
-      }}>
+      {/* Right - Email Content */}
+      <div className="email-content" style={{ width: '65%', display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
         {selectedEmail ? (
-          <div style={{ 
-            padding: '20px',
-            overflowY: 'auto',
-            flex: 1,
-            wordWrap: 'break-word'
-          }}>
+          <div style={{ padding: '20px', overflowY: 'auto', flex: 1, wordWrap: 'break-word' }}>
             <h2 style={{ marginBottom: '10px' }}>{selectedEmail.subject}</h2>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', color: '#666' }}>
               <div>
@@ -176,46 +187,51 @@ const FacultyCircular = () => {
               </div>
               <div>{formatDate(selectedEmail.date)}</div>
             </div>
-
-            <div style={{
-              whiteSpace: 'pre-wrap',
-              lineHeight: '1.6',
-              padding: '15px',
-              backgroundColor: '#f9f9f9',
-              borderRadius: '4px',
-              overflowWrap: 'break-word'
-            }}>
+            <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
               {selectedEmail.body}
             </div>
-
             {selectedEmail.attachments.length > 0 && (
               <div style={{ marginTop: '20px' }}>
                 <h3 style={{ marginBottom: '10px' }}>Attachments</h3>
                 <ul style={{ listStyle: 'none', padding: 0 }}>
-                  {selectedEmail.attachments.map((file, index) => (
-                    <li key={index} style={{
-                      padding: '8px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      marginBottom: '5px',
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}>
-                      <i className="fa fa-file" style={{ marginRight: '10px', color: '#666' }}></i>
-                      {file}
-                      <button style={{
-                        marginLeft: 'auto',
-                        backgroundColor: '#0078d4',
-                        color: 'white',
-                        border: 'none',
-                        padding: '5px 10px',
+                  {selectedEmail.attachments.map((file, index) => {
+                    const fileKey = `${selectedEmail.id}-${file.id}`;
+                    const isDownloading = downloadingFiles.has(fileKey);
+                    return (
+                      <li key={index} style={{
+                        padding: '8px',
+                        border: '1px solid #ddd',
                         borderRadius: '4px',
-                        cursor: 'pointer'
+                        marginBottom: '5px',
+                        display: 'flex',
+                        alignItems: 'center'
                       }}>
-                        Download
-                      </button>
-                    </li>
-                  ))}
+                        <i className="fa fa-file" style={{ marginRight: '10px', color: '#666' }}></i>
+                        {file.name}
+                        <button
+                          onClick={() => handleDownload(file, selectedEmail.id)}
+                          disabled={isDownloading}
+                          style={{
+                            marginLeft: 'auto',
+                            backgroundColor: isDownloading ? '#ccc' : '#0078d4',
+                            color: 'white',
+                            border: 'none',
+                            padding: '5px 10px',
+                            borderRadius: '4px',
+                            cursor: isDownloading ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px'
+                          }}
+                        >
+                          {isDownloading && (
+                            <i className="fa fa-spinner fa-spin"></i>
+                          )}
+                          {isDownloading ? 'Downloading...' : 'Download'}
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             )}

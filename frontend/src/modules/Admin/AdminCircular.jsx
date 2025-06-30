@@ -331,7 +331,7 @@ const AdminCircular = () => {
                         avatar={fileTypeIcon(file.name)}
                         title={
                           <a 
-                            href={`${config.uploadsUrl}/${file.path}`} 
+                            href={`${config.url}/uploads/${file.path}`} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             style={{ display: 'flex', alignItems: 'center' }}

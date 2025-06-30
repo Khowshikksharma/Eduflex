@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Button, 
   Table, 
@@ -16,8 +16,7 @@ import {
 import { 
   InboxOutlined, 
   PaperClipOutlined, 
-  SendOutlined, 
-  DeleteOutlined 
+  SendOutlined,  
 } from '@ant-design/icons';
 import axios from 'axios';
 import config from '../../config';

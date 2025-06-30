@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const validator = require('validator');
 
 const studentSchema = new mongoose.Schema({
   id: {type: String,required: true,unique: true,default: function() { return generateStudentId(this.department, this.startYear)}},

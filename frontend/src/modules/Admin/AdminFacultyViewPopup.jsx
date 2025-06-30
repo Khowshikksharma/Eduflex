@@ -1,4 +1,3 @@
-import React from 'react';
 import { Descriptions, Tag, Button, Space } from 'antd';
 import { EditOutlined, CloseOutlined } from '@ant-design/icons';
 

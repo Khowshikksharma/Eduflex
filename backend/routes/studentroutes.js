@@ -7,5 +7,7 @@ studentrouter.put('/updateProfile', studentcontroller.updateProfile);
 studentrouter.put('/changePassword', studentcontroller.changeStudnetPassword);
 studentrouter.get('/getCirculars',studentcontroller.getCirculrByRole);
 studentrouter.put('/markAsRead/:id',studentcontroller.markAsRead);
+studentrouter.get('/downloadAttachment/:circularId/:attachmentId', studentcontroller.downloadAttachment);
+
 
 module.exports = studentrouter;

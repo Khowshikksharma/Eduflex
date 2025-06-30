@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, Select, Space, Typography, Radio } from 'antd';
+import { useEffect, useState } from 'react';
+import { Form, Button, Select, Space, Typography, Radio } from 'antd';
 import axios from 'axios';
 import config from '../../config';
 import toast from 'react-hot-toast';

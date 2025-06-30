@@ -4,7 +4,6 @@ const Faculty = require('../models/Faculty');
 const Course = require('../models/Course');
 const FacultyCourseMapping = require('../models/FacultyCourseMapping');
 const Circular = require('../models/Circular');
-const path = require('path');
 
 const departments = [
   'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 

@@ -7,5 +7,6 @@ facultyrouter.put('/updateProfile', facultycontroller.updateProfile);
 facultyrouter.put('/changePassword', facultycontroller.changeFacultyPassword);
 facultyrouter.get('/getCirculars',facultycontroller.getCirculrByRole);
 facultyrouter.put("/markAsRead/:id",facultycontroller.markAsRead);
+facultyrouter.get('/downloadAttachment/:circularId/:attachmentId', facultycontroller.downloadAttachment);
 
 module.exports = facultyrouter;

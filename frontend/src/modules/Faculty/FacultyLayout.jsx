@@ -13,7 +13,7 @@ import {
   LayoutFilled,
   UserOutlined,
 } from '@ant-design/icons';
-import { Button, Layout, Menu, theme } from 'antd';
+import { Button, Layout, Menu, theme, Badge } from 'antd';
 import eduflexlogo from '../../assets/edufelxlogo.jpg';
 import eduflexshortlogo from '../../assets/eduflexshortlogo.png';
 import usePopup from '../../components/usePopup';
@@ -31,6 +31,8 @@ import FacultyCircular from './FacultyCircular';
 import FacultyClass from './FacultyClass';
 import FacultyAcademic from './FacultyAcademic';
 import FacultyEditProfile from './FacultyEditProfile';
+import axios from 'axios';
+import config from '../../config';
 
 const { Header, Sider, Content, Footer } = Layout;
 
@@ -41,6 +43,7 @@ const FacultyLayout = ({onLogout}) => {
   const location = useLocation();
   const { showPopup, PopupWrapper } = usePopup();
   const[facultyData,setFacultyData] = useState({});
+  const [unreadCirculars, setUnreadCirculars] = useState(0);
   const storedData = sessionStorage.getItem('faculty');
   useEffect(() =>{
     if(storedData){
@@ -56,6 +59,18 @@ const FacultyLayout = ({onLogout}) => {
   const checkIsMobile = () => {
     setIsMobile(window.innerWidth < 768);
   };
+
+  useEffect(() => {
+    if(facultyData?.id){
+      axios.get(`${config.url}/faculty/getCircularCount/${facultyData.id}`)
+      .then(response => {
+        setUnreadCirculars(response.data || 0);
+      })
+      .catch(error => {
+        console.error('Error fetching circular count:', error);
+      });
+    }
+  },[facultyData]);
 
   const handleLogout = () => {
     try {
@@ -121,7 +136,11 @@ const FacultyLayout = ({onLogout}) => {
         {
           key: 'circular',
           icon: <NotificationOutlined style={{ color: '#000' }} />,
-          label: 'Circular',
+          label: (
+            <Badge count={unreadCirculars} size="small" offset={[10, 0]}>
+              <span>Circulars</span>
+            </Badge>
+          ),
           onClick: () => navigate('/faculty/mydept/circular'),
         },
       ];
@@ -367,7 +386,7 @@ const FacultyLayout = ({onLogout}) => {
             <Route path="mydept/give-grades" element={<FacultyGiveGrades />} />
             <Route path="mydept/upload-materials" element={<FacultyUploadMaterials />} />
             <Route path="mydept/take-attendance" element={<FacultyTakeAttendance />} />
-            <Route path="mydept/circular" element={<FacultyCircular />} />
+            <Route path="mydept/circular" element={<FacultyCircular setUnreadCirculars={setUnreadCirculars}/>} />
             <Route path="timetable/class" element={<FacultyClass />} />
             <Route path="timetable/academic" element={<FacultyAcademic />} />
             <Route path="editprofile" element={<FacultyEditProfile />} />

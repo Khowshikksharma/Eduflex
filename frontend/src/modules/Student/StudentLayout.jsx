@@ -13,7 +13,7 @@ import {
   NotificationOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Button, Layout, Menu, theme } from 'antd';
+import { Button, Layout, Menu, theme, Badge } from 'antd';
 import eduflexlogo from '../../assets/edufelxlogo.jpg';
 import eduflexshortlogo from '../../assets/eduflexshortlogo.png';
 import usePopup from '../../components/usePopup';
@@ -32,6 +32,8 @@ import StudentClass from './StudentClass';
 import StudentAcademic from './StudentAcademic';
 import StudentEditProfile from './StudentEditProfle';
 import StudentMaterials from './StudentMaterials';
+import config from '../../config';
+import axios from 'axios';
 
 const { Header, Sider, Content, Footer } = Layout;
 
@@ -42,6 +44,7 @@ const StudentLayout = ({onLogout}) => {
   const location = useLocation();
   const { showPopup, PopupWrapper } = usePopup();
   const[studnetData,setSudentData] = useState({});
+  const [unreadCirculars, setUnreadCirculars] = useState(0);
   const storedData = sessionStorage.getItem('student');
   useEffect(() =>{
     if(storedData){
@@ -56,6 +59,19 @@ const StudentLayout = ({onLogout}) => {
   const checkIsMobile = () => {
     setIsMobile(window.innerWidth < 768);
   };
+  
+  useEffect(() => {
+    if(studnetData?.id){
+      axios
+      .get(`${config.url}/student/getCircularCount/${studnetData.id}`)
+      .then((response) => {
+        setUnreadCirculars(response.data || 0);
+      })
+      .catch((error) => {
+        console.error('Error fetching circulars:', error);
+      });
+    }
+  }, [studnetData]);
 
   const handleLogout = () => {
     try {
@@ -93,7 +109,11 @@ const StudentLayout = ({onLogout}) => {
         {
           key: 'circulars',
           icon: <NotificationOutlined style={{ color: '#000' }} />,
-          label: 'Circulars',
+          label:( 
+            <Badge count={unreadCirculars} size="small" offset={[10, 0]}>
+              <span>Circulars</span>
+            </Badge>
+          ),
           onClick: () => navigate('/student/home/circular'),
         },
       ];
@@ -360,7 +380,7 @@ const StudentLayout = ({onLogout}) => {
           <Routes>
             <Route index element={<Navigate to="/student/home/dashboard" replace />} />
             <Route path="home/dashboard" element={<StudentHome />} />
-            <Route path="home/circular" element={<StudentCircular />} />
+            <Route path="home/circular" element={<StudentCircular setUnreadCirculars={setUnreadCirculars}/>} />
             <Route path="mycourse/grades" element={<StudentGrade />} />
             <Route path="mycourse/course-registration" element={<StudentCourseRegistration />} />
             <Route path="mycourse/attendance" element={<StudentAttendance />} />

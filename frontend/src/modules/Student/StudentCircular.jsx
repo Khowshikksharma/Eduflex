@@ -3,7 +3,7 @@ import axios from 'axios';
 import config from '../../config';
 import toast from 'react-hot-toast';
 
-const StudentCircular = () => {
+const StudentCircular = ({setUnreadCirculars}) => {
   const [emails, setEmails] = useState([]);
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,12 +71,16 @@ const StudentCircular = () => {
 
   const handleEmailClick = async (email) => {
     setSelectedEmail(email);
+    const wasUnread = !email.read;
     setEmails(emails.map(e => e.id === email.id ? { ...e, read: true } : e));
 
     try {
       await axios.put(`${config.url}/student/markAsRead/${email.id}`, {
         user: studentData.id
       });
+      if(wasUnread){
+        setUnreadCirculars(prev => Math.max(0, prev - 1));
+      }
     } catch (err) {
       console.error('Failed to mark as read:', err);
     }

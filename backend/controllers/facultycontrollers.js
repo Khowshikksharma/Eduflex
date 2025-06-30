@@ -60,6 +60,18 @@ const getCirculrByRole = async(req,res) => {
   }
 }
 
+const getCircularCount = async (req, res) => {
+  const userId = req.params.id;
+  try {
+    const circulars = await Circular.find({ recipientGroups: { $in: ['faculty'] } }).sort({ createdAt: -1 });
+    const unreadCount = circulars.filter(circular => !circular.readBy.includes(userId)).length;
+    res.json(unreadCount);
+  } catch (error) {
+    console.error('Error fetching circular count:', error);
+    res.status(500).json({ error: 'Failed to fetch circular count' });
+  }
+}
+
 const markAsRead = async(req,res) => {
   const circularId = req.params.id;
   const user = req.body.user;
@@ -145,6 +157,7 @@ module.exports = {
     updateProfile,
     changeFacultyPassword,
     getCirculrByRole,
+    getCircularCount,
     markAsRead,
     downloadAttachment,
 };

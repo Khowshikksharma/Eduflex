@@ -49,10 +49,21 @@ const changeStudnetPassword = async (req, res) => {
   }
 };
 
-const getCirculrByRole = async (req, res) => {
+const getCirculrByRole = async(req,res) => {
+  try{
+    const circulars = await Circular.find({ recipientGroups: { $in: ['students'] } }).sort({createdAt:-1});
+    res.json(circulars);
+  }catch(error){
+    res.status(500).json(error);
+  }
+}
+
+const getCircularCount = async (req, res) => {
+  const userId = req.params.id;
   try {
     const circulars = await Circular.find({ recipientGroups: { $in: ['students'] } }).sort({ createdAt: -1 });
-    res.json(circulars);
+    const unreadCount = circulars.filter(c => !c.readBy.includes(userId)).length;
+     res.json(unreadCount);
   } catch (error) {
     res.status(500).json(error);
   }
@@ -138,6 +149,7 @@ module.exports = {
   updateProfile,
   changeStudnetPassword,
   getCirculrByRole,
+  getCircularCount,
   markAsRead,
   downloadAttachment
 };

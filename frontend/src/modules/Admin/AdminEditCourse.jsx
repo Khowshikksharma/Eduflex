@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Form, Input, Button, Select, Space, Typography, InputNumber, Radio } from 'antd';
+import { Form, Input, Button, Select, Space, Typography, InputNumber, Radio, Tag } from 'antd';
 import config from './../../config';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -11,15 +11,52 @@ const AdminEditCourse = ({ courseData, onUpdate, onClose, departments }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [isActive, setIsActive] = useState(true);
+  const [credits, setCredits] = useState(0);
+  const [formValues, setFormValues] = useState({
+    l: 0,
+    t: 0,
+    p: 0,
+    s: 0
+  });
+
+  useEffect(() => {
+    const { l = 0, t = 0, p = 0, s = 0 } = formValues;
+    const calculated = (l * 1.5) + (t * 0.5) + (p * 0.5) + (s * 0.5);
+    const rounded = Math.max(1, Math.min(6, Math.round(calculated * 2) / 2)); // Round to nearest 0.5 and clamp between 1-6
+    setCredits(rounded);
+    form.setFieldsValue({ credits: rounded });
+  }, [formValues, form]);
+
+  const handleValuesChange = (changedValues) => {
+    setFormValues(prev => ({
+      ...prev,
+      ...changedValues
+    }));
+  };
 
   useEffect(() => {
     if (courseData) {
       const activeStatus = courseData.status === true || courseData.status === 'true';
       setIsActive(activeStatus);
       
-      form.setFieldsValue({
+      const initialValues = {
         ...courseData,
+        l: courseData.l || 0,
+        t: courseData.t || 0,
+        p: courseData.p || 0,
+        s: courseData.s || 0,
+        departments: courseData.departments || [],
         status: activeStatus
+      };
+      
+      form.setFieldsValue(initialValues);
+      setCredits(courseData.credits);
+      setFormValues({
+        l: courseData.l || 0,
+        t: courseData.t || 0,
+        p: courseData.p || 0,
+        s: courseData.s || 0,
+        departments: courseData.departments || []
       });
     }
   }, [courseData, form]);
@@ -30,26 +67,24 @@ const AdminEditCourse = ({ courseData, onUpdate, onClose, departments }) => {
     const updatedCourse = {
       ...courseData,
       ...values,
+      credits: credits,
       status: values.status
     };
 
-    try{
+    try {
       const response = await axios.put(`${config.url}/admin/updateCourse`, updatedCourse);
       if(response.status === 200) {
         toast.success('Course updated successfully');
         onUpdate(updatedCourse);
         onClose();
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
       }
       else {
         toast.error('Failed to update course');
       }
-    }catch(error) {
+    } catch(error) {
       console.error('Error updating course:', error);
-      toast.error('An error occurred while updating the course');
-    }finally {
+      toast.error(error.response?.data?.message || 'An error occurred while updating the course');
+    } finally {
       setLoading(false);
     }
   };
@@ -73,7 +108,7 @@ const AdminEditCourse = ({ courseData, onUpdate, onClose, departments }) => {
         fontSize: '20px',
         fontWeight: '600'
       }}>
-        Editing Course: {courseData?.courseName} ({courseData?.courseCode})
+        Editing Course: {courseData?.cname} ({courseData?.ccode})
       </h2>
       
       <Form
@@ -81,6 +116,13 @@ const AdminEditCourse = ({ courseData, onUpdate, onClose, departments }) => {
         layout="vertical"
         onFinish={onFinish}
         autoComplete="off"
+        onValuesChange={handleValuesChange}
+        initialValues={{
+          l: 0,
+          t: 0,
+          p: 0,
+          s: 0
+        }}
       >
         <Form.Item label="Course Code">
           <Text strong>{courseData?.ccode}</Text>
@@ -129,28 +171,71 @@ const AdminEditCourse = ({ courseData, onUpdate, onClose, departments }) => {
           </Select>
         </Form.Item>
 
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+          <Form.Item
+            label="Lecture (L)"
+            name="l"
+            rules={[{ type: 'number', min: 0, max: 6, message: 'Must be between 0-6' }]}
+          >
+            <InputNumber min={0} max={6} size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Tutorial (T)"
+            name="t"
+            rules={[{ type: 'number', min: 0, max: 6, message: 'Must be between 0-6' }]}
+          >
+            <InputNumber min={0} max={6} size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Practical (P)"
+            name="p"
+            rules={[{ type: 'number', min: 0, max: 6, message: 'Must be between 0-6' }]}
+          >
+            <InputNumber min={0} max={6} size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Self Study (S)"
+            name="s"
+            rules={[{ type: 'number', min: 0, max: 6, message: 'Must be between 0-6' }]}
+          >
+            <InputNumber min={0} max={6} size="large" />
+          </Form.Item>
+        </div>
+
         <Form.Item
-          label="Credits"
+          label="Calculated Credits"
           name="credits"
-          rules={[
-            { required: true, message: 'Please input credits!' },
-            { type: 'number', min: 1, max: 6, message: 'Credits must be between 1 and 6' }
-          ]}
         >
-          <InputNumber 
+          <InputNumber
             style={{ width: '100%' }}
-            min={1}
-            max={6}
+            value={credits}
+            disabled
             size="large"
           />
         </Form.Item>
 
         <Form.Item
-          label="Department"
-          name="department"
-          rules={[{ required: true, message: 'Please select department!' }]}
+          label="Departments"
+          name="departments"
+          rules={[{ required: true, message: 'Please select at least one department!' }]}
         >
-          <Select placeholder="Select department" size="large">
+          <Select
+            mode="multiple"
+            placeholder="Select departments"
+            size="large"
+            tagRender={({ label, closable, onClose }) => (
+              <Tag
+                closable={closable}
+                onClose={onClose}
+                style={{ marginRight: 3 }}
+              >
+                {label}
+              </Tag>
+            )}
+          >
             {departments.map(dept => (
               <Option key={dept} value={dept}>{dept}</Option>
             ))}

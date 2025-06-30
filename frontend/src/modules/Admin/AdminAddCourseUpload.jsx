@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Upload, Button, Form, Space } from 'antd';
+import { Upload, Button, Form, Space, Tag } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import config from '../../config';
 import { toast } from 'react-hot-toast';
 
-const AdminAddCourseUpload = ({ closePopup }) => {
+const AdminAddCourseUpload = ({ closePopup, onSuccess }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fileList, setFileList] = useState([]);
@@ -17,16 +17,23 @@ const AdminAddCourseUpload = ({ closePopup }) => {
                     file.type === 'application/vnd.ms-excel';
     if (!isExcel) {
       toast.error('You can only upload Excel files!');
+      return false;
     }
     const isLt5M = file.size / 1024 / 1024 < 5;
     if (!isLt5M) {
       toast.error('File must be smaller than 5MB!');
+      return false;
     }
     return isExcel && isLt5M;
   };
 
+  const calculateCredits = (l, t, p, s) => {
+    const calculated = (l * 1.5) + (t * 0.5) + (p * 0.5) + (s * 0.5);
+    return Math.max(1, Math.min(6, Math.round(calculated * 2) / 2));
+  };
+
   const handleChange = async (info) => {
-    let newFileList = [...info.fileList].slice(-1); // Only keep the latest
+    let newFileList = [...info.fileList].slice(-1);
     setFileList(newFileList);
 
     const file = newFileList[0]?.originFileObj;
@@ -40,9 +47,45 @@ const AdminAddCourseUpload = ({ closePopup }) => {
         if (jsonData.length === 0) {
           toast.error('Excel file is empty or incorrectly formatted.');
           setExcelData(null);
-        } else {
-          setExcelData(jsonData);
+          return;
         }
+
+        const processedData = jsonData.map(course => {
+          const l = course.L ? Number(course.L) : 0;
+          const t = course.T ? Number(course.T) : 0;
+          const p = course.P ? Number(course.P) : 0;
+          const s = course.S ? Number(course.S) : 0;
+
+          let departments = [];
+          if (course.Departments) {
+            departments = typeof course.Departments === 'string' 
+              ? course.Departments.split(',').map(d => d.trim().toUpperCase()).filter(d => d)
+              : Array.isArray(course.Departments) 
+                ? course.Departments.map(d => d.toString().trim().toUpperCase()).filter(d => d)
+                : [];
+          }
+
+          if (departments.length === 0) {
+            toast.error(`Course ${course['Course Code']} has no departments specified`);
+          }
+
+          return {
+            ccode: course['Course Code']?.toString().toUpperCase().trim(),
+            cname: course['Course Name']?.toString().trim(),
+            cshortname: course['Course Short Name']?.toString().trim(),
+            academicYear: course['Academic Year']?.toString().trim(),
+            semester: Number(course['Semester']) || 1,
+            l: Math.max(0, Math.min(6, l)),
+            t: Math.max(0, Math.min(6, t)),
+            p: Math.max(0, Math.min(6, p)),
+            s: Math.max(0, Math.min(6, s)),
+            credits: course['Credits'] ? Number(course['Credits']) : calculateCredits(l, t, p, s),
+            departments: departments,
+            status: true
+          };
+        });
+
+        setExcelData(processedData);
       } catch (error) {
         console.error(error);
         toast.error('Error parsing Excel file.');
@@ -53,6 +96,12 @@ const AdminAddCourseUpload = ({ closePopup }) => {
   const onFinish = async () => {
     if (!excelData || fileList.length === 0) {
       toast.error('Please upload a valid Excel file first!');
+      return;
+    }
+
+    const invalidCourses = excelData.filter(course => !course.departments || course.departments.length === 0);
+    if (invalidCourses.length > 0) {
+      toast.error(`${invalidCourses.length} courses are missing departments`);
       return;
     }
 
@@ -67,15 +116,13 @@ const AdminAddCourseUpload = ({ closePopup }) => {
         setExcelData(null);
         form.resetFields();
         closePopup();
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000); 
+        if (onSuccess) onSuccess();
       } else {
         toast.error(response.data.message || 'Upload failed. Please check the file format.');
       }
     } catch (error) {
       console.error(error);
-      toast.error('Failed to upload courses. Please try again.');
+      toast.error(error.response?.data?.message || 'Failed to upload courses. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -104,7 +151,7 @@ const AdminAddCourseUpload = ({ closePopup }) => {
             onChange={handleChange}
             accept=".xlsx,.xls"
             maxCount={1}
-            customRequest={({ onSuccess }) => setTimeout(() => onSuccess("ok"), 0)} // prevent auto-upload
+            customRequest={({ onSuccess }) => setTimeout(() => onSuccess("ok"), 0)}
           >
             <Button icon={<UploadOutlined />} size="large">
               Select Excel File
@@ -117,7 +164,20 @@ const AdminAddCourseUpload = ({ closePopup }) => {
           <ul>
             <li>Excel format (.xlsx or .xls)</li>
             <li>Maximum file size: 5MB</li>
-            <li>Follow the template format</li>
+            <li>Required columns: 
+              <Tag style={{ margin: '2px' }}>Course Code</Tag>
+              <Tag style={{ margin: '2px' }}>Course Name</Tag>
+              <Tag style={{ margin: '2px' }}>Course Short Name</Tag>
+              <Tag style={{ margin: '2px' }}>Academic Year</Tag>
+              <Tag style={{ margin: '2px' }}>Semester</Tag>
+              <Tag style={{ margin: '2px' }}>L</Tag>
+              <Tag style={{ margin: '2px' }}>T</Tag>
+              <Tag style={{ margin: '2px' }}>P</Tag>
+              <Tag style={{ margin: '2px' }}>S</Tag>
+              <Tag style={{ margin: '2px' }}>Departments</Tag>
+            </li>
+            <li>Departments can be comma-separated (e.g., "CSE,IT")</li>
+            <li>Credits column is optional (will be calculated if not provided)</li>
             <a
               href="/templates/Course_Template.xlsx"
               download
@@ -127,6 +187,15 @@ const AdminAddCourseUpload = ({ closePopup }) => {
             </a>
           </ul>
         </div>
+
+        {excelData && (
+          <div style={{ marginBottom: 24 }}>
+            <p>Preview (first 5 courses):</p>
+            <div style={{ maxHeight: '200px', overflow: 'auto', border: '1px solid #d9d9d9', padding: '10px', borderRadius: '4px' }}>
+              <pre>{JSON.stringify(excelData.slice(0, 5), null, 2)}</pre>
+            </div>
+          </div>
+        )}
 
         <Form.Item style={{ marginTop: 32 }}>
           <Space>

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Form, Input, Button, Select, InputNumber, Space } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Form, Input, Button, Select, InputNumber, Space, Tag } from 'antd';
 import { BookOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import config from '../../config'; 
@@ -7,37 +7,64 @@ import { toast } from 'react-hot-toast';
 
 const { Option } = Select;
 
-const AdminAddCourse = ({ onSuccess, departments,closePopup }) => {
+const AdminAddCourse = ({ onSuccess, departments, closePopup }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [credits, setCredits] = useState(0);
+  const [formValues, setFormValues] = useState({
+    l: 0,
+    t: 0,
+    p: 0,
+    s: 0,
+    departments: []
+  });
 
-const onFinish = async (values) => {
-  setLoading(true);
+  useEffect(() => {
+    const { l = 0, t = 0, p = 0, s = 0 } = formValues;
+    const calculated = (l * 1.5) + (t * 0.5) + (p * 0.5) + (s * 0.5);
+    const rounded = Math.max(1, Math.min(6, Math.round(calculated * 2) / 2));
+    setCredits(rounded);
+    form.setFieldsValue({ credits: rounded });
+  }, [formValues, form]);
 
-  const newCourse = {
-    ccode: values.courseCode,
-    cname: values.courseName,
-    cshortname: values.courseShortName,
-    academicYear: values.academicYear,
-    semester: values.semester,
-    credits: values.credits,
-    department: values.department,
-    status: true,
+  const handleValuesChange = (changedValues) => {
+    setFormValues(prev => ({
+      ...prev,
+      ...changedValues
+    }));
   };
 
-  try {
-    await axios.post(`${config.url}/admin/insertCourse`, newCourse);
-    toast.success('Course added successfully!');
-    onSuccess(newCourse);
-    form.resetFields();
-    closePopup();
-  } catch (error) {
-    console.error(error);
-    toast.error('Failed to add course. Please try again.');
-  } finally {
-    setLoading(false);
-  }
-};
+  const onFinish = async (values) => {
+    setLoading(true);
+
+    const newCourse = {
+      ccode: values.courseCode,
+      cname: values.courseName,
+      cshortname: values.courseShortName,
+      academicYear: values.academicYear,
+      semester: values.semester,
+      credits: credits,
+      l: values.l || 0,
+      t: values.t || 0,
+      p: values.p || 0,
+      s: values.s || 0,
+      departments: values.departments || [],
+      status: true,
+    };
+
+    try {
+      await axios.post(`${config.url}/admin/insertCourse`, newCourse);
+      toast.success('Course added successfully!');
+      onSuccess(newCourse);
+      form.resetFields();
+      closePopup();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || 'Failed to add course. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const generateAcademicYears = () => {
     const currentYear = new Date().getFullYear();
@@ -57,6 +84,14 @@ const onFinish = async (values) => {
         layout="vertical"
         onFinish={onFinish}
         autoComplete="off"
+        onValuesChange={handleValuesChange}
+        initialValues={{
+          l: 0,
+          t: 0,
+          p: 0,
+          s: 0,
+          departments: []
+        }}
       >
         <Form.Item
           label="Course Code"
@@ -66,10 +101,10 @@ const onFinish = async (values) => {
             { pattern: /^[A-Za-z0-9]{6}$/, message: 'Must be exactly 6 letters/numbers' }
           ]}
         >
-          <Input 
-            prefix={<BookOutlined />} 
-            placeholder="e.g., CS101" 
-            size="large" 
+          <Input
+            prefix={<BookOutlined />}
+            placeholder="e.g., CS101"
+            size="large"
             maxLength={6}
           />
         </Form.Item>
@@ -117,28 +152,71 @@ const onFinish = async (values) => {
           </Select>
         </Form.Item>
 
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+          <Form.Item
+            label="Lecture (L)"
+            name="l"
+            rules={[{ type: 'number', min: 0, max: 6, message: 'Must be between 0-6' }]}
+          >
+            <InputNumber min={0} max={6} size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Tutorial (T)"
+            name="t"
+            rules={[{ type: 'number', min: 0, max: 6, message: 'Must be between 0-6' }]}
+          >
+            <InputNumber min={0} max={6} size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Practical (P)"
+            name="p"
+            rules={[{ type: 'number', min: 0, max: 6, message: 'Must be between 0-6' }]}
+          >
+            <InputNumber min={0} max={6} size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Self Study (S)"
+            name="s"
+            rules={[{ type: 'number', min: 0, max: 6, message: 'Must be between 0-6' }]}
+          >
+            <InputNumber min={0} max={6} size="large" />
+          </Form.Item>
+        </div>
+
         <Form.Item
-          label="Credits"
+          label="Calculated Credits"
           name="credits"
-          rules={[
-            { required: true, message: 'Please input credits!' },
-            { type: 'number', min: 1, max: 6, message: 'Credits must be between 1 and 6' }
-          ]}
         >
-          <InputNumber 
+          <InputNumber
             style={{ width: '100%' }}
-            min={1}
-            max={6}
+            value={credits}
+            disabled
             size="large"
           />
         </Form.Item>
 
         <Form.Item
-          label="Department"
-          name="department"
-          rules={[{ required: true, message: 'Please select department!' }]}
+          label="Departments"
+          name="departments"
+          rules={[{ required: true, message: 'Please select at least one department!' }]}
         >
-          <Select placeholder="Select department" size="large">
+          <Select
+            mode="multiple"
+            placeholder="Select departments"
+            size="large"
+            tagRender={({ label, closable, onClose }) => (
+              <Tag
+                closable={closable}
+                onClose={onClose}
+                style={{ marginRight: 3 }}
+              >
+                {label}
+              </Tag>
+            )}
+          >
             {departments.map(dept => (
               <Option key={dept} value={dept}>{dept}</Option>
             ))}

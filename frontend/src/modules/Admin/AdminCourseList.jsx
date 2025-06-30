@@ -21,30 +21,6 @@ const AdminCourseList = () => {
   const [loading, setLoading] = useState(false);
   const { showPopup, closePopup, PopupWrapper } = usePopup();
 
-  const calculateLTP = (credits) => {
-    let remainingCredits = credits;
-    const result = { L: 0, T: 0, P: 0, S: 0 };
-
-    result.L = Math.floor(remainingCredits / 1.75);
-    remainingCredits = remainingCredits % 1.75;
-
-    if (remainingCredits >= 1.5) {
-      result.P = Math.floor(remainingCredits / 1.5);
-      remainingCredits = remainingCredits % 1.5;
-    }
-
-    if (remainingCredits >= 0.25) {
-      result.T = Math.floor(remainingCredits / 0.25);
-      remainingCredits = remainingCredits % 0.25;
-    }
-
-    if (remainingCredits > 0) {
-      result.S += 1;
-    }
-
-    return `${result.L}-${result.T}-${result.P}-${result.S}`;
-  };
-
   useEffect(() => {
     fetchCourses();
   }, []);
@@ -56,13 +32,18 @@ const AdminCourseList = () => {
         const coursesData = response.data;
         if (Array.isArray(coursesData)) {
           const mappedCourses = coursesData.map(c => ({
+            key: c.ccode,
             courseCode: c.ccode,
             courseName: c.cname,
             courseShortName: c.cshortname,
             academicYear: c.academicYear,
             semester: c.semester,
             credits: c.credits,
-            department: c.department,
+            l: c.l || 0,
+            t: c.t || 0,
+            p: c.p || 0,
+            s: c.s || 0,
+            departments: c.departments || [],
             status: c.status
           }));
           setCourses(mappedCourses);
@@ -87,17 +68,21 @@ const AdminCourseList = () => {
         departments={departments}
         onSuccess={(newCourse) => {
           const mapped = {
+            key: newCourse.ccode,
             courseCode: newCourse.ccode,
             courseName: newCourse.cname,
             courseShortName: newCourse.cshortname,
             academicYear: newCourse.academicYear,
             semester: newCourse.semester,
             credits: newCourse.credits,
-            department: newCourse.department,
+            l: newCourse.l || 0,
+            t: newCourse.t || 0,
+            p: newCourse.p || 0,
+            s: newCourse.s || 0,
+            departments: newCourse.departments || [],
             status: newCourse.status
           };
           setCourses([...courses, mapped]);
-          // toast.success('Course added successfully!');
         }}
         closePopup={closePopup}
       />
@@ -107,34 +92,32 @@ const AdminCourseList = () => {
   const handleImportCourses = () => {
     showPopup(
       <AdminAddCourseUpload
-        onSuccess={() => {
-          fetchCourses(); // Refresh the course list
-          toast.success('Courses imported successfully!');
-        }}
+        onSuccess={fetchCourses}
         closePopup={closePopup}
       />
     );
   };
 
   const handleExportCourses = () => {
-    // data for export
     const exportData = courses.map(course => ({
       'Course Code': course.courseCode,
       'Course Name': course.courseName,
       'Course Short Name': course.courseShortName,
       'Academic Year': course.academicYear,
       'Semester': course.semester,
+      'L': course.l,
+      'T': course.t,
+      'P': course.p,
+      'S': course.s,
       'Credits': course.credits,
-      'Department': course.department,
-      'Status': course.status ? 'Active' : 'Inactive',
-      'L-T-P-S': calculateLTP(course.credits)
+      'Departments': course.departments.join(','),
+      'Status': course.status ? 'Active' : 'Inactive'
     }));
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(exportData);
     
     XLSX.utils.book_append_sheet(wb, ws, 'Courses');
-    
     XLSX.writeFile(wb, 'Courses_Export.xlsx');
     
     toast.success('Courses exported successfully!');
@@ -150,25 +133,33 @@ const AdminCourseList = () => {
           academicYear: record.academicYear,
           semester: record.semester,
           credits: record.credits,
-          department: record.department,
+          l: record.l,
+          t: record.t,
+          p: record.p,
+          s: record.s,
+          departments: record.departments,
           status: record.status
         }}
         departments={departments}
         onUpdate={(updatedCourse) => {
           const mapped = {
+            key: updatedCourse.ccode,
             courseCode: updatedCourse.ccode,
             courseName: updatedCourse.cname,
             courseShortName: updatedCourse.cshortname,
             academicYear: updatedCourse.academicYear,
             semester: updatedCourse.semester,
             credits: updatedCourse.credits,
-            department: updatedCourse.department,
+            l: updatedCourse.l,
+            t: updatedCourse.t,
+            p: updatedCourse.p,
+            s: updatedCourse.s,
+            departments: updatedCourse.departments,
             status: updatedCourse.status
           };
           setCourses(courses.map(c =>
             c.courseCode === mapped.courseCode ? mapped : c
           ));
-          // toast.success('Course updated successfully!');
         }}
         onClose={closePopup}
       />
@@ -179,7 +170,7 @@ const AdminCourseList = () => {
     try {
       const response = await axios.put(`${config.url}/admin/changeCourseStatus`, {
         ccode: record.courseCode,
-        status: !record.status // Toggle status
+        status: !record.status
       });
       if (response.status === 200) {
         setCourses(courses.map(c =>
@@ -190,7 +181,7 @@ const AdminCourseList = () => {
         toast.error('Failed to update course status');
       }
     } catch (error) {
-      toast.error('Failed to update course status');
+      toast.error(error.response?.data?.message || 'Failed to update course status');
       console.error('Error updating course status:', error);
     }
   };
@@ -244,6 +235,12 @@ const AdminCourseList = () => {
       align: 'center',
     },
     {
+      title: 'L-T-P-S',
+      key: 'ltps',
+      render: (_, record) => `${record.l || 0}-${record.t || 0}-${record.p || 0}-${record.s || 0}`,
+      align: 'center',
+    },
+    {
       title: 'Credits',
       dataIndex: 'credits',
       key: 'credits',
@@ -251,18 +248,19 @@ const AdminCourseList = () => {
       align: 'center',
     },
     {
-      title: 'L-T-P-S',
-      key: 'ltps',
-      render: (_, record) => calculateLTP(record.credits),
-      align: 'center',
-    },
-    {
       title: 'Departments',
-      dataIndex: 'department',
-      key: 'department',
+      dataIndex: 'departments',
+      key: 'departments',
+      render: (departments) => (
+        <span>
+          {departments?.map(dept => (
+            <Tag key={dept} style={{ margin: '2px' }}>{dept}</Tag>
+          ))}
+        </span>
+      ),
       filters: departments.map(dept => ({ text: dept, value: dept })),
-      onFilter: (value, record) => record.department === value,
-      sorter: (a, b) => a.department.localeCompare(b.department),
+      onFilter: (value, record) => record.departments?.includes(value),
+      sorter: (a, b) => (a.departments?.join() || '').localeCompare(b.departments?.join() || ''),
       align: 'center',
     },
     {
@@ -286,7 +284,7 @@ const AdminCourseList = () => {
       key: 'action',
       fixed: 'right',
       render: (_, record) => (
-        <Space size="middle" style={{ zIndex: 0 }}> {/* Add zIndex here */}
+        <Space size="middle" style={{ zIndex: 0 }}>
           <Button 
             type="link" 
             onClick={() => handleEditCourse(record)}
@@ -347,22 +345,22 @@ const AdminCourseList = () => {
       </div>
 
       <Table
-      columns={columns}
-      dataSource={filteredCourses}
-      rowKey="courseCode"
-      loading={loading}
-      scroll={{ x: 'max-content' }}
-      bordered
-      style={{
-        position: 'relative',
-        zIndex: 0
-      }}
-      pagination={{
-        pageSizeOptions: [10, 20, 50, 100],
-        showSizeChanger: true,
-        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} students`,
-      }}
-    />
+        columns={columns}
+        dataSource={filteredCourses}
+        rowKey="key"
+        loading={loading}
+        scroll={{ x: 'max-content' }}
+        bordered
+        style={{
+          position: 'relative',
+          zIndex: 0
+        }}
+        pagination={{
+          pageSizeOptions: [10, 20, 50, 100],
+          showSizeChanger: true,
+          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} courses`,
+        }}
+      />
       <PopupWrapper />
     </div>
   );

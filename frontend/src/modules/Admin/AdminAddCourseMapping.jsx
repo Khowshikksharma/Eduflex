@@ -174,7 +174,6 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
               onClick={() => {
                 form.resetFields();
                 setSelectedDept(null);
-                // setErrorMsg('');
               }}
               size="large"
             >

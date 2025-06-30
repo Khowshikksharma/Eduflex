@@ -72,6 +72,7 @@ adminrouter.get("/viewCourses", admincontroller.viewCourses);
 adminrouter.put("/updateCourse", admincontroller.updateCourse);
 adminrouter.put("/changeCourseStatus", admincontroller.changeCourseStatus);
 adminrouter.get("/viewCourseById/:ccode", admincontroller.viewCourseById);
+adminrouter.post('/uploadCourses', admincontroller.courseUpload);
 
 adminrouter.post("/addCourseMapping", admincontroller.createFCMapping);
 adminrouter.get("/viewFCMapping", admincontroller.viewFCMapping);

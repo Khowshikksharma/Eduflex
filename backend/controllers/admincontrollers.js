@@ -333,6 +333,15 @@ const viewCourseById = async (req, res) => {
   }
 }
 
+const courseUpload = async (req, res) => {
+  try {
+    await Course.insertMany(req.body);
+    res.status(200).json({ success: true, message: 'Courses uploaded successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to upload courses' });
+  }
+};
+
 const createFCMapping = async (req, res) => {
     try {
         const { facultyId, ccode, department } = req.body;
@@ -395,9 +404,6 @@ const createFCMapping = async (req, res) => {
 const viewFCMapping = async (req, res) => {
   try {
     const mappings = await FacultyCourseMapping.find();
-    if (mappings.length === 0) {
-      return res.status(404).json({ message: 'No mappings found' });
-    }
     res.json(mappings);
   } catch (error) {
     console.error('Error fetching mappings:', error);
@@ -537,6 +543,7 @@ module.exports = {
     updateCourse,
     changeCourseStatus,
     viewCourseById,
+    courseUpload,
 
     createFCMapping,
     viewFCMapping,

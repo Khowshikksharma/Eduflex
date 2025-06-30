@@ -108,7 +108,7 @@ const AdminAddCourseUpload = ({ closePopup, onSuccess }) => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${config.url}/admin/uploadcourses`, excelData);
+      const response = await axios.post(`${config.url}/admin/uploadCourses`, excelData);
 
       if (response.data.success) {
         toast.success(`Successfully uploaded ${response.data.count} courses!`);

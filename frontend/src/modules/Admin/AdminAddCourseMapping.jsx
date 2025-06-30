@@ -82,7 +82,7 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
   }, [form]);
 
   const filteredCourses = selectedDept
-    ? courses.filter(course => course.department === selectedDept)
+    ? courses.filter(course => course.departments.includes(selectedDept))
     : [];
 
   const filteredFaculties = selectedDept

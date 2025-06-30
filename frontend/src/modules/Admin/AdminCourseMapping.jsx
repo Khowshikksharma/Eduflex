@@ -100,7 +100,7 @@ const AdminCourseMapping = () => {
           toast.warning(`Loaded with ${errorCount} mapping(s) having incomplete data`);
         }
       } catch (error) {
-        toast.error('Failed to load mappings');
+        // toast.error('Failed to load mappings');
         console.error('Error fetching mappings:', error);
       } finally {
         setLoading(false);

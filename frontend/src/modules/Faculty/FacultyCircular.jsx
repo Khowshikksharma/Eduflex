@@ -28,7 +28,7 @@ const FacultyCircular = ({setUnreadCirculars}) => {
       const data = res.data.map((circular) => ({
         id: circular._id,
         subject: circular.subject,
-        sender: 'admin@university.edu',
+        sender: circular.sentby,
         date: circular.createdAt,
         body: circular.description,
         read: circular.readBy.includes(facultyData.id),

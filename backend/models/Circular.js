@@ -7,6 +7,7 @@ const attachmentSchema = new mongoose.Schema({
 });
 
 const circularSchema = new mongoose.Schema({
+  sentby: { type: String, required: true },
   subject: { type: String, required: true },
   description: { type: String, required: true },
   recipientGroups: [{ type: String, enum: ['students', 'faculty'] }],

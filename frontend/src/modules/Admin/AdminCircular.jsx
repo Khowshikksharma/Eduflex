@@ -58,6 +58,18 @@ const AdminCircular = () => {
   const [previewImage, setPreviewImage] = useState('');
   const [recipientGroups, setRecipientGroups] = useState(['students', 'faculty']);
   const [selectedDepartments, setSelectedDepartments] = useState([]);
+  const [adminData, setAdminData] = useState({});
+
+  useEffect(() => {
+    const storedData = sessionStorage.getItem('admin');
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      setAdminData(parsedData);
+    } else {
+      toast.warning('No admin data found in session storage.');
+    }
+  }, []);
+
 
   const fileTypeToName = (extension) => {
     const types = {
@@ -95,6 +107,7 @@ const AdminCircular = () => {
     setLoading(true);
 
     const formData = new FormData();
+    formData.append('sentby', adminData.email);
     formData.append('subject', values.subject);
     formData.append('description', values.description);
     formData.append('recipientGroups', JSON.stringify(recipientGroups));

@@ -477,7 +477,7 @@ const sendCircular = async (req, res) => {
     // console.log('Received files:', req.files); 
     // console.log('Request body:', req.body);
 
-    const { subject, description, recipientGroups, selectedDepartments } = req.body;
+    const { sentby,subject, description, recipientGroups, selectedDepartments } = req.body;
 
     let attachments = [];
     if (req.files && req.files.length > 0) {
@@ -490,6 +490,7 @@ const sendCircular = async (req, res) => {
     }
 
     const newCircular = new Circular({
+      sentby,
       subject,
       description,
       recipientGroups: JSON.parse(recipientGroups),

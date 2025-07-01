@@ -137,7 +137,7 @@ const FacultyLayout = ({onLogout}) => {
           key: 'circular',
           icon: <NotificationOutlined style={{ color: '#000' }} />,
           label: (
-            <Badge count={unreadCirculars} size="small" offset={[10, 0]}>
+            <Badge count={unreadCirculars} size="small" offset={[20, 8]}>
               <span>Circulars</span>
             </Badge>
           ),

@@ -294,6 +294,7 @@ const AdminCourseList = () => {
           <Button 
             type="link" 
             danger 
+            disabled={!record.status}
             onClick={() => handleDeleteCourse(record)}
           >
             {record.status ? 'Make Inactive' : 'Inactive'}

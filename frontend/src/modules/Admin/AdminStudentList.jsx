@@ -352,6 +352,7 @@ const AdminStudentList = () => {
           <Button 
             type="link" 
             danger 
+            disabled={!record.status}
             onClick={() => handleDeleteStudent(record)}
           >
             {record.status ? 'Make Inactive' : 'Inactive'}

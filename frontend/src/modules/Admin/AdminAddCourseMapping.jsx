@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Select, Space, Checkbox, Row, Col, message } from 'antd';
+import { Form, Button, Select, Space, Checkbox, Row, Col } from 'antd';
 import { LinkOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import config from '../../config';
+import toast from 'react-hot-toast';
 
 const { Option } = Select;
 
@@ -32,7 +33,7 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
         setCourses(coursesRes.data);
         setFaculties(facultiesRes.data);
       } catch (err) {
-        message.error('Failed to load data');
+        toast.error('Failed to load data');
         console.error('Error fetching data:', err);
       }
     };
@@ -65,18 +66,18 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
       setLoading(true);
       try {
         if (!selectedCourse) {
-          message.error('Please select a course');
+          toast.error('Please select a course');
           return;
         }
 
         if (selectedComponents.length === 0) {
-          message.error('Please select at least one component');
+          toast.error('Please select at least one component');
           return;
         }
 
         const faculty = faculties.find(f => f.id === values.facultyId);
         if (!faculty) {
-          message.error('Selected faculty not found');
+          toast.error('Selected faculty not found');
           return;
         }
 
@@ -98,7 +99,7 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
         const res = await axios.post(`${config.url}/admin/addCourseMapping`, newMapping);
 
         if (res.data.success) {
-          message.success('Mapping created successfully!');
+          toast.success('Mapping created successfully!');
           onSuccess({
             ...newMapping,
             fmapid: res.data.data.fmapid,
@@ -108,10 +109,10 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
           });
           closePopup();
         } else {
-          throw new Error(res.data.message || 'Failed to create mapping');
+          throw new Error(res.data.toast || 'Failed to create mapping');
         }
       } catch (err) {
-        message.error(err.response?.data?.message || err.message || 'Failed to create mapping');
+        toast.error(err.response?.data?.message || err.message || 'Failed to create mapping');
         console.error('Error creating mapping:', err);
       } finally {
         setLoading(false);
@@ -178,26 +179,6 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
           </Select>
         </Form.Item>
 
-        {selectedCourse && availableComponents.length > 0 && (
-          <Form.Item
-            label="Select Components"
-            required
-          >
-            <Row gutter={16}>
-              {availableComponents.map(component => (
-                <Col span={6} key={component}>
-                  <Checkbox
-                    checked={selectedComponents.includes(component)}
-                    onChange={(e) => handleComponentToggle(component, e.target.checked)}
-                  >
-                    {component} ({selectedCourse[component.toLowerCase()]} hours)
-                  </Checkbox>
-                </Col>
-              ))}
-            </Row>
-          </Form.Item>
-        )}
-
         <Form.Item
           label="Faculty"
           name="facultyId"
@@ -216,6 +197,26 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
             ))}
           </Select>
         </Form.Item>
+
+{selectedCourse && availableComponents.length > 0 && (
+          <Form.Item
+            label="Select Components"
+            required
+          >
+            <Row gutter={16}>
+              {availableComponents.map(component => (
+                <Col span={6} key={component}>
+                  <Checkbox
+                    checked={selectedComponents.includes(component)}
+                    onChange={(e) => handleComponentToggle(component, e.target.checked)}
+                  >
+                    {component} ({selectedCourse[component.toLowerCase()]} hours)
+                  </Checkbox>
+                </Col>
+              ))}
+            </Row>
+          </Form.Item>
+        )}
 
         <Form.Item style={{ marginTop: 32 }}>
           <Space>

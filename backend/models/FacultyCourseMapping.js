@@ -4,8 +4,8 @@ const facultyCourseMappingSchema = new mongoose.Schema({
     fmapid: { type: String, required: true, unique: true },
     facultyname: { type: String, required: true },
     facultyId: { type: String, required: true },
-    cname: { type: String, required: true, trim: true },
     ccode: { type: String, required: true },
+    cname: { type: String, required: true, trim: true },
     departments: [{ type: String, required: true }],
     components: [{ 
         type: { type: String, enum: ['L', 'T', 'P', 'S'] },

@@ -70,6 +70,7 @@ const fetchCourseMappings = async () => {
   try {
     const mappingRes = await axios.get(`${config.url}/admin/viewFCMapping`);
     const mappings = mappingRes.data || [];
+    // console.log('Fetched mappings:', mappings);
     const updatedMappings = {};
 
     for (let map of mappings) {

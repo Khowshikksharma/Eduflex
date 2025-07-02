@@ -63,7 +63,6 @@ adminrouter.put("/updatefaculty", admincontroller.updateFaculty);
 adminrouter.put("/changeFacultyStatus", admincontroller.changeFacultyStatus);
 adminrouter.get("/viewFacultyById/:facultyId", admincontroller.viewFacultyById);
 adminrouter.post("/uploadfaculties",admincontroller.facultyUpload);
-// adminrouter.get("/getFacultyID/:facultyId",admincontroller.getFacultyID);
 
 adminrouter.get("/analysis", admincontroller.analysis);
 

@@ -195,6 +195,14 @@ const changeFacultyStatus = async (req, res) => {
       { status: status },
       { new: true }
     );
+    const updatedMapping = await FacultyCourseMapping.updateMany(
+      { facultyId: id },
+      { status: status },
+      { new : true } 
+    );
+    if (!updatedMapping) {
+      return res.status(404).send('Mapping not found');
+    }
     if (!updatedFaculty) {
       return res.status(404).send('Faculty not found');
     }
@@ -207,24 +215,12 @@ const changeFacultyStatus = async (req, res) => {
 const viewFacultyById = async (req, res) => {
   try {
     const facultyId = req.params.facultyId;
-    const faculty = await Faculty.findById(facultyId);
+    const faculty = await Faculty.findOne({id: facultyId});
     if (!faculty) {
       return res.status(404).send('Faculty not found');
     }
     res.json(faculty);
   } catch (error) {
-    res.status(500).send(error.message);
-  }
-}
-
-const getFacultyID = async(req,res) => {
-  try{
-    const facultyID = req.params.facultyId;
-    const faculty = await Faculty.findById(facultyID);
-    if(!faculty)
-      return res.status(404).send('Faculty not found');
-    res.json(faculty.id);
-  }catch(error){
     res.status(500).send(error.message);
   }
 }
@@ -311,6 +307,14 @@ const changeCourseStatus = async (req, res) => {
       { status: status },
       { new: true }
     );
+    const updateMapping = await FacultyCourseMapping.findOneAndUpdate(
+      { ccode: ccode },
+      { status: status },
+      { new: true }
+    );
+    if (!updateMapping) {
+      return res.status(404).send('Mapping not found');
+    }
     if (!updatedCourse) {
       return res.status(404).send('Course not found');
     }
@@ -323,7 +327,7 @@ const changeCourseStatus = async (req, res) => {
 const viewCourseById = async (req, res) => {
   try {
     const ccode = req.params.ccode;
-    const course = await Course.findById(ccode);
+    const course = await Course.findOne({ccode: ccode});
     if (!course) {
       return res.status(404).send('Course not found');
     }
@@ -539,7 +543,6 @@ module.exports = {
     changeFacultyStatus,
     viewFacultyById,
     facultyUpload,
-    getFacultyID,
 
     analysis,
 

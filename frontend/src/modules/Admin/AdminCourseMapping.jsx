@@ -1,122 +1,46 @@
 import { useState, useEffect } from 'react';
-import { Button, Input, Space, Table, Tag } from 'antd';
+import { Button, Input, Space, Table, Tag, message, Popconfirm } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import usePopup from '../../components/usePopup';
 import AdminAddCourseMapping from './AdminAddCourseMapping';
-import AdminEditCourseMapping from './AdminEditCourseMappping';
+import AdminEditCourseMapping from './AdminEditCourseMapping';
 import config from '../../config';
 import axios from 'axios';
-import toast from 'react-hot-toast';
 
 const departments = ['CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE'];
+const components = ['L', 'T', 'P', 'S'];
 
 const AdminCourseMapping = () => {
   const [mappings, setMappings] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errorCount, setErrorCount] = useState(0);
   const { showPopup, closePopup, PopupWrapper } = usePopup();
 
-  const fetchFacultyDetails = async (facultyId) => {
-    try {
-      const response = await axios.get(`${config.url}/admin/viewFacultyById/${facultyId}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Failed to fetch faculty ${facultyId}`, error);
-      return {
-        name: 'Unknown Faculty',
-        department: 'Unknown',
-        error: true
-      };
-    }
-  };
 
-  const fetchCourseDetails = async (ccode) => {
-    try {
-      const response = await axios.get(`${config.url}/admin/viewCourseById/${ccode}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Failed to fetch course ${ccode}`, error);
-      return {
-        cname: 'Unknown Course',
-        cshortName: 'Unknown',
-        credits: 0,
-        error: true
-      };
-    }
-  };
-
-  useEffect(() => {
-    const fetchMappings = async () => {
+  const fetchMappings = async () => {
       setLoading(true);
-      setErrorCount(0);
-      
       try {
         const response = await axios.get(`${config.url}/admin/viewFCMapping`);
-        const baseMappings = response.data;
-
-        const enrichedMappings = await Promise.all(
-          baseMappings.map(async (map) => {
-            try {
-              const [facultyData, courseData] = await Promise.all([
-                fetchFacultyDetails(map.facultyId),
-                fetchCourseDetails(map.ccode)
-              ]);
-
-              if (facultyData.error || courseData.error) {
-                setErrorCount(prev => prev + 1);
-              }
-
-              return {
-                ...map,
-                facultyId: facultyData.id || map.facultyId,
-                ccode: courseData.ccode || map.ccode,
-                name: facultyData.name,
-                department: facultyData.department,
-                cname: courseData.cname,
-                cshortname: courseData.cshortname,
-                credits: courseData.credits,
-                hasError: facultyData.error || courseData.error
-              };
-            } catch (innerErr) {
-              console.error(`Failed to process mapping ${map.fmapid}`, innerErr);
-              setErrorCount(prev => prev + 1);
-              return {
-                ...map,
-                name: 'Error loading',
-                department: 'Error',
-                cname: 'Error loading',
-                cshortname: 'Error',
-                credits: 0,
-                hasError: true
-              };
-            }
-          })
-        );
-        
-        setMappings(enrichedMappings);
-        
-        if (errorCount > 0) {
-          toast.warning(`Loaded with ${errorCount} mapping(s) having incomplete data`);
-        }
+        setMappings(response.data);
       } catch (error) {
-        // toast.error('Failed to load mappings');
+        message.error('Failed to load mappings');
         console.error('Error fetching mappings:', error);
       } finally {
         setLoading(false);
       }
-    };
+  };
 
+  useEffect(() => {
     fetchMappings();
-  }, [errorCount]);
+  }, []);
 
   const handleAddMapping = () => {
     showPopup(
-      <AdminAddCourseMapping 
+      <AdminAddCourseMapping
         departments={departments}
         onSuccess={(newMapping) => {
-          setMappings([...mappings, newMapping]);
-          // toast.success('Mapping added successfully!');
+          setMappings(prev => [...prev, newMapping]);
+          message.success('Mapping added successfully!');
         }}
         closePopup={closePopup}
       />
@@ -125,14 +49,14 @@ const AdminCourseMapping = () => {
 
   const handleEditMapping = (record) => {
     showPopup(
-      <AdminEditCourseMapping 
+      <AdminEditCourseMapping
         mappingData={record}
         departments={departments}
         onUpdate={(updatedMapping) => {
-          setMappings(mappings.map(m => 
+          setMappings(prev => prev.map(m => 
             m.fmapid === updatedMapping.fmapid ? updatedMapping : m
           ));
-          // toast.success('Mapping updated successfully!');
+          message.success('Mapping updated successfully!');
         }}
         onClose={closePopup}
       />
@@ -140,17 +64,23 @@ const AdminCourseMapping = () => {
   };
 
   const handleDeleteMapping = async (record) => {
-    const response = await axios.put(`${config.url}/admin/changeMappingStatus`,{
-      fmapid: record.fmapid,
-      status: !record.status 
-    });
-    if(response.status === 200) {
-      setMappings(mappings.map(m => 
-        m.fmapid === record.fmapid ? { ...m, status: !m.status } : m
-      ));
-      toast.success(`Mapping ${record.status ? 'deactivated' : 'activated'} successfully!`);
-    }else{
-      toast.error('Failed to change mapping status');
+    try {
+      const response = await axios.put(`${config.url}/admin/changeMappingStatus`, {
+        fmapid: record.fmapid,
+        status: !record.status 
+      });
+      
+      if(response.data.success) {
+        setMappings(prev => prev.map(m => 
+          m.fmapid === record.fmapid ? { ...m, status: !m.status } : m
+        ));
+        message.success(`Mapping ${record.status ? 'deactivated' : 'activated'} successfully!`);
+      } else {
+        throw new Error(response.data.message || 'Failed to change status');
+      }
+    } catch (error) {
+      message.error(error.response?.data?.message || 'Failed to change mapping status');
+      console.error('Error changing mapping status:', error);
     }
   };
 
@@ -166,7 +96,7 @@ const AdminCourseMapping = () => {
       (mapping.facultyId || '').toLowerCase().includes(searchLower) ||
       (mapping.department || '').toLowerCase().includes(searchLower) ||
       (mapping.fmapid || '').toLowerCase().includes(searchLower) ||
-      (mapping.component || '').toLowerCase().includes(searchLower) ||
+      (mapping.components?.join('') || '').toLowerCase().includes(searchLower) ||
       (mapping.cshortname || '').toLowerCase().includes(searchLower)
     );
   });
@@ -184,23 +114,19 @@ const AdminCourseMapping = () => {
       dataIndex: 'fmapid',
       key: 'fmapid',
       align: 'center',
+      sorter: (a, b) => a.fmapid.localeCompare(b.fmapid),
     },
     {
       title: 'Course ID',
       dataIndex: 'ccode',
       key: 'ccode',
       align: 'center',
+      sorter: (a, b) => a.ccode.localeCompare(b.ccode),
     },
     {
       title: 'Course Name',
       dataIndex: 'cname',
       key: 'cname',
-      align: 'center',
-    },
-    {
-      title: 'Short Name',
-      dataIndex: 'cshortname',
-      key: 'cshortname',
       align: 'center',
     },
     {
@@ -211,29 +137,39 @@ const AdminCourseMapping = () => {
     },
     {
       title: 'Faculty Name',
-      dataIndex: 'name',
-      key: 'name',
+      dataIndex: 'facultyname',
+      key: 'facultyname',
       align: 'center',
     },
     {
-      title: 'Credits',
-      dataIndex: 'credits',
-      key: 'credits',
+      title: 'Departments',
+      dataIndex: 'departments',
+      key: 'departments',
       align: 'center',
-    },
-    {
-      title: 'Component',
-      dataIndex: 'component',
-      key: 'component',
-      align: 'center',
-    },
-    {
-      title: 'Department',
-      dataIndex: 'department',
-      key: 'department',
-      align: 'center',
+      render: depts => depts?.join(', ') || 'N/A',
       filters: departments.map(dept => ({ text: dept, value: dept })),
-      onFilter: (value, record) => record.department === value,
+      onFilter: (value, record) => record.departments?.includes(value),
+    },
+    {
+      title: 'Components (Hours)',
+      dataIndex: 'components',
+      key: 'components',
+      align: 'center',
+      render: (components) => {
+        if (!components || components.length === 0) return 'N/A';
+        const formattedComponents = ['L', 'T', 'P', 'S']
+          .map(comp => {
+            const found = components.find(c => c.type === comp);
+            return found && found.hours > 0 ? `${comp}(${found.hours})` : null;
+          })
+          .filter(Boolean);
+        return formattedComponents.length > 0
+          ? formattedComponents.join('-')
+          : 'None';
+      },
+      filters: components.map(comp => ({ text: comp, value: comp })),
+      onFilter: (value, record) =>
+        record.components?.some(c => c.type === value && c.hours > 0),
     },
     {
       title: 'Status',
@@ -252,26 +188,30 @@ const AdminCourseMapping = () => {
       align: 'center',
     },
     {
-      title: 'Action → Edit/Delete',
-      key: 'action',
+      title: 'Actions',
+      key: 'actions',
       fixed: 'right',
       render: (_, record) => (
         <Space size="middle">
           <Button 
             type="link" 
             onClick={() => handleEditMapping(record)}
-            disabled={!record.status}
           >
             Edit
           </Button>
-          <Button 
-            type="link" 
-            danger 
-            onClick={() => handleDeleteMapping(record)}
-            disabled={!record.status}
+          <Popconfirm
+            title={`Are you sure you want to ${record.status ? 'deactivate' : 'activate'} this mapping?`}
+            onConfirm={() => handleDeleteMapping(record)}
+            okText="Yes"
+            cancelText="No"
           >
-            {record.status ? 'Deactivate' : 'Inactive'}
-          </Button>
+            <Button 
+              type="link" 
+              danger
+            >
+              {record.status ? 'Deactivate' : 'Activate'}
+            </Button>
+          </Popconfirm>
         </Space>
       ),
     },
@@ -288,11 +228,12 @@ const AdminCourseMapping = () => {
         <h1 style={{ margin: 0 }}>Course - Faculty Mapping</h1>
         <div style={{ display: 'flex', gap: '10px' }}>
           <Input
-            placeholder="Search by course or faculty"
+            placeholder="Search by course, faculty, components etc."
             prefix={<SearchOutlined />}
-            style={{ width: 250 }}
+            style={{ width: 300 }}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
+            allowClear
           />
           <Button 
             type="primary" 
@@ -316,7 +257,6 @@ const AdminCourseMapping = () => {
           zIndex: 0
         }}
         pagination={{
-          // pageSize: 10,
           showSizeChanger: true,
           pageSizeOptions: [10, 20, 50, 100],
           showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} mappings`,

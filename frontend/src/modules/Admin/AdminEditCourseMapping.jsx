@@ -6,21 +6,20 @@ import config from '../../config';
 
 const { Option } = Select;
 
-const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
+const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClose }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [selectedDepts, setSelectedDepts] = useState([]);
+  const [selectedDepts, setSelectedDepts] = useState(mappingData.departments || []);
   const [courses, setCourses] = useState([]);
   const [faculties, setFaculties] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedComponents, setSelectedComponents] = useState([]);
-
-  useEffect(() => {
-    form.resetFields();
-    setSelectedDepts([]);
-    setSelectedCourse(null);
-    setSelectedComponents([]);
-  }, [form]);
+  const [courseComponents, setCourseComponents] = useState({
+    L: 0,
+    T: 0,
+    P: 0,
+    S: 0
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,28 +30,67 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
         ]);
         setCourses(coursesRes.data);
         setFaculties(facultiesRes.data);
+
+        // Initialize form with mapping data
+        if (mappingData) {
+          form.setFieldsValue({
+            facultyId: mappingData.facultyId,
+            ccode: mappingData.ccode,
+            departments: mappingData.departments
+          });
+
+          // Find the course to set component settings
+          const course = coursesRes.data.find(c => c.ccode === mappingData.ccode);
+          if (course) {
+            setSelectedCourse(course);
+            setCourseComponents({
+              L: course.l || 0,
+              T: course.t || 0,
+              P: course.p || 0,
+              S: course.s || 0
+            });
+
+            // Initialize selected components from mapping data
+            const initialSelected = mappingData.components
+              ?.filter(comp => comp.hours > 0)
+              .map(comp => comp.type) || [];
+            
+            setSelectedComponents(initialSelected);
+          }
+        }
       } catch (err) {
         message.error('Failed to load data');
         console.error('Error fetching data:', err);
       }
     };
     fetchData();
-  }, []);
+  }, [mappingData, form]);
 
   const handleDepartmentChange = (values) => {
     setSelectedDepts(values);
     form.setFieldsValue({
-      ccode: undefined,
-      facultyId: undefined
+      ccode: undefined
     });
     setSelectedCourse(null);
     setSelectedComponents([]);
+    setCourseComponents({
+      L: 0,
+      T: 0,
+      P: 0,
+      S: 0
+    });
   };
 
   const handleCourseChange = (value) => {
     const course = courses.find(c => c.ccode === value);
     setSelectedCourse(course);
-    setSelectedComponents([]);
+    setCourseComponents({
+      L: course.l || 0,
+      T: course.t || 0,
+      P: course.p || 0,
+      S: course.s || 0
+    });
+    setSelectedComponents([]); // Reset selected components when course changes
   };
 
   const handleComponentToggle = (component, checked) => {
@@ -62,60 +100,58 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
   };
 
   const onFinish = async (values) => {
-      setLoading(true);
-      try {
-        if (!selectedCourse) {
-          message.error('Please select a course');
-          return;
-        }
-
-        if (selectedComponents.length === 0) {
-          message.error('Please select at least one component');
-          return;
-        }
-
-        const faculty = faculties.find(f => f.id === values.facultyId);
-        if (!faculty) {
-          message.error('Selected faculty not found');
-          return;
-        }
-
-        const components = selectedComponents.map(component => ({
-          type: component,
-          hours: selectedCourse[component.toLowerCase()] || 0
-        }));
-
-        const newMapping = {
-          facultyId: values.facultyId,
-          facultyname: faculty.name,  // Added faculty name
-          ccode: values.ccode,
-          cname: selectedCourse.cname,  // Added course name
-          departments: selectedDepts,
-          components,
-          status: true
-        };
-
-        const res = await axios.post(`${config.url}/admin/addCourseMapping`, newMapping);
-
-        if (res.data.success) {
-          message.success('Mapping created successfully!');
-          onSuccess({
-            ...newMapping,
-            fmapid: res.data.data.fmapid,
-            status: true,
-            name: faculty.name,  // For immediate display in table
-            cname: selectedCourse.cname  // For immediate display in table
-          });
-          closePopup();
-        } else {
-          throw new Error(res.data.message || 'Failed to create mapping');
-        }
-      } catch (err) {
-        message.error(err.response?.data?.message || err.message || 'Failed to create mapping');
-        console.error('Error creating mapping:', err);
-      } finally {
-        setLoading(false);
+    setLoading(true);
+    try {
+      if (selectedComponents.length === 0) {
+        message.error('Please select at least one component');
+        return;
       }
+
+      const faculty = faculties.find(f => f.id === values.facultyId);
+      if (!faculty) {
+        message.error('Selected faculty not found');
+        return;
+      }
+
+      // Prepare components array using the course's predefined hours
+      const components = selectedComponents.map(type => ({
+        type,
+        hours: courseComponents[type] || 0
+      }));
+
+      const updatedMapping = {
+        fmapid: mappingData.fmapid,
+        facultyId: values.facultyId,
+        facultyname: faculty.name,
+        ccode: values.ccode,
+        cname: selectedCourse.cname,
+        departments: selectedDepts,
+        components,
+        status: mappingData.status
+      };
+
+      const res = await axios.put(`${config.url}/admin/updateCourseMapping`, updatedMapping);
+
+      if (res.data.success) {
+        message.success('Mapping updated successfully!');
+        onUpdate({
+          ...updatedMapping,
+          name: faculty.name,
+          cname: selectedCourse.cname,
+          cshortname: mappingData.cshortname,
+          credits: mappingData.credits,
+          department: mappingData.department
+        });
+        onClose();
+      } else {
+        throw new Error(res.data.message || 'Failed to update mapping');
+      }
+    } catch (err) {
+      message.error(err.response?.data?.message || err.message || 'Failed to update mapping');
+      console.error('Error updating mapping:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredCourses = selectedDepts.length > 0
@@ -128,14 +164,10 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
         selectedDepts.includes(faculty.department))
     : [];
 
-  const availableComponents = selectedCourse
-    ? ['L', 'T', 'P', 'S'].filter(comp => selectedCourse[comp.toLowerCase()] > 0)
-    : [];
-
   return (
     <div style={{ padding: '0 20px' }}>
       <h2 style={{ marginBottom: 24, fontSize: '20px', fontWeight: '600' }}>
-        Add New Course-Faculty Mapping
+        Edit Course-Faculty Mapping
       </h2>
       
       <Form form={form} layout="vertical" onFinish={onFinish}>
@@ -178,24 +210,24 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
           </Select>
         </Form.Item>
 
-        {selectedCourse && availableComponents.length > 0 && (
-          <Form.Item
-            label="Select Components"
-            required
-          >
+        {selectedCourse && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ marginBottom: 8 }}>Select Components:</div>
             <Row gutter={16}>
-              {availableComponents.map(component => (
-                <Col span={6} key={component}>
-                  <Checkbox
-                    checked={selectedComponents.includes(component)}
-                    onChange={(e) => handleComponentToggle(component, e.target.checked)}
-                  >
-                    {component} ({selectedCourse[component.toLowerCase()]} hours)
-                  </Checkbox>
-                </Col>
+              {Object.entries(courseComponents).map(([component, hours]) => (
+                hours > 0 && (
+                  <Col span={6} key={component}>
+                    <Checkbox
+                      checked={selectedComponents.includes(component)}
+                      onChange={(e) => handleComponentToggle(component, e.target.checked)}
+                    >
+                      {component}({hours})
+                    </Checkbox>
+                  </Col>
+                )
               ))}
             </Row>
-          </Form.Item>
+          </div>
         )}
 
         <Form.Item
@@ -226,11 +258,11 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
               size="large"
               icon={<LinkOutlined />}
             >
-              Create Mapping
+              Update Mapping
             </Button>
             <Button
               htmlType="button"
-              onClick={closePopup}
+              onClick={onClose}
               size="large"
             >
               Cancel
@@ -242,4 +274,4 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
   );
 };
 
-export default AdminAddCourseMapping;
+export default AdminEditCourseMapping;

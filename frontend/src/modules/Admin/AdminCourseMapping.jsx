@@ -67,7 +67,7 @@ const AdminCourseMapping = () => {
     try {
       const response = await axios.put(`${config.url}/admin/changeMappingStatus`, {
         fmapid: record.fmapid,
-        status: !record.status 
+        status: !record.status
       });
       
       if(response.data.success) {
@@ -75,6 +75,7 @@ const AdminCourseMapping = () => {
           m.fmapid === record.fmapid ? { ...m, status: !m.status } : m
         ));
         message.success(`Mapping ${record.status ? 'deactivated' : 'activated'} successfully!`);
+        window.location.reload();
       } else {
         throw new Error(response.data.message || 'Failed to change status');
       }

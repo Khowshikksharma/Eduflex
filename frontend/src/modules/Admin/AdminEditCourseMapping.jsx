@@ -31,7 +31,6 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
         setCourses(coursesRes.data);
         setFaculties(facultiesRes.data);
 
-        // Initialize form with mapping data
         if (mappingData) {
           form.setFieldsValue({
             facultyId: mappingData.facultyId,
@@ -39,7 +38,6 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
             departments: mappingData.departments
           });
 
-          // Find the course to set component settings
           const course = coursesRes.data.find(c => c.ccode === mappingData.ccode);
           if (course) {
             setSelectedCourse(course);
@@ -50,7 +48,6 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
               S: course.s || 0
             });
 
-            // Initialize selected components from mapping data
             const initialSelected = mappingData.components
               ?.filter(comp => comp.hours > 0)
               .map(comp => comp.type) || [];
@@ -90,7 +87,7 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
       P: course.p || 0,
       S: course.s || 0
     });
-    setSelectedComponents([]); // Reset selected components when course changes
+    setSelectedComponents([]);
   };
 
   const handleComponentToggle = (component, checked) => {
@@ -113,7 +110,6 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
         return;
       }
 
-      // Prepare components array using the course's predefined hours
       const components = selectedComponents.map(type => ({
         type,
         hours: courseComponents[type] || 0

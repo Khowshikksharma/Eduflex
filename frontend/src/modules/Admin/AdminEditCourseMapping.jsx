@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Select, Space, Checkbox, Row, Col, message } from 'antd';
+import { Form, Button, Select, Space, Checkbox, Row, Col } from 'antd';
 import { LinkOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import config from '../../config';
+import toast from 'react-hot-toast';
 
 const { Option } = Select;
 
@@ -56,7 +57,7 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
           }
         }
       } catch (err) {
-        message.error('Failed to load data');
+        toast.error('Failed to load data');
         console.error('Error fetching data:', err);
       }
     };
@@ -100,21 +101,20 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
     setLoading(true);
     try {
       if (selectedComponents.length === 0) {
-        message.error('Please select at least one component');
+        toast.error('Please select at least one component');
+        setLoading(false);
         return;
       }
-
       const faculty = faculties.find(f => f.id === values.facultyId);
       if (!faculty) {
-        message.error('Selected faculty not found');
+        toast.error('Selected faculty not found');
+        setLoading(false);
         return;
       }
-
       const components = selectedComponents.map(type => ({
         type,
         hours: courseComponents[type] || 0
       }));
-
       const updatedMapping = {
         fmapid: mappingData.fmapid,
         facultyId: values.facultyId,
@@ -125,26 +125,42 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
         components,
         status: mappingData.status
       };
-
-      const res = await axios.put(`${config.url}/admin/updateCourseMapping`, updatedMapping);
-
-      if (res.data.success) {
-        message.success('Mapping updated successfully!');
-        onUpdate({
-          ...updatedMapping,
-          name: faculty.name,
-          cname: selectedCourse.cname,
-          cshortname: mappingData.cshortname,
-          credits: mappingData.credits,
-          department: mappingData.department
-        });
-        onClose();
+      // console.log('Updating mapping with data:', updatedMapping);
+      const res = await axios.put(`${config.url}/admin/updateFCMapping`, updatedMapping);
+      // console.log('API Response:', res.data);
+      if (res.status === 200) {
+        if (res.data.success !== false) {
+          toast.success('Mapping updated successfully!');
+          onUpdate({
+            ...updatedMapping,
+            name: faculty.name,
+            cname: selectedCourse.cname,
+            cshortname: mappingData.cshortname,
+            credits: mappingData.credits,
+            department: mappingData.department
+          });
+          onClose();
+        } else {
+          throw new Error(res.data.message || 'Update failed on server');
+        }
       } else {
-        throw new Error(res.data.message || 'Failed to update mapping');
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       }
     } catch (err) {
-      message.error(err.response?.data?.message || err.message || 'Failed to update mapping');
       console.error('Error updating mapping:', err);
+      let errorMessage = 'Failed to update mapping';
+      if (err.response) {
+        errorMessage = err.response.data?.message || 
+                     err.response.data?.error || 
+                     `Server error: ${err.response.status}`;
+        console.error('Server error details:', err.response.data);
+      } else if (err.request) {
+        errorMessage = 'No response from server. Please check your connection.';
+        console.error('Network error:', err.request);
+      } else {
+        errorMessage = err.message || 'An unexpected error occurred';
+      }
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

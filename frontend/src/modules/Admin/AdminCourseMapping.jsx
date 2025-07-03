@@ -41,7 +41,7 @@ const AdminCourseMapping = () => {
         departments={departments}
         onSuccess={(newMapping) => {
           setMappings(prev => [...prev, newMapping]);
-          toast.success('Mapping added successfully!');
+          // toast.success('Mapping added successfully!');
         }}
         closePopup={closePopup}
       />
@@ -57,7 +57,7 @@ const AdminCourseMapping = () => {
           setMappings(prev => prev.map(m => 
             m.fmapid === updatedMapping.fmapid ? updatedMapping : m
           ));
-          toast.success('Mapping updated successfully!');
+          // toast.success('Mapping updated successfully!');
         }}
         onClose={closePopup}
       />

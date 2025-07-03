@@ -396,7 +396,7 @@ const createFCMapping = async (req, res) => {
 
         await newMapping.save();
 
-        res.status(201).json({
+        res.status(200).json({
             success: true,
             data: newMapping,
             message: 'Mapping created successfully'
@@ -458,7 +458,7 @@ const updateFCMapping = async (req, res) => {
             return res.status(404).json({ message: 'Mapping not found' });
         }
 
-        res.json(updated);
+        res.status(200).json(updated);
     } catch (error) {
         res.status(500).json({
             message: error.message || 'Server error'

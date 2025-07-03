@@ -71,17 +71,17 @@ const AdminCourseMapping = () => {
         status: !record.status
       });
       
-      if(response.data.success) {
+      if(response.status === 200) {
         setMappings(prev => prev.map(m => 
           m.fmapid === record.fmapid ? { ...m, status: !m.status } : m
         ));
         toast.success(`Mapping ${record.status ? 'deactivated' : 'activated'} successfully!`);
         window.location.reload();
       } else {
-        throw new Error(response.data.message || 'Failed to change status');
+        toast.error(response.data.message);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to change mapping status');
+      toast.error(error.response?.data?.message);
       console.error('Error changing mapping status:', error);
     }
   };
@@ -202,20 +202,14 @@ const AdminCourseMapping = () => {
           >
             Edit
           </Button>
-          <Popconfirm
-            title={`Are you sure you want to ${record.status ? 'deactivate' : 'activate'} this mapping?`}
-            onConfirm={() => handleDeleteMapping(record)}
-            okText="Yes"
-            cancelText="No"
+          <Button 
+            type="link" 
+            danger
+            disabled={!record.status}
+            onClick={() => handleDeleteMapping(record)}
           >
-            <Button 
-              type="link" 
-              danger
-              disabled={!record.status}
-            >
-              {record.status ? 'Activate' : 'Inactive'}
-            </Button>
-          </Popconfirm>
+            {record.status ? 'Activate' : 'Inactive'}
+          </Button>
         </Space>
       ),
     },

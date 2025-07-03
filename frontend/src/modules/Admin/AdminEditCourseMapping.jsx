@@ -25,13 +25,8 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [coursesRes, facultiesRes] = await Promise.all([
-          axios.get(`${config.url}/admin/viewCourses`),
-          axios.get(`${config.url}/admin/viewfaculties`)
-        ]);
+        const coursesRes = await axios.get(`${config.url}/admin/viewCourses`);
         setCourses(coursesRes.data);
-        setFaculties(facultiesRes.data);
-
         if (mappingData) {
           form.setFieldsValue({
             facultyId: mappingData.facultyId,
@@ -63,6 +58,16 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
         console.error('Error fetching data:', err);
       }
     };
+    const fetchFaculties = async () => {
+      try {
+        const facultiesRes = await axios.get(`${config.url}/admin/viewfaculties`);
+        setFaculties(facultiesRes.data.filter(faculty => faculty.facultycoursecount < 3));
+      } catch (err) {
+        toast.error('Failed to load faculties');
+        console.error('Error fetching faculties:', err);
+      }
+    };
+    fetchFaculties();
     fetchData();
   }, [mappingData, form]);
 

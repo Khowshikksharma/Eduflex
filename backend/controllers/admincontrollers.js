@@ -364,6 +364,12 @@ const createFCMapping = async (req, res) => {
             });
         }
 
+        if(faculty.facultycoursecount >= 3) {
+            return res.status(400).json({
+                message: 'Faculty is already assigned to 3 components'
+            });
+        }
+
         const course = await Course.findOne({ ccode: ccode });
         if (!course) {
             return res.status(404).json({
@@ -383,6 +389,12 @@ const createFCMapping = async (req, res) => {
         }
         const fmapid = `MAP${Date.now().toString().slice(-6)}`;
 
+        if((faculty.facultycoursecount + components.length) > 3){
+            return res.status(400).json({
+                message: 'Faculty cannot be assigned more than 3 components in total'
+            });
+        }
+
         const newMapping = new FacultyCourseMapping({
             fmapid,
             facultyname: faculty.name,
@@ -396,6 +408,11 @@ const createFCMapping = async (req, res) => {
             status: true
         });
 
+        await Faculty.findOneAndUpdate(
+            { id: facultyId },
+            { $inc: { facultycoursecount: components.length } },
+            { new: true }
+        );
         await newMapping.save();
 
         res.status(200).json({
@@ -425,10 +442,23 @@ const updateFCMapping = async (req, res) => {
     try {
         const { fmapid, facultyId, ccode, departments, components } = req.body;
 
+        if (!fmapid || !facultyId || !ccode || !departments || !components) {
+            return res.status(400).json({
+                message: 'Missing required fields: fmapid, facultyId, ccode, departments, or components'
+            });
+        }
+
         const faculty = await Faculty.findOne({ id: facultyId });
         if (!faculty) {
             return res.status(404).json({ message: 'Faculty not found' });
         }
+
+        if (faculty.facultycoursecount + components.length > 3) {
+            return res.status(400).json({
+                message: 'Faculty cannot be assigned more than 3 components in total'
+            });
+        }
+
         const course = await Course.findOne({ ccode: ccode });
         if (!course) {
             return res.status(404).json({ message: 'Course not found' });
@@ -443,6 +473,18 @@ const updateFCMapping = async (req, res) => {
             return res.status(409).json({
                 message: 'This faculty is already mapped to this course with another mapping'
             });
+        }
+        
+        const existingMapping = await FacultyCourseMapping.findOne({ fmapid: fmapid });
+        if(existingMapping.facultyId !== facultyId) {
+          const oldFaculty = await Faculty.findOne({ id: existingMapping.facultyId });
+          oldFaculty.facultycoursecount -= existingMapping.components.length;
+          await oldFaculty.save();
+          await Faculty.findOneAndUpdate(
+              { id: facultyId },
+              { $inc: { facultycoursecount: components.length } },
+              { new: true }
+          );
         }
 
         const updated = await FacultyCourseMapping.findOneAndUpdate(

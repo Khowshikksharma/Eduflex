@@ -26,18 +26,27 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [coursesRes, facultiesRes] = await Promise.all([
-          axios.get(`${config.url}/admin/viewCourses`),
-          axios.get(`${config.url}/admin/viewfaculties`)
-        ]);
+        const coursesRes = await axios.get(`${config.url}/admin/viewCourses`);
         setCourses(coursesRes.data);
-        setFaculties(facultiesRes.data);
       } catch (err) {
         toast.error('Failed to load data');
         console.error('Error fetching data:', err);
       }
     };
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchFaculties = async () => {
+      try {
+        const facultiesRes = await axios.get(`${config.url}/admin/viewfaculties`);
+        setFaculties(facultiesRes.data.filter(faculty => faculty.facultycoursecount < 3));
+      } catch (err) {
+        toast.error('Failed to load faculties');
+        console.error('Error fetching faculties:', err);
+      }
+    };
+    fetchFaculties();
   }, []);
 
   const handleDepartmentChange = (values) => {

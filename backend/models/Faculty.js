@@ -22,7 +22,8 @@ const facultySchema = new mongoose.Schema({
   motherTongue: { type: String, required: true },
   nationality: { type: String, required: true },
   address: { type: String, required: true },
-  password: { type: String, required: true ,default: 123} // Added for authentication
+  password: { type: String, required: true ,default: 123},
+  facultycoursecount: {type: Number, default: 0,min: 0,max: 3},
 }, { timestamps: true });
 
 const generateFacultyId = (department) => {

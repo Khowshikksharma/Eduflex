@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Select, Space, Checkbox, Row, Col } from 'antd';
+import { Form, Button, Select, Space, Checkbox, Row, Col, Input } from 'antd';
 import { LinkOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import config from '../../config';
@@ -36,7 +36,9 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
           form.setFieldsValue({
             facultyId: mappingData.facultyId,
             ccode: mappingData.ccode,
-            departments: mappingData.departments
+            departments: mappingData.departments,
+            academicYear: mappingData.academicYear,
+            semester: mappingData.semester
           });
 
           const course = coursesRes.data.find(c => c.ccode === mappingData.ccode);
@@ -67,7 +69,9 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
   const handleDepartmentChange = (values) => {
     setSelectedDepts(values);
     form.setFieldsValue({
-      ccode: undefined
+      ccode: undefined,
+      academicYear: undefined,
+      semester: undefined
     });
     setSelectedCourse(null);
     setSelectedComponents([]);
@@ -89,6 +93,11 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
       S: course.s || 0
     });
     setSelectedComponents([]);
+    
+    form.setFieldsValue({
+      academicYear: course.academicYear,
+      semester: course.semester
+    });
   };
 
   const handleComponentToggle = (component, checked) => {
@@ -121,13 +130,13 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
         facultyname: faculty.name,
         ccode: values.ccode,
         cname: selectedCourse.cname,
+        academicYear: selectedCourse.academicYear,
+        semester: selectedCourse.semester,
         departments: selectedDepts,
         components,
         status: mappingData.status
       };
-      // console.log('Updating mapping with data:', updatedMapping);
       const res = await axios.put(`${config.url}/admin/updateFCMapping`, updatedMapping);
-      // console.log('API Response:', res.data);
       if (res.status === 200) {
         if (res.data.success !== false) {
           toast.success('Mapping updated successfully!');
@@ -135,9 +144,8 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
             ...updatedMapping,
             name: faculty.name,
             cname: selectedCourse.cname,
-            cshortname: mappingData.cshortname,
-            credits: mappingData.credits,
-            department: mappingData.department
+            cshortname: selectedCourse.cshortname,
+            credits: selectedCourse.credits
           });
           onClose();
         } else {
@@ -150,9 +158,7 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
       console.error('Error updating mapping:', err);
       let errorMessage = 'Failed to update mapping';
       if (err.response) {
-        errorMessage = err.response.data?.message || 
-                     err.response.data?.error || 
-                     `Server error: ${err.response.status}`;
+        errorMessage = err.response.data?.message || err.response.data?.error || `Server error: ${err.response.status}`;
         console.error('Server error details:', err.response.data);
       } else if (err.request) {
         errorMessage = 'No response from server. Please check your connection.';
@@ -220,6 +226,14 @@ const AdminEditCourseMapping = ({ mappingData, departments = [], onUpdate, onClo
               </Option>
             ))}
           </Select>
+        </Form.Item>
+        
+        <Form.Item label="Academic Year" name="academicYear">
+          <Input disabled size="large" />
+        </Form.Item>
+
+        <Form.Item label="Semester" name="semester">
+          <Input disabled size="large" />
         </Form.Item>
 
         {selectedCourse && (

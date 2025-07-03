@@ -11,8 +11,7 @@ import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
 const departments = [
-  'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
-  'ASE', 'AUT', 'AGE', 'BIO', 'BME', 'CEE', 'CER'
+  'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 'ASE', 'AUT', 'AGE', 'BIO', 'BME', 'CEE', 'CER'
 ];
 
 const AdminCourseList = () => {

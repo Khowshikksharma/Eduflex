@@ -138,7 +138,7 @@ const AdminAddFacultyUpload = ({ closePopup }) => {
               Import Faculty
             </Button>
             <Button 
-              htmlType="button" 
+              htmlType="button"
               onClick={() => {
                 setFileList([]);
                 setExcelData(null);

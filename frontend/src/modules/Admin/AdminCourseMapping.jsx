@@ -132,6 +132,21 @@ const AdminCourseMapping = () => {
       align: 'center',
     },
     {
+      title: 'Academic Year',
+      dataIndex: 'academicYear',
+      key: 'academicYear',
+      align: 'center',
+      sorter: (a, b) => a.academicYear.localeCompare(b.academicYear),
+    },
+    {
+      title: 'Semester',
+      dataIndex: 'semester',
+      key: 'semester',
+      align: 'center',
+      sorter: (a, b) => a.semester - b.semester,
+      render: semester => `Semester ${semester}`,
+    },
+    {
       title: 'Faculty ID',
       dataIndex: 'facultyId',
       key: 'facultyId',

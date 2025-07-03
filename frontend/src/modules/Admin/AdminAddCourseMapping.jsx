@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Select, Space, Checkbox, Row, Col } from 'antd';
+import { Form, Button, Select, Space, Checkbox, Row, Col, Input } from 'antd';
 import { LinkOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import config from '../../config';
@@ -63,60 +63,62 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
   };
 
   const onFinish = async (values) => {
-      setLoading(true);
-      try {
-        if (!selectedCourse) {
-          toast.error('Please select a course');
-          return;
-        }
-
-        if (selectedComponents.length === 0) {
-          toast.error('Please select at least one component');
-          return;
-        }
-
-        const faculty = faculties.find(f => f.id === values.facultyId);
-        if (!faculty) {
-          toast.error('Selected faculty not found');
-          return;
-        }
-
-        const components = selectedComponents.map(component => ({
-          type: component,
-          hours: selectedCourse[component.toLowerCase()] || 0
-        }));
-
-        const newMapping = {
-          facultyId: values.facultyId,
-          facultyname: faculty.name,  // Added faculty name
-          ccode: values.ccode,
-          cname: selectedCourse.cname,  // Added course name
-          departments: selectedDepts,
-          components,
-          status: true
-        };
-
-        const res = await axios.post(`${config.url}/admin/addCourseMapping`, newMapping);
-
-        if (res.data.success) {
-          toast.success('Mapping created successfully!');
-          onSuccess({
-            ...newMapping,
-            fmapid: res.data.data.fmapid,
-            status: true,
-            name: faculty.name,  // For immediate display in table
-            cname: selectedCourse.cname  // For immediate display in table
-          });
-          closePopup();
-        } else {
-          throw new Error(res.data.toast || 'Failed to create mapping');
-        }
-      } catch (err) {
-        toast.error(err.response?.data?.message || err.message || 'Failed to create mapping');
-        console.error('Error creating mapping:', err);
-      } finally {
-        setLoading(false);
+    setLoading(true);
+    try {
+      if (!selectedCourse) {
+        toast.error('Please select a course');
+        return;
       }
+
+      if (selectedComponents.length === 0) {
+        toast.error('Please select at least one component');
+        return;
+      }
+
+      const faculty = faculties.find(f => f.id === values.facultyId);
+      if (!faculty) {
+        toast.error('Selected faculty not found');
+        return;
+      }
+
+      const components = selectedComponents.map(component => ({
+        type: component,
+        hours: selectedCourse[component.toLowerCase()] || 0
+      }));
+
+      const newMapping = {
+        facultyId: values.facultyId,
+        facultyname: faculty.name,
+        ccode: values.ccode,
+        cname: selectedCourse.cname,
+        academicYear: selectedCourse.academicYear,
+        semester: selectedCourse.semester,
+        departments: selectedDepts,
+        components,
+        status: true
+      };
+
+      const res = await axios.post(`${config.url}/admin/addCourseMapping`, newMapping);
+
+      if (res.data.success) {
+        toast.success('Mapping created successfully!');
+        onSuccess({
+          ...newMapping,
+          fmapid: res.data.data.fmapid,
+          status: true,
+          name: faculty.name,
+          cname: selectedCourse.cname
+        });
+        closePopup();
+      } else {
+        throw new Error(res.data.toast || 'Failed to create mapping');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to create mapping');
+      console.error('Error creating mapping:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredCourses = selectedDepts.length > 0
@@ -179,6 +181,26 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
           </Select>
         </Form.Item>
 
+        {selectedCourse && (
+          <>
+            <Form.Item label="Academic Year">
+              <Input 
+                value={selectedCourse.academicYear} 
+                disabled 
+                size="large"
+              />
+            </Form.Item>
+            
+            <Form.Item label="Semester">
+              <Input 
+                value={`Semester ${selectedCourse.semester}`} 
+                disabled 
+                size="large"
+              />
+            </Form.Item>
+          </>
+        )}
+
         <Form.Item
           label="Faculty"
           name="facultyId"
@@ -198,7 +220,7 @@ const AdminAddCourseMapping = ({ onSuccess, departments = [], closePopup }) => {
           </Select>
         </Form.Item>
 
-{selectedCourse && availableComponents.length > 0 && (
+        {selectedCourse && availableComponents.length > 0 && (
           <Form.Item
             label="Select Components"
             required

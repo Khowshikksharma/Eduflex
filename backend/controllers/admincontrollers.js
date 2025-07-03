@@ -385,10 +385,12 @@ const createFCMapping = async (req, res) => {
 
         const newMapping = new FacultyCourseMapping({
             fmapid,
-            facultyname: faculty.name,  // Added faculty name
+            facultyname: faculty.name,
             facultyId,
-            cname: course.cname,      // Added course name
+            cname: course.cname,
             ccode,
+            academicYear: course.academicYear,
+            semester: course.semester,
             departments,
             components,
             status: true
@@ -448,6 +450,8 @@ const updateFCMapping = async (req, res) => {
             {
                 facultyId,
                 ccode,
+                academicYear: course.academicYear,
+                semester: course.semester,
                 departments,
                 components
             },

@@ -13,7 +13,7 @@ const departments = [
 const checkAdminLogin = async (req, res) => {
     try{
         const input = req.body;
-        console.log(input);
+        // console.log(input);
         const admin = await Admin.findOne(input);
         res.json(admin)
     }catch(error){

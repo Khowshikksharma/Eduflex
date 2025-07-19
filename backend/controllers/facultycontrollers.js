@@ -6,7 +6,7 @@ const path = require('path');
 const checkFacultyLogin = async (req, res) => {
     try {
         const input = req.body;
-        console.log(input);
+        // console.log(input);
         const faculty = await Faculty.findOne(input);
         res.json(faculty);
     } catch (error) {

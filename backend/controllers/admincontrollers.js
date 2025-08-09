@@ -4,6 +4,7 @@ const Faculty = require('../models/Faculty');
 const Course = require('../models/Course');
 const FacultyCourseMapping = require('../models/FacultyCourseMapping');
 const Circular = require('../models/Circular');
+const Mail = require('./Mail');
 
 const departments = [
   'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
@@ -80,6 +81,7 @@ const insertstudent = async (request, response) => {
       const input = request.body;
       const student = new Student(input);
       await student.save();
+      await Mail.sendStudentWelcomeEmail(student);
       response.send('Registered Successfully');
     } 
     catch(e) 
@@ -149,6 +151,7 @@ const insertfaculty = async (request, response) => {
       const input = request.body;
       const faculty = new Faculty(input);
       await faculty.save();
+      await Mail.sendFacultyWelcomeEmail(faculty);
       response.send('Registered Successfully');
     } 
     catch(e) 

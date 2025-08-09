@@ -123,7 +123,7 @@ const sendFacultyWelcomeEmail = async (faculty) => {
 }
 
 const userSendMail = async (to, subject, body) => {
-    console.log('userSendMail called with:', { to, subject });
+    // console.log('userSendMail called with:', { to, subject });
     try {
         let config = {
             service: 'gmail',
@@ -144,7 +144,7 @@ const userSendMail = async (to, subject, body) => {
             html: body 
         }
         const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent successfully:', info.messageId);
+        // console.log('Email sent successfully:', info.messageId);
         return info;
     } catch (error) {
         console.error('Error sending email:', error);

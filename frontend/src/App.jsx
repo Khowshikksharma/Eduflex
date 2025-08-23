@@ -12,7 +12,6 @@ import ContactAdmin from './pages/ContactAdmin';
 import StudentLayout from './modules/Student/StudentLayout';
 import FacultyLayout from './modules/Faculty/FacultyLayout';
 import AdminLayout from './modules/Admin/AdminLayout';
-import Animated404 from './pages/Animated404';
 
 const App = () => {
   const checkAuthState = () => ({
@@ -89,8 +88,6 @@ const App = () => {
             <Route path="/contactadmin" element={<ContactAdmin />} />
           </>
         ) : null}
-        
-        <Route path="*" element={<Animated404 authState={authState}/>}/>
       </Routes>
       <Toaster position="top-center" reverseOrder={false} toastOptions={{ duration: 3000 }} />
     </Router>

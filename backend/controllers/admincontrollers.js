@@ -4,6 +4,7 @@ const Faculty = require('../models/Faculty');
 const Course = require('../models/Course');
 const FacultyCourseMapping = require('../models/FacultyCourseMapping');
 const Circular = require('../models/Circular');
+const Mail = require('./Mail');
 
 const departments = [
   'CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'ChE', 'AE', 
@@ -80,6 +81,7 @@ const insertstudent = async (request, response) => {
       const input = request.body;
       const student = new Student(input);
       await student.save();
+      await Mail.sendStudentWelcomeEmail(student);
       response.send('Registered Successfully');
     } 
     catch(e) 
@@ -135,11 +137,56 @@ const changeStudentStatus = async (req, res) => {
 }
 
 const studentUpload = async (req, res) => {
-  try{
-    await Student.insertMany(req.body);
-    res.status(200).json({ success: true, message: 'Students uploaded successfully' });
-  }catch(error){
-    res.status(500).json({ message: error.message || 'Failed to upload students' });
+  try {
+    const students = req.body;
+    
+    if (!Array.isArray(students) || students.length === 0) {
+      return res.status(400).json({ message: 'Invalid student data' });
+    }
+
+    const results = [];
+    
+    for (const student of students) {
+      try {
+        const newStudent = new Student(student);
+        await newStudent.save();
+        await Mail.sendStudentWelcomeEmail(newStudent);
+        
+        results.push({
+          success: true,
+          studentId: newStudent.id,
+          email: newStudent.email,
+          message: 'Student added successfully'
+        });
+      } catch (error) {
+        results.push({
+          success: false,
+          email: student.email,
+          message: error.message || 'Failed to add student'
+        });
+      }
+    }
+
+    const allSuccess = results.every(result => result.success);
+    
+    if (allSuccess) {
+      res.status(200).json({ 
+        success: true, 
+        message: 'All students uploaded successfully',
+        details: results
+      });
+    } else {
+      res.status(207).json({  
+        success: false,
+        message: 'Some students failed to upload',
+        details: results
+      });
+    }
+    
+  } catch(error) {
+    res.status(500).json({ 
+      message: error.message || 'Failed to process student upload' 
+    });
   }
 };
 
@@ -149,6 +196,7 @@ const insertfaculty = async (request, response) => {
       const input = request.body;
       const faculty = new Faculty(input);
       await faculty.save();
+      await Mail.sendFacultyWelcomeEmail(faculty);
       response.send('Registered Successfully');
     } 
     catch(e) 
@@ -226,11 +274,56 @@ const viewFacultyById = async (req, res) => {
 }
 
 const facultyUpload = async (req, res) => {
-  try{
-    await Faculty.insertMany(req.body);
-    res.status(200).json({ success: true, message: 'Faculties uploaded successfully' });
-  }catch(error){
-    res.status(500).json({ message: error.message || 'Failed to upload faculties' });
+  try {
+    const faculties = req.body;
+    
+    if (!Array.isArray(faculties) || faculties.length === 0) {
+      return res.status(400).json({ message: 'Invalid faculty data' });
+    }
+
+    const results = [];
+    
+    for (const faculty of faculties) {
+      try {
+        const newFaculty = new Faculty(faculty);
+        await newFaculty.save();
+        await Mail.sendFacultyWelcomeEmail(newFaculty);
+        
+        results.push({
+          success: true,
+          facultyId: newFaculty.id,
+          email: newFaculty.email,
+          message: 'Faculty added successfully'
+        });
+      } catch (error) {
+        results.push({
+          success: false,
+          email: faculty.email || 'No email provided',
+          message: error.message || 'Failed to add faculty'
+        });
+      }
+    }
+
+    const allSuccess = results.every(result => result.success);
+    
+    if (allSuccess) {
+      res.status(200).json({ 
+        success: true, 
+        message: 'All faculties uploaded successfully',
+        details: results
+      });
+    } else {
+      res.status(207).json({  
+        success: false,
+        message: 'Some faculties failed to upload',
+        details: results
+      });
+    }
+    
+  } catch(error) {
+    res.status(500).json({ 
+      message: error.message || 'Failed to process faculty upload' 
+    });
   }
 };
 
